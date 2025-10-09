@@ -10,13 +10,7 @@ import java.util.HashMap;
  @RestController
  @RequestMapping("/api/workflow")
  @Slf4j
- @CrossOrigin(
-     origins = {"http://localhost:3000", "http://localhost:3001", "http://localhost:3002"},
-     methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS},
-     allowedHeaders = "*",
-     allowCredentials = "true",
-     maxAge = 3600
- )
+ @CrossOrigin(origins = "*", allowedHeaders = "*")
  public class WorkflowController {
 
     @GetMapping("/test")

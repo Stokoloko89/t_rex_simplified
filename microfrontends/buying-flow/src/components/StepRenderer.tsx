@@ -86,14 +86,75 @@ const StepRenderer: React.FC = () => {
       const timer = setTimeout(() => {
         setContainerHeight('auto');
         setIsHeightTransitioning(false);
-      }, 600); // Longer for smoother transitions
+      }, 900); // Even longer for smoother transitions
       
       return () => clearTimeout(timer);
     }
   }, [isTransitioning, isHeightTransitioning, currentStepConfig?.stepId]);
 
   if (isLoading || !currentStepConfig) {
-    return <LoadingSpinner message="Loading step..." />;
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center',
+        minHeight: '60vh',
+        width: '100%',
+        textAlign: 'center',
+        py: 8,
+        animation: 'initialLoad 1.5s ease-out',
+        '@keyframes initialLoad': {
+          '0%': { opacity: 0, transform: 'translateY(20px)' },
+          '100%': { opacity: 1, transform: 'translateY(0px)' },
+        }
+      }}>
+        <CircularProgress 
+          size={64} 
+          thickness={3}
+          sx={{ 
+            mb: 3, 
+            color: '#007AFF',
+            animation: 'initialSpin 2s ease-in-out infinite',
+            '@keyframes initialSpin': {
+              '0%': { transform: 'rotate(0deg) scale(1)' },
+              '50%': { transform: 'rotate(180deg) scale(1.1)' },
+              '100%': { transform: 'rotate(360deg) scale(1)' },
+            }
+          }} 
+        />
+        <Typography 
+          variant="h6" 
+          color="text.primary"
+          sx={{
+            fontWeight: 500,
+            mb: 1,
+            animation: 'titleFade 1.8s ease-in-out',
+            '@keyframes titleFade': {
+              '0%': { opacity: 0 },
+              '70%': { opacity: 0 },
+              '100%': { opacity: 0.9 },
+            }
+          }}
+        >
+          Loading Workflow
+        </Typography>
+        <Typography 
+          variant="body2" 
+          color="text.secondary"
+          sx={{
+            animation: 'subtitleFade 2.1s ease-in-out',
+            '@keyframes subtitleFade': {
+              '0%': { opacity: 0 },
+              '80%': { opacity: 0 },
+              '100%': { opacity: 0.6 },
+            }
+          }}
+        >
+          Please wait while we prepare your experience...
+        </Typography>
+      </Box>
+    );
   }
 
   if (error) {
@@ -125,11 +186,42 @@ const StepRenderer: React.FC = () => {
         minHeight: '60vh',
         width: '100%',
         textAlign: 'center',
-        py: 8
+        py: 8,
+        animation: 'fadeInOut 1.3s ease-in-out',
+        '@keyframes fadeInOut': {
+          '0%': { opacity: 0, transform: 'translateY(10px)' },
+          '50%': { opacity: 1, transform: 'translateY(0px)' },
+          '100%': { opacity: 1, transform: 'translateY(0px)' },
+        }
       }}>
-        <CircularProgress size={48} sx={{ mb: 2, color: '#007AFF' }} />
-        <Typography variant="body1" color="text.secondary">
-          Loading next step...
+        <CircularProgress 
+          size={56} 
+          thickness={3.5}
+          sx={{ 
+            mb: 3, 
+            color: '#007AFF',
+            animation: 'pulse 2s ease-in-out infinite',
+            '@keyframes pulse': {
+              '0%': { transform: 'scale(1)', opacity: 1 },
+              '50%': { transform: 'scale(1.05)', opacity: 0.8 },
+              '100%': { transform: 'scale(1)', opacity: 1 },
+            }
+          }} 
+        />
+        <Typography 
+          variant="body1" 
+          color="text.secondary"
+          sx={{
+            fontWeight: 500,
+            animation: 'textFade 1.5s ease-in-out',
+            '@keyframes textFade': {
+              '0%': { opacity: 0 },
+              '60%': { opacity: 0 },
+              '100%': { opacity: 0.7 },
+            }
+          }}
+        >
+          Preparing your next step...
         </Typography>
       </Box>
     );
@@ -167,7 +259,7 @@ const StepRenderer: React.FC = () => {
         ref={containerRef}
         sx={{
           height: containerHeight,
-          transition: 'height 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          transition: 'height 0.8s cubic-bezier(0.23, 1, 0.320, 1)',
           overflow: 'hidden',
           position: 'relative'
         }}
@@ -181,7 +273,7 @@ const StepRenderer: React.FC = () => {
             left: 0
           }}
         >
-          <Fade in={!isTransitioning} timeout={500}>
+          <Fade in={!isTransitioning} timeout={800}>
             <Box>
               <Suspense fallback={<LoadingSpinner message="Loading component..." />}>
                 <StepComponent

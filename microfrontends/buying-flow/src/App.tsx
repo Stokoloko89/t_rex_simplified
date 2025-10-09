@@ -85,13 +85,13 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     setIsTransitioning(true);
     
     // Wait for fade out animation (increased for smoother feel)
-    await new Promise(resolve => setTimeout(resolve, 400));
+    await new Promise(resolve => setTimeout(resolve, 700));
     
     // Update the step content
     setCurrentStepConfig(newStepConfig);
     
     // Wait longer for content to render and settle
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 600));
     
     // Fade back in
     setIsTransitioning(false);
