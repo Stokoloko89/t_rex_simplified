@@ -1,0 +1,4 @@
+packages:
+  - 'packages/*'
+  - 'microfrontends/*'
+  - 'host-app'

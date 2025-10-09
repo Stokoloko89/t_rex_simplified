@@ -1,0 +1,39 @@
+{
+  "name": "@t-rex/buying-flow",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@hookform/resolvers": "^3.1.0",
+    "@mui/icons-material": "^5.14.0",
+    "@mui/material": "^5.14.0",
+    "@t-rex/shared-ui": "*",
+    "axios": "^1.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.45.0",
+    "single-spa-react": "^6.0.0",
+    "yup": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@webpack-cli/serve": "^2.0.5",
+    "copy-webpack-plugin": "^13.0.1",
+    "html-webpack-plugin": "^5.5.0",
+    "ts-loader": "^9.4.0",
+    "typescript": "^5.0.0",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.0",
+    "webpack-dev-server": "^4.15.0"
+  },
+  "scripts": {
+    "start": "webpack serve --mode development",
+    "build": "webpack --mode production",
+    "test": "echo \"No tests yet\"",
+    "clean": "rm -rf dist",
+    "lint": "eslint src --ext .ts,.tsx",
+    "serve:standalone": "webpack serve --mode development --env standalone"
+  }
+}
