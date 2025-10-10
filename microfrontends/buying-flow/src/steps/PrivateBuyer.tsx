@@ -41,21 +41,12 @@ const PrivateBuyer: React.FC<PrivateBuyerProps> = ({
         <Typography variant="h4" component="h1" gutterBottom>
           Private Sale Details
         </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {message}
-        </Typography>
       </Box>
 
       <Card>
         <CardContent sx={{ p: 4 }}>
           <Stack spacing={4}>
             <Box>
-              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                <AttachMoney sx={{ mr: 1 }} />
-                Sale Information
-              </Typography>
-              
-
               <FormControl component="fieldset" sx={{ width: '100%' }}>
                 <FormLabel component="legend" sx={{ mb: 2 }}>
                   Does the buyer need financing?

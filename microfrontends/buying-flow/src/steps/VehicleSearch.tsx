@@ -32,8 +32,8 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
   const [searchData, setSearchData] = useState({
     make: '',
     model: '',
-    yearRange: [2015, 2024],
-    priceRange: [10000, 50000],
+    yearRange: [2015, 2025],
+    priceRange: [100000, 250000],
     mileageMax: 100000,
     bodyType: '',
     fuelType: '',
@@ -55,7 +55,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
 
   return (
     <Card>
-      <CardContent>
+      <CardContent sx={{ pr: 4 }}>
         <Box textAlign="center" mb={4}>
           <Search sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
           <Typography variant="h4" gutterBottom>
@@ -114,7 +114,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 onChange={(e) => handleInputChange('fuelType', e.target.value)}
               >
                 <MenuItem value="">Any</MenuItem>
-                <MenuItem value="gasoline">Gasoline</MenuItem>
+                <MenuItem value="petrol">Petrol</MenuItem>
                 <MenuItem value="hybrid">Hybrid</MenuItem>
                 <MenuItem value="electric">Electric</MenuItem>
                 <MenuItem value="diesel">Diesel</MenuItem>
@@ -131,35 +131,35 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
               onChange={(_, newValue) => handleInputChange('yearRange', newValue)}
               valueLabelDisplay="auto"
               min={2000}
-              max={2024}
+              max={2025}
               marks={[
                 { value: 2000, label: '2000' },
-                { value: 2024, label: '2024' },
+                { value: 2025, label: '2025' },
               ]}
             />
           </Grid>
 
           <Grid item xs={12}>
             <Typography gutterBottom>
-              Price Range: ${searchData.priceRange[0].toLocaleString()} - ${searchData.priceRange[1].toLocaleString()}
+              Price Range: R{searchData.priceRange[0].toLocaleString()} - R{searchData.priceRange[1].toLocaleString()}
             </Typography>
             <Slider
               value={searchData.priceRange}
               onChange={(_, newValue) => handleInputChange('priceRange', newValue)}
               valueLabelDisplay="auto"
-              min={5000}
-              max={100000}
-              step={1000}
+              min={10000}
+              max={2000000}
+              step={10000}
               marks={[
-                { value: 5000, label: '$5K' },
-                { value: 100000, label: '$100K' },
+                { value: 10000, label: 'R10K' },
+                { value: 2000000, label: 'R2 million' },
               ]}
             />
           </Grid>
 
           <Grid item xs={12}>
             <Typography gutterBottom>
-              Maximum Mileage: {searchData.mileageMax.toLocaleString()} miles
+              Maximum Mileage: {searchData.mileageMax.toLocaleString()} kilometers
             </Typography>
             <Slider
               value={searchData.mileageMax}
