@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -33,11 +33,96 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     make: '',
     model: '',
     yearRange: [2015, 2025],
-    priceRange: [100000, 250000],
-    mileageMax: 100000,
+    priceRange: [100000, 2000000],
+    mileageMax: 200000,
     bodyType: '',
     fuelType: '',
+    province: '',
   });
+
+  const [filters, setFilters] = useState({
+    makes: [],
+    models: [],
+    provinces: [],
+    fuelTypes: [],
+    bodyTypes: [],
+    transmissions: [],
+    priceRange: { min: 0, max: 2000000 },
+    yearRange: { min: 2000, max: 2025 }
+  });
+
+  const [isLoadingFilters, setIsLoadingFilters] = useState(true);
+
+  // Load filters on component mount
+  useEffect(() => {
+    const loadFilters = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/vehicles/filters');
+        const filtersData = await response.json();
+        
+        setFilters({
+          makes: filtersData.makes || [],
+          models: [],
+          provinces: filtersData.provinces || [],
+          fuelTypes: filtersData.fuelTypes || [],
+          bodyTypes: filtersData.bodyTypes || [],
+          transmissions: filtersData.transmissions || [],
+          priceRange: filtersData.priceRange || { min: 0, max: 2000000 },
+          yearRange: filtersData.yearRange || { min: 2000, max: 2025 }
+        });
+        
+        // Update search data with actual ranges
+        if (filtersData.priceRange) {
+          setSearchData(prev => ({
+            ...prev,
+            priceRange: [filtersData.priceRange.min, filtersData.priceRange.max]
+          }));
+        }
+        
+        if (filtersData.yearRange) {
+          setSearchData(prev => ({
+            ...prev,
+            yearRange: [filtersData.yearRange.min, filtersData.yearRange.max]
+          }));
+        }
+        
+      } catch (error) {
+        console.error('Error loading filters:', error);
+      } finally {
+        setIsLoadingFilters(false);
+      }
+    };
+
+    loadFilters();
+  }, []);
+
+  // Load models when make changes
+  useEffect(() => {
+    if (searchData.make) {
+      const loadModels = async () => {
+        try {
+          const response = await fetch(`http://localhost:8080/api/vehicles/makes/${searchData.make}/models`);
+          const models = await response.json();
+          setFilters(prev => ({
+            ...prev,
+            models: models || []
+          }));
+        } catch (error) {
+          console.error('Error loading models:', error);
+        }
+      };
+      loadModels();
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        models: []
+      }));
+      setSearchData(prev => ({
+        ...prev,
+        model: ''
+      }));
+    }
+  }, [searchData.make]);
 
   const handleSubmit = () => {
     onSubmit({
@@ -68,22 +153,41 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
 
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Make"
-              value={searchData.make}
-              onChange={(e) => handleInputChange('make', e.target.value)}
-              placeholder="e.g., Toyota, Honda, Ford"
-            />
+            <FormControl fullWidth>
+              <InputLabel>Make</InputLabel>
+              <Select
+                value={searchData.make}
+                label="Make"
+                onChange={(e) => handleInputChange('make', e.target.value)}
+                disabled={isLoadingFilters}
+              >
+                <MenuItem value="">Any Make</MenuItem>
+                {filters.makes.map((make) => (
+                  <MenuItem key={make} value={make}>
+                    {make}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
+          
           <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Model"
-              value={searchData.model}
-              onChange={(e) => handleInputChange('model', e.target.value)}
-              placeholder="e.g., Camry, Civic, F-150"
-            />
+            <FormControl fullWidth>
+              <InputLabel>Model</InputLabel>
+              <Select
+                value={searchData.model}
+                label="Model"
+                onChange={(e) => handleInputChange('model', e.target.value)}
+                disabled={!searchData.make || filters.models.length === 0}
+              >
+                <MenuItem value="">Any Model</MenuItem>
+                {filters.models.map((model) => (
+                  <MenuItem key={model} value={model}>
+                    {model}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -93,14 +197,14 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 value={searchData.bodyType}
                 label="Body Type"
                 onChange={(e) => handleInputChange('bodyType', e.target.value)}
+                disabled={isLoadingFilters}
               >
-                <MenuItem value="">Any</MenuItem>
-                <MenuItem value="sedan">Sedan</MenuItem>
-                <MenuItem value="suv">SUV</MenuItem>
-                <MenuItem value="truck">Truck</MenuItem>
-                <MenuItem value="coupe">Coupe</MenuItem>
-                <MenuItem value="hatchback">Hatchback</MenuItem>
-                <MenuItem value="convertible">Convertible</MenuItem>
+                <MenuItem value="">Any Body Type</MenuItem>
+                {filters.bodyTypes.map((bodyType) => (
+                  <MenuItem key={bodyType} value={bodyType}>
+                    {bodyType}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
@@ -112,12 +216,33 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 value={searchData.fuelType}
                 label="Fuel Type"
                 onChange={(e) => handleInputChange('fuelType', e.target.value)}
+                disabled={isLoadingFilters}
               >
-                <MenuItem value="">Any</MenuItem>
-                <MenuItem value="petrol">Petrol</MenuItem>
-                <MenuItem value="hybrid">Hybrid</MenuItem>
-                <MenuItem value="electric">Electric</MenuItem>
-                <MenuItem value="diesel">Diesel</MenuItem>
+                <MenuItem value="">Any Fuel Type</MenuItem>
+                {filters.fuelTypes.map((fuelType) => (
+                  <MenuItem key={fuelType} value={fuelType}>
+                    {fuelType}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Province</InputLabel>
+              <Select
+                value={searchData.province}
+                label="Province"
+                onChange={(e) => handleInputChange('province', e.target.value)}
+                disabled={isLoadingFilters}
+              >
+                <MenuItem value="">Any Province</MenuItem>
+                {filters.provinces.map((province) => (
+                  <MenuItem key={province} value={province}>
+                    {province}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
@@ -130,11 +255,12 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
               value={searchData.yearRange}
               onChange={(_, newValue) => handleInputChange('yearRange', newValue)}
               valueLabelDisplay="auto"
-              min={2000}
-              max={2025}
+              min={filters.yearRange.min}
+              max={filters.yearRange.max}
+              disabled={isLoadingFilters}
               marks={[
-                { value: 2000, label: '2000' },
-                { value: 2025, label: '2025' },
+                { value: filters.yearRange.min, label: filters.yearRange.min.toString() },
+                { value: filters.yearRange.max, label: filters.yearRange.max.toString() },
               ]}
             />
           </Grid>
@@ -147,12 +273,13 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
               value={searchData.priceRange}
               onChange={(_, newValue) => handleInputChange('priceRange', newValue)}
               valueLabelDisplay="auto"
-              min={10000}
-              max={2000000}
+              min={Math.max(10000, filters.priceRange.min)}
+              max={filters.priceRange.max}
               step={10000}
+              disabled={isLoadingFilters}
               marks={[
-                { value: 10000, label: 'R10K' },
-                { value: 2000000, label: 'R2 million' },
+                { value: Math.max(10000, filters.priceRange.min), label: `R${Math.max(10000, filters.priceRange.min / 1000)}K` },
+                { value: filters.priceRange.max, label: `R${filters.priceRange.max >= 1000000 ? (filters.priceRange.max / 1000000).toFixed(1) + 'M' : (filters.priceRange.max / 1000) + 'K'}` },
               ]}
             />
           </Grid>
@@ -166,11 +293,12 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
               onChange={(_, newValue) => handleInputChange('mileageMax', newValue)}
               valueLabelDisplay="auto"
               min={10000}
-              max={200000}
+              max={250000}
               step={5000}
+              disabled={isLoadingFilters}
               marks={[
                 { value: 10000, label: '10K' },
-                { value: 200000, label: '200K' },
+                { value: 250000, label: '250K' },
               ]}
             />
           </Grid>

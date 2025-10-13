@@ -321,13 +321,14 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
           };
         } else if (formData.has_buyer === 'no_buyer') {
           nextStep = {
-            stepId: 'vehicle-selling-form',
-            componentName: 'VehicleSellingForm',  
+            stepId: 'dealer-network',
+            componentName: 'DealerNetwork',  
             data: { 
               ...formData, 
-              message: 'Let us help you find a buyer through our dealer network',
+              message: 'Find dealers interested in your vehicle',
               previousChoice: 'no_buyer',
-              valuationData: currentStepConfig?.data?.valuationData
+              valuationData: currentStepConfig?.data?.valuationData,
+              prePopulateFromValuation: true // Flag to indicate we should pre-populate
             },
             stepNumber: 2,
             totalSteps: 3
@@ -399,19 +400,35 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         }
         break;
       case 'dealer-network':
-        // Handle DealerNetwork completion
+        // Handle DealerNetwork completion - check the action/intent to determine next step
         console.log('DealerNetwork form data:', formData);
-        nextStep = {
-          stepId: 'dealer-network-complete',
-          componentName: 'DealerNetworkComplete',
-          data: { 
-            ...formData, 
-            message: 'We will connect you with our dealer network',
-            saleType: 'dealer'
-          },
-          stepNumber: 4,
-          totalSteps: 4
-        };
+        
+        // If this is a vehicle search action, go to SearchResults
+        if (formData.action === 'vehicle-search' || formData.intent === 'search-vehicles') {
+          nextStep = {
+            stepId: 'search-results',
+            componentName: 'SearchResults',
+            data: { 
+              ...formData, 
+              message: 'Here are vehicles matching your criteria'
+            },
+            stepNumber: 4,
+            totalSteps: 6
+          };
+        } else {
+          // Default dealer network completion
+          nextStep = {
+            stepId: 'dealer-network-complete',
+            componentName: 'DealerNetworkComplete',
+            data: { 
+              ...formData, 
+              message: 'We will connect you with our dealer network',
+              saleType: 'dealer'
+            },
+            stepNumber: 4,
+            totalSteps: 4
+          };
+        }
         break;
       case 'vehicle-selling-form':
         // Handle VehicleSellingForm completion

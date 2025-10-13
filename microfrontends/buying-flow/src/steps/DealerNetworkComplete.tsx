@@ -18,6 +18,10 @@ const DealerNetworkComplete: React.FC<DealerNetworkCompleteProps> = ({
   const message = initialData?.message || "Thank you for your submission!";
   const description = initialData?.description || "We'll connect you with dealers in our network who are interested in your vehicle type.";
   const nextSteps = initialData?.nextSteps || "Our dealer network team will review your vehicle information and match you with interested buyers within 48 hours.";
+  
+  // Extract vehicle search data for display
+  const vehicleSearch = initialData?.dealerSearchData || initialData?.vehicleSearch;
+  const valuationData = initialData?.valuationData;
 
   const handleStartNew = () => {
     // Restart the workflow
@@ -51,6 +55,73 @@ const DealerNetworkComplete: React.FC<DealerNetworkCompleteProps> = ({
             {nextSteps}
           </Typography>
         </Alert>
+
+        {/* Vehicle Search Criteria Display */}
+        {vehicleSearch && (
+          <Card variant="outlined">
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Vehicle Specifications Submitted to Dealers
+              </Typography>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
+                {vehicleSearch.make && (
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Make</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{vehicleSearch.make}</Typography>
+                  </Box>
+                )}
+                {vehicleSearch.model && (
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Model</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{vehicleSearch.model}</Typography>
+                  </Box>
+                )}
+                {vehicleSearch.yearRange && (
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Year Range</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      {vehicleSearch.yearRange[0]} - {vehicleSearch.yearRange[1]}
+                    </Typography>
+                  </Box>
+                )}
+                {vehicleSearch.bodyType && (
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Body Type</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{vehicleSearch.bodyType}</Typography>
+                  </Box>
+                )}
+                {vehicleSearch.fuelType && (
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Fuel Type</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{vehicleSearch.fuelType}</Typography>
+                  </Box>
+                )}
+                {vehicleSearch.priceRange && (
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Price Range</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      R{vehicleSearch.priceRange[0].toLocaleString()} - R{vehicleSearch.priceRange[1].toLocaleString()}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+              
+              {valuationData && (
+                <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #e0e0e0' }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Based on your vehicle valuation:
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {valuationData.year} {valuationData.make} {valuationData.model} {valuationData.variant}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Estimated value: R{valuationData.marketValue?.toLocaleString() || 'N/A'}
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardContent sx={{ p: 3 }}>

@@ -223,7 +223,7 @@ const VehicleValuationReport: React.FC<VehicleValuationReportProps> = ({
             }}>
               <Box
                 component="img"
-                src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=300&fit=crop&crop=center"
+                src="https://news-site-za.s3.af-south-1.amazonaws.com/images/2021/02/2012-Chevrolet-Sonic-Sedan.jpg"
                 alt="Blue Chevrolet Sonic"
                 sx={{
                   width: '100%',
@@ -467,7 +467,7 @@ const VehicleValuationReport: React.FC<VehicleValuationReportProps> = ({
           What would you like to do next?
         </Typography>
         <Typography variant="body1" sx={{ color: '#666666', mb: 4, fontSize: '1.1rem' }}>
-          Based on this professional valuation, choose your preferred action for this {vehicleData.year} {vehicleData.make} {vehicleData.model}
+          Based on this valuation, choose your preferred action for this {vehicleData.year} {vehicleData.make} {vehicleData.model}
         </Typography>
       </Box>
 

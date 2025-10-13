@@ -113,4 +113,29 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     // Get year range for available vehicles
     @Query("SELECT MIN(v.year), MAX(v.year) FROM Vehicle v WHERE v.soldDate IS NULL")
     Object[] findYearRange();
+    
+    // Filtered methods based on make and model selection
+    @Query("SELECT DISTINCT v.bodyType FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "v.bodyType IS NOT NULL AND v.soldDate IS NULL ORDER BY v.bodyType")
+    List<String> findDistinctBodyTypesByMakeAndModel(@Param("make") String make, @Param("model") String model);
+    
+    @Query("SELECT DISTINCT v.fuelType FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "v.fuelType IS NOT NULL AND v.soldDate IS NULL ORDER BY v.fuelType")
+    List<String> findDistinctFuelTypesByMakeAndModel(@Param("make") String make, @Param("model") String model);
+    
+    @Query("SELECT DISTINCT v.provinceName FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "v.soldDate IS NULL ORDER BY v.provinceName")
+    List<String> findDistinctProvincesByMakeAndModel(@Param("make") String make, @Param("model") String model);
+    
+    @Query("SELECT DISTINCT v.transmission FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "v.transmission IS NOT NULL AND v.soldDate IS NULL ORDER BY v.transmission")
+    List<String> findDistinctTransmissionsByMakeAndModel(@Param("make") String make, @Param("model") String model);
 }

@@ -157,6 +157,27 @@ public class VehicleService {
         vehicleRepository.deleteById(id);
     }
     
+    // Filtered methods based on make and model selection
+    public List<String> getBodyTypesByMakeAndModel(String make, String model) {
+        logger.info("Getting body types filtered by make: {} and model: {}", make, model);
+        return vehicleRepository.findDistinctBodyTypesByMakeAndModel(make, model);
+    }
+    
+    public List<String> getFuelTypesByMakeAndModel(String make, String model) {
+        logger.info("Getting fuel types filtered by make: {} and model: {}", make, model);
+        return vehicleRepository.findDistinctFuelTypesByMakeAndModel(make, model);
+    }
+    
+    public List<String> getProvincesByMakeAndModel(String make, String model) {
+        logger.info("Getting provinces filtered by make: {} and model: {}", make, model);
+        return vehicleRepository.findDistinctProvincesByMakeAndModel(make, model);
+    }
+    
+    public List<String> getTransmissionsByMakeAndModel(String make, String model) {
+        logger.info("Getting transmissions filtered by make: {} and model: {}", make, model);
+        return vehicleRepository.findDistinctTransmissionsByMakeAndModel(make, model);
+    }
+    
     // Helper method to create a vehicle search summary
     public Map<String, Object> getSearchSummary(Page<Vehicle> vehiclePage) {
         Map<String, Object> summary = new HashMap<>();

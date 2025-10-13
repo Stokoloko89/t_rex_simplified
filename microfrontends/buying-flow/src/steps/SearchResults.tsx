@@ -1,7 +1,42 @@
-import React, { useState } from 'react';
-import { Box, Typography, Card, CardContent, Button, Stack, Grid, Chip, Divider, CardMedia } from '@mui/material';
-import { LocalGasStation, Speed, LocationOn } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { 
+  Box, 
+  Typography, 
+  Card, 
+  CardContent, 
+  Button, 
+  Stack, 
+  Grid, 
+  Chip, 
+  Divider, 
+  CircularProgress,
+  Alert,
+  Pagination,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
+} from '@mui/material';
+import { LocalGasStation, Speed, LocationOn, DirectionsCar, Settings } from '@mui/icons-material';
 import { formatCurrency, formatFuelConsumption, formatDistance } from '@t-rex/shared-ui';
+
+interface Vehicle {
+  id: number;
+  usedVehicleStockId: number;
+  year: number;
+  makeName: string;
+  modelName: string;
+  variantName: string;
+  price: number;
+  mileage: number;
+  colour: string;
+  provinceName: string;
+  bodyType: string;
+  transmission: string;
+  fuelType: string;
+  engineSize: string;
+  condition: string;
+}
 
 interface SearchResultsProps {
   initialData?: any;
@@ -16,65 +51,147 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   onBack,
   isLoading = false,
 }) => {
-  const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [isLoadingResults, setIsLoadingResults] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 0,
+    totalPages: 1,
+    totalElements: 0,
+    pageSize: 20,
+  });
+  const [sortBy, setSortBy] = useState('price');
+  const [sortDir, setSortDir] = useState('asc');
 
-  // Mock South African vehicle data - in real app this would come from initialData
-  const vehicles = [
-    {
-      id: 'vehicle-1',
-      make: 'Toyota',
-      model: 'Camry',
-      year: 2023,
-      price: 485000, // ZAR
-      fuelConsumption: 6.8, // L/100km
-      mileage: 15000, // km
-      rating: 4.5,
-      image: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=1200&auto=format&fit=crop',
-      location: 'Cape Town, Western Cape',
-      features: ['Hybrid Available', 'Toyota Safety Sense', 'Apple CarPlay']
-    },
-    {
-      id: 'vehicle-2',
-      make: 'Honda',
-      model: 'Accord',
-      year: 2023,
-      price: 462000, // ZAR
-      fuelConsumption: 7.2, // L/100km
-      mileage: 22000, // km
-      rating: 4.4,
-      image: 'https://images.unsplash.com/photo-1549923746-c502d488b3ea?q=80&w=1200&auto=format&fit=crop',
-      location: 'Johannesburg, Gauteng',
-      features: ['Honda Sensing', 'Wireless Charging', 'LED Headlights']
-    },
-    {
-      id: 'vehicle-3',
-      make: 'Nissan',
-      model: 'Altima',
-      year: 2023,
-      price: 440000, // ZAR
-      fuelConsumption: 7.8, // L/100km
-      mileage: 18500, // km
-      rating: 4.2,
-      image: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?q=80&w=1200&auto=format&fit=crop',
-      location: 'Durban, KwaZulu-Natal',
-      features: ['ProPILOT Assist', 'Remote Start', 'Bose Audio']
+  useEffect(() => {
+    if (initialData?.vehicleSearch) {
+      searchVehicles();
     }
-  ];
+  }, [initialData?.vehicleSearch, pagination.currentPage, sortBy, sortDir]);
 
-  const handleVehicleSelect = (vehicleId: string) => {
-    setSelectedVehicle(vehicleId);
+  const searchVehicles = async (page = 0) => {
+    setIsLoadingResults(true);
+    setError(null);
+    
+    try {
+      const searchParams = initialData.vehicleSearch;
+      const queryParams = new URLSearchParams();
+      
+      if (searchParams.make) queryParams.append('make', searchParams.make);
+      if (searchParams.model) queryParams.append('model', searchParams.model);
+      if (searchParams.bodyType) queryParams.append('bodyType', searchParams.bodyType);
+      if (searchParams.fuelType) queryParams.append('fuelType', searchParams.fuelType);
+      if (searchParams.province) queryParams.append('province', searchParams.province);
+      
+      if (searchParams.yearRange && searchParams.yearRange.length === 2) {
+        queryParams.append('minYear', searchParams.yearRange[0].toString());
+        queryParams.append('maxYear', searchParams.yearRange[1].toString());
+      }
+      
+      if (searchParams.priceRange && searchParams.priceRange.length === 2) {
+        queryParams.append('minPrice', searchParams.priceRange[0].toString());
+        queryParams.append('maxPrice', searchParams.priceRange[1].toString());
+      }
+      
+      if (searchParams.mileageMax) {
+        queryParams.append('maxMileage', searchParams.mileageMax.toString());
+      }
+      
+      queryParams.append('page', page.toString());
+      queryParams.append('size', '20');
+      queryParams.append('sortBy', sortBy);
+      queryParams.append('sortDir', sortDir);
+      
+      const response = await fetch(`http://localhost:8080/api/vehicles/search?${queryParams}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to search vehicles');
+      }
+      
+      const data = await response.json();
+      setVehicles(data.vehicles || []);
+      setPagination(data.pagination || {
+        currentPage: 0,
+        totalPages: 1,
+        totalElements: 0,
+        pageSize: 20,
+      });
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while searching');
+    } finally {
+      setIsLoadingResults(false);
+    }
+  };
+
+  const handleVehicleSelect = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
   };
 
   const handleSubmit = () => {
-    const selected = vehicles.find(v => v.id === selectedVehicle);
-    onSubmit({ 
-      selectedVehicle: selected,
-      vehicleId: selectedVehicle 
+    if (!selectedVehicle) {
+      alert('Please select a vehicle to continue');
+      return;
+    }
+    
+    onSubmit({
+      ...initialData,
+      selectedVehicle: selectedVehicle,
     });
   };
 
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setPagination(prev => ({ ...prev, currentPage: value - 1 }));
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-ZA', {
+      style: 'currency',
+      currency: 'ZAR',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  if (isLoadingResults && vehicles.length === 0) {
+    return (
+      <Card>
+        <CardContent>
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+            <CircularProgress />
+            <Typography variant="h6" sx={{ ml: 2 }}>
+              Searching for vehicles...
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+          <Box display="flex" justifyContent="space-between">
+            {onBack && (
+              <Button variant="outlined" onClick={onBack}>
+                Back to Search
+              </Button>
+            )}
+            <Button variant="contained" onClick={() => searchVehicles()}>
+              Try Again
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const message = initialData?.message || "Here are vehicles matching your criteria";
-  const total = initialData?.results?.total || vehicles.length;
+  const total = pagination.totalElements;
 
   return (
     <Box sx={{ 
@@ -85,172 +202,217 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     }}>
       {/* Header Section */}
       <Box sx={{ mb: 6 }}>
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          sx={{ 
-            fontWeight: 600,
-            color: '#1a1a1a',
-            mb: 1.5,
-            letterSpacing: '-0.02em'
-          }}
-        >
-          Vehicle Search Results
-        </Typography>
-        
-        <Typography 
-          variant="body1" 
-          color="text.secondary" 
-          sx={{ 
-            mb: 3,
-            fontSize: '1rem',
-            lineHeight: 1.6
-          }}
-        >
-          {message} • {total} vehicles found in South Africa
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Box>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              sx={{ 
+                fontWeight: 600,
+                color: '#1a1a1a',
+                mb: 1.5,
+                letterSpacing: '-0.02em'
+              }}
+            >
+              Vehicle Search Results
+            </Typography>
+            
+            <Typography 
+              variant="body1" 
+              color="text.secondary" 
+              sx={{ 
+                mb: 3,
+                fontSize: '1rem',
+                lineHeight: 1.6
+              }}
+            >
+              {message} • {total} vehicles found in South Africa
+            </Typography>
+          </Box>
+          
+          <Box display="flex" gap={2}>
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <InputLabel>Sort by</InputLabel>
+              <Select
+                value={sortBy}
+                label="Sort by"
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <MenuItem value="price">Price</MenuItem>
+                <MenuItem value="year">Year</MenuItem>
+                <MenuItem value="mileage">Mileage</MenuItem>
+                <MenuItem value="makeName">Make</MenuItem>
+              </Select>
+            </FormControl>
+            
+            <FormControl size="small" sx={{ minWidth: 100 }}>
+              <InputLabel>Order</InputLabel>
+              <Select
+                value={sortDir}
+                label="Order"
+                onChange={(e) => setSortDir(e.target.value)}
+              >
+                <MenuItem value="asc">Low to High</MenuItem>
+                <MenuItem value="desc">High to Low</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </Box>
         
         <Divider sx={{ mb: 3 }} />
       </Box>
 
       {/* Vehicle Grid */}
-      <Grid container spacing={4}>
-        {vehicles.map((vehicle) => (
-          <Grid item xs={12} md={6} key={vehicle.id}>
-            <Card 
-              sx={{ 
-                cursor: 'pointer',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'all 0.2s ease-in-out',
-                border: selectedVehicle === vehicle.id 
-                  ? '2px solid #007AFF' 
-                  : '1px solid #e0e0e0',
-                boxShadow: selectedVehicle === vehicle.id
-                  ? '0 8px 24px rgba(0, 122, 255, 0.15)'
-                  : '0 2px 8px rgba(0, 0, 0, 0.08)',
-                '&:hover': {
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
-                  transform: 'translateY(-4px)',
-                }
-              }}
-              onClick={() => handleVehicleSelect(vehicle.id)}
-            >
-              <CardMedia
-                component="img"
-                height="200"
-                image={vehicle.image}
-                alt={`${vehicle.make} ${vehicle.model}`}
-                sx={{ 
-                  objectFit: 'cover',
-                  borderBottom: '1px solid #e0e0e0'
-                }}
-              />
-              
-              <CardContent sx={{ 
-                p: 3, 
-                flexGrow: 1,
-                display: 'flex',
-                flexDirection: 'column'
-              }}>
-                {/* Vehicle Title */}
-                <Typography 
-                  variant="h6" 
-                  component="h3" 
+      {vehicles.length === 0 ? (
+        <Box textAlign="center" py={8}>
+          <DirectionsCar sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h6" gutterBottom>
+            No vehicles found
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={3}>
+            Try adjusting your search criteria to find more results
+          </Typography>
+          {onBack && (
+            <Button variant="contained" onClick={onBack}>
+              Modify Search
+            </Button>
+          )}
+        </Box>
+      ) : (
+        <>
+          <Grid container spacing={4}>
+            {vehicles.map((vehicle) => (
+              <Grid item xs={12} md={6} lg={4} key={vehicle.id}>
+                <Card 
                   sx={{ 
-                    fontWeight: 600,
-                    mb: 0.5,
-                    color: '#1a1a1a',
-                    fontSize: '1.125rem'
+                    cursor: 'pointer',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'all 0.2s ease-in-out',
+                    border: selectedVehicle?.id === vehicle.id 
+                      ? '2px solid #007AFF' 
+                      : '1px solid #e0e0e0',
+                    boxShadow: selectedVehicle?.id === vehicle.id
+                      ? '0 8px 24px rgba(0, 122, 255, 0.15)'
+                      : '0 2px 8px rgba(0, 0, 0, 0.08)',
+                    '&:hover': {
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                      transform: 'translateY(-4px)',
+                    }
                   }}
+                  onClick={() => handleVehicleSelect(vehicle)}
                 >
-                  {vehicle.year} {vehicle.make} {vehicle.model}
-                </Typography>
-                
-                {/* Location */}
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <LocationOn sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    {vehicle.location}
-                  </Typography>
-                </Box>
-                
-                {/* Price */}
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
-                    fontWeight: 700,
-                    color: '#007AFF',
-                    mb: 3,
-                    fontSize: '1.75rem'
-                  }}
-                >
-                  {formatCurrency(vehicle.price)}
-                </Typography>
-
-                {/* Specs */}
-                <Box sx={{ 
-                  display: 'flex', 
-                  gap: 3,
-                  mb: 3,
-                  pb: 3,
-                  borderBottom: '1px solid #f0f0f0'
-                }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                    <LocalGasStation sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                      {formatFuelConsumption(vehicle.fuelConsumption)}
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                    <Speed sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-                      {formatDistance(vehicle.mileage)}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Features */}
-                <Box sx={{ mt: 'auto' }}>
-                  <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
-                    sx={{ 
-                      display: 'block',
-                      mb: 1,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      fontWeight: 600
-                    }}
-                  >
-                    Key Features
-                  </Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {vehicle.features.map((feature, index) => (
+                  <CardContent sx={{ 
+                    p: 3, 
+                    flexGrow: 1,
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
+                    {/* Vehicle Title */}
+                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                      <Box>
+                        <Typography 
+                          variant="h6" 
+                          component="h3" 
+                          sx={{ 
+                            fontWeight: 600,
+                            mb: 0.5,
+                            color: '#1a1a1a',
+                            fontSize: '1.125rem'
+                          }}
+                        >
+                          {vehicle.year} {vehicle.makeName} {vehicle.modelName}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {vehicle.variantName}
+                        </Typography>
+                      </Box>
                       <Chip 
-                        key={index}
-                        label={feature} 
+                        label={vehicle.condition} 
                         size="small" 
-                        sx={{
-                          backgroundColor: '#f5f5f5',
-                          border: 'none',
-                          fontSize: '0.75rem',
-                          height: '24px',
-                          '& .MuiChip-label': {
-                            px: 1.5
-                          }
-                        }}
+                        color={vehicle.condition === 'Excellent' ? 'success' : 'default'}
                       />
-                    ))}
-                  </Stack>
-                </Box>
-              </CardContent>
-            </Card>
+                    </Box>
+                    
+                    {/* Location */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <LocationOn sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        {vehicle.provinceName}
+                      </Typography>
+                    </Box>
+                    
+                    {/* Price */}
+                    <Typography 
+                      variant="h5" 
+                      sx={{ 
+                        fontWeight: 700,
+                        color: '#007AFF',
+                        mb: 3,
+                        fontSize: '1.75rem'
+                      }}
+                    >
+                      {formatPrice(vehicle.price)}
+                    </Typography>
+
+                    {/* Specs */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap',
+                      gap: 1,
+                      mb: 3,
+                      pb: 3,
+                      borderBottom: '1px solid #f0f0f0'
+                    }}>
+                      <Chip 
+                        icon={<Speed />} 
+                        label={`${vehicle.mileage?.toLocaleString() || 'N/A'} km`} 
+                        size="small" 
+                        variant="outlined" 
+                      />
+                      <Chip 
+                        icon={<LocalGasStation />} 
+                        label={vehicle.fuelType} 
+                        size="small" 
+                        variant="outlined" 
+                      />
+                      <Chip 
+                        icon={<Settings />} 
+                        label={vehicle.transmission} 
+                        size="small" 
+                        variant="outlined" 
+                      />
+                    </Box>
+
+                    {/* Additional Info */}
+                    <Box sx={{ mt: 'auto' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {vehicle.colour} • {vehicle.bodyType} • {vehicle.engineSize}
+                      </Typography>
+                      {selectedVehicle?.id === vehicle.id && (
+                        <Chip label="Selected" color="primary" size="small" sx={{ mt: 1 }} />
+                      )}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
-        ))}
-      </Grid>
+
+          {pagination.totalPages > 1 && (
+            <Box display="flex" justifyContent="center" mt={4}>
+              <Pagination
+                count={pagination.totalPages}
+                page={pagination.currentPage + 1}
+                onChange={handlePageChange}
+                color="primary"
+                size="large"
+              />
+            </Box>
+          )}
+        </>
+      )}
 
       {/* Action Buttons */}
       <Box sx={{ 
