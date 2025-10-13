@@ -147,6 +147,8 @@ import java.util.HashMap;
         log.info("getNextStepResponse called with currentStep: {} and data: {}", currentStep, data);
         return switch (currentStep) {
             case "intent-selection" -> handleIntentSelection(data);
+            case "vehicle-valuation-report" -> handleVehicleValuationReport(data);
+            case "vehicle-purchase-confirmation" -> handleVehiclePurchaseConfirmation(data);
             case "vehicle-knowledge" -> handleVehicleKnowledge(data);
             case "vehicle-search" -> handleVehicleSearch(data);
             case "carin-analytics" -> handleCarInAnalytics(data);
@@ -157,6 +159,7 @@ import java.util.HashMap;
             case "has-buyer" -> handleHasBuyer(data);
             case "buyer-type" -> handleBuyerType(data);
             case "private-buyer" -> handlePrivateBuyer(data);
+            case "vehicle-selling-form" -> handleVehicleSellingForm(data);
             case "dealer-network" -> handleDealerNetwork(data);
             case "selling-confirmation" -> handleSellingConfirmation(data);
             case "replacement-check" -> handleReplacementCheck(data);
@@ -323,6 +326,117 @@ import java.util.HashMap;
         );
     }
 
+    private Map<String, Object> handleVehicleValuationReport(Map<String, Object> data) {
+        log.info("handleVehicleValuationReport called with data: {}", data);
+        
+        String action = (String) data.get("action");
+        String intent = (String) data.get("intent");
+        
+        // Extract vehicle data in the new structure format
+        Map<String, Object> vehicleData = createVehicleDataStructure(data);
+        
+        if ("buying".equals(action) && "buying".equals(intent)) {
+            // Route to VehiclePurchaseConfirmation
+            return Map.of(
+                    "stepId", "vehicle-purchase-confirmation",
+                    "componentName", "VehiclePurchaseConfirmation",
+                    "data", Map.of(
+                        "message", "Complete your vehicle purchase request",
+                        "vehicleData", vehicleData,
+                        "personData", data.get("personData"), // Pass person data for prepopulation
+                        "vehicleInterest", data.get("vehicleInterest")
+                    ),
+                    "stepNumber", 2,
+                    "totalSteps", "3",
+                    "canGoBack", true,
+                    "previousStep", "vehicle-valuation-report",
+                    "status", "SUCCESS"
+            );
+        } else if ("selling".equals(action) && "selling".equals(intent)) {
+            // Route to HasBuyer for selling workflow
+            return Map.of(
+                    "stepId", "has-buyer",
+                    "componentName", "HasBuyer",
+                    "data", Map.of(
+                        "message", "Do you already have a buyer for your vehicle?",
+                        "vehicleData", vehicleData, // Use new vehicle data structure
+                        "personData", data.get("personData"), // Pass person data for prepopulation
+                        "options", Map.of(
+                            "has_buyer", "Yes, I have a buyer",
+                            "no_buyer", "No, I need help finding a buyer"
+                        )
+                    ),
+                    "stepNumber", 2,
+                    "totalSteps", "4-7",
+                    "canGoBack", true,
+                    "previousStep", "vehicle-valuation-report",
+                    "status", "SUCCESS"
+            );
+        } else if ("dealer-search".equals(action) && "dealer-network".equals(intent)) {
+            // Route to DealerNetwork for vehicle search
+            return Map.of(
+                    "stepId", "dealer-network",
+                    "componentName", "DealerNetwork",
+                    "data", Map.of(
+                        "message", "Search our dealer network for similar vehicles",
+                        "vehicleData", vehicleData, // Use new vehicle data structure
+                        "personData", data.get("personData"), // Pass person data for prepopulation
+                        "vehicleInterest", data.get("vehicleInterest"),
+                        "searchMode", true
+                    ),
+                    "stepNumber", 2,
+                    "totalSteps", "3",
+                    "canGoBack", true,
+                    "previousStep", "vehicle-valuation-report",
+                    "status", "SUCCESS"
+            );
+        } else {
+            return createErrorResponse("Invalid action or intent from vehicle valuation report: " + action + "/" + intent);
+        }
+    }
+
+    private Map<String, Object> handleVehiclePurchaseConfirmation(Map<String, Object> data) {
+        log.info("handleVehiclePurchaseConfirmation called with data: {}", data);
+        
+        // Extract the contact info and assistance types
+        @SuppressWarnings("unchecked")
+        Map<String, Object> contactInfo = (Map<String, Object>) data.get("contactInfo");
+        @SuppressWarnings("unchecked")
+        java.util.List<String> assistanceRequested = (java.util.List<String>) data.get("assistanceRequested");
+        
+        // Create completion response based on assistance requested
+        String completionMessage = "Thank you! Your vehicle purchase request has been submitted successfully.";
+        String nextSteps = "Our team will contact you within 24 hours regarding your inquiry.";
+        
+        if (assistanceRequested != null && !assistanceRequested.isEmpty()) {
+            if (assistanceRequested.contains("financing") && assistanceRequested.contains("compliance")) {
+                nextSteps = "Our Finance & Insurance team and Compliance specialists will contact you within 24 hours to assist with both financing and documentation.";
+            } else if (assistanceRequested.contains("financing")) {
+                nextSteps = "Our Finance & Insurance team will contact you within 24 hours to discuss financing options and bank applications.";
+            } else if (assistanceRequested.contains("compliance")) {
+                nextSteps = "Our Compliance team will contact you within 24 hours to assist with FICA documentation and vehicle registration.";
+            }
+        }
+        
+        return Map.of(
+                "stepId", "purchase-complete",
+                "componentName", "PurchaseComplete",
+                "data", Map.of(
+                    "message", completionMessage,
+                    "nextSteps", nextSteps,
+                    "leadId", "PURCHASE-" + System.currentTimeMillis(),
+                    "contactInfo", contactInfo,
+                    "assistanceRequested", assistanceRequested,
+                    "vehicleData", data.get("vehicleData")
+                ),
+                "stepNumber", 3,
+                "totalSteps", "3",
+                "canGoBack", false,
+                "status", "SUCCESS",
+                "workflowComplete", true
+        );
+    }
+
     private Map<String, Object> handleBuyingConfirmation(Map<String, Object> data) {
         // Simulate lead submission via Saga pattern
         return Map.of(
@@ -345,12 +459,17 @@ import java.util.HashMap;
     private Map<String, Object> handleHasBuyer(Map<String, Object> data) {
         String hasBuyer = (String) data.get("has_buyer");
         
+        // Get vehicle data from the request
+        Map<String, Object> vehicleData = createVehicleDataStructure(data);
+        
         if ("has_buyer".equals(hasBuyer)) {
             return Map.of(
                     "stepId", "buyer-type",
                     "componentName", "BuyerType",
                     "data", Map.of(
                         "message", "What type of buyer do you have?",
+                        "vehicleData", vehicleData,
+                        "personData", data.get("personData"),
                         "options", Map.of(
                             "private", "Private individual",
                             "dealer", "Dealer/Trade-in"
@@ -363,16 +482,14 @@ import java.util.HashMap;
                     "status", "SUCCESS"
             );
         } else {
+            // Route to VehicleSellingForm for no buyer scenario
             return Map.of(
-                    "stepId", "dealer-network",
-                    "componentName", "DealerNetwork",
+                    "stepId", "vehicle-selling-form",
+                    "componentName", "VehicleSellingForm",
                     "data", Map.of(
                         "message", "We'll help you find buyers through our dealer network",
-                        "fields", Map.of(
-                            "vehicleInfo", "Vehicle Information",
-                            "condition", "Vehicle Condition",
-                            "mileage", "Current Mileage"
-                        )
+                        "vehicleData", vehicleData,
+                        "personData", data.get("personData")
                     ),
                     "stepNumber", 3,
                     "totalSteps", "4-5",
@@ -381,6 +498,31 @@ import java.util.HashMap;
                     "status", "SUCCESS"
             );
         }
+    }
+
+    private Map<String, Object> handleVehicleSellingForm(Map<String, Object> data) {
+        log.info("handleVehicleSellingForm called with data: {}", data);
+        
+        // Extract the vehicle data from the form submission
+        Map<String, Object> vehicleData = createVehicleDataStructure(data);
+        
+        // Route to dealer network search completion
+        return Map.of(
+                "stepId", "dealer-network-complete",
+                "componentName", "DealerNetworkComplete",
+                "data", Map.of(
+                    "message", "Thank you! We've received your vehicle information and will help you find buyers through our dealer network.",
+                    "nextSteps", "Our dealer network team will contact you within 24 hours with potential buyers and next steps.",
+                    "vehicleData", vehicleData,
+                    "leadId", "SELLING-" + System.currentTimeMillis(),
+                    "formType", "vehicle-selling"
+                ),
+                "stepNumber", 4,
+                "totalSteps", "4",
+                "canGoBack", false,
+                "status", "SUCCESS",
+                "workflowComplete", true
+        );
     }
 
     private Map<String, Object> handleBuyerType(Map<String, Object> data) {
@@ -700,6 +842,28 @@ import java.util.HashMap;
         }
         
         return switch (currentStep) {
+            // VEHICLE VALUATION REPORT FLOW BACK NAVIGATION
+            case "vehicle-purchase-confirmation" -> {
+                log.error("Going back from vehicle-purchase-confirmation to vehicle-valuation-report");
+                yield Map.of(
+                    "stepId", "vehicle-valuation-report",
+                    "componentName", "VehicleValuationReport",
+                    "data", Map.of(
+                        "message", "Professional Vehicle Valuation Report",
+                        "reportData", Map.of(
+                            "make", "Toyota",
+                            "model", "Corolla",
+                            "year", 2020,
+                            "marketValue", 285000
+                        )
+                    ),
+                    "stepNumber", 1,
+                    "totalSteps", "3",
+                    "canGoBack", false,
+                    "status", "SUCCESS"
+                );
+            }
+            
             // BUYING FLOW BACK NAVIGATION
             case "vehicle-knowledge" -> {
                 log.error("Going back from vehicle-knowledge to intent-selection");
@@ -841,7 +1005,7 @@ import java.util.HashMap;
                 );
             }
             
-            case "private-buyer", "dealer-network" -> {
+            case "private-buyer", "dealer-network", "vehicle-selling-form" -> {
                 String previousStep = "private-buyer".equals(currentStep) ? "buyer-type" : "has-buyer";
                 log.error("Going back from {} to {}", currentStep, previousStep);
                 
@@ -905,5 +1069,88 @@ import java.util.HashMap;
                 "status", "SYSTEM_ERROR",
                 "message", message
         );
+    }
+
+    /**
+     * Creates a standardized vehicle data structure from input data
+     * Supports both new structured format and legacy formats
+     */
+    private Map<String, Object> createVehicleDataStructure(Map<String, Object> inputData) {
+        Map<String, Object> vehicleData = new HashMap<>();
+        
+        // Extract from valuationData if present
+        @SuppressWarnings("unchecked")
+        Map<String, Object> valuationData = (Map<String, Object>) inputData.get("valuationData");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> vehicleToSell = (Map<String, Object>) inputData.get("vehicleToSell");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> existingVehicleData = (Map<String, Object>) inputData.get("vehicleData");
+        
+        // Priority: existingVehicleData > valuationData > vehicleToSell > default
+        Map<String, Object> sourceData = existingVehicleData != null ? existingVehicleData :
+                                       valuationData != null ? valuationData :
+                                       vehicleToSell != null ? vehicleToSell : 
+                                       inputData;
+        
+        // New standardized structure with proper keys
+        vehicleData.put("MKT", sourceData.getOrDefault("MKT", "MCV"));
+        vehicleData.put("Id", sourceData.getOrDefault("Id", generateVehicleId()));
+        vehicleData.put("usedVehicleStockID", sourceData.getOrDefault("usedVehicleStockID", generateStockId()));
+        vehicleData.put("year", sourceData.getOrDefault("year", 2023));
+        vehicleData.put("makeName", sourceData.getOrDefault("makeName", sourceData.getOrDefault("make", "Toyota")));
+        vehicleData.put("modelName", sourceData.getOrDefault("modelName", sourceData.getOrDefault("model", "Corolla")));
+        vehicleData.put("variantName", sourceData.getOrDefault("variantName", "Standard"));
+        vehicleData.put("vin", sourceData.getOrDefault("vin", generateVIN()));
+        vehicleData.put("registration", sourceData.getOrDefault("registration", ""));
+        vehicleData.put("mmCode", sourceData.get("mmCode")); // Can be null
+        vehicleData.put("engineNo", sourceData.getOrDefault("engineNo", ""));
+        vehicleData.put("milage", sourceData.getOrDefault("milage", 
+            sourceData.getOrDefault("mileage", 50000))); // Handle both spellings
+        vehicleData.put("colour", sourceData.getOrDefault("colour", 
+            sourceData.getOrDefault("color", "White")));
+        vehicleData.put("provinceName", sourceData.getOrDefault("provinceName", "Gauteng"));
+        vehicleData.put("trim", sourceData.get("trim")); // Can be null
+        vehicleData.put("condition", sourceData.getOrDefault("condition", "Good"));
+        vehicleData.put("stockCode", sourceData.getOrDefault("stockCode", generateStockCode()));
+        vehicleData.put("department", sourceData.getOrDefault("department", "Used"));
+        vehicleData.put("loadDate", sourceData.getOrDefault("loadDate", getCurrentTimestamp()));
+        vehicleData.put("lastTouchDate", sourceData.getOrDefault("lastTouchDate", getCurrentTimestamp()));
+        vehicleData.put("lastChangedDate", sourceData.getOrDefault("lastChangedDate", getCurrentTimestamp()));
+        vehicleData.put("soldDate", sourceData.getOrDefault("soldDate", "1900-01-01 00:00:00"));
+        vehicleData.put("isProgram", sourceData.getOrDefault("isProgram", -1));
+        vehicleData.put("currencySymbol", sourceData.getOrDefault("currencySymbol", 
+            sourceData.getOrDefault("currency", "R")));
+        vehicleData.put("price", sourceData.getOrDefault("price", 
+            sourceData.getOrDefault("marketValue", 285000.0)));
+        vehicleData.put("firstPrice", sourceData.getOrDefault("firstPrice", 
+            sourceData.getOrDefault("price", sourceData.getOrDefault("marketValue", 285000.0))));
+        vehicleData.put("franchise", sourceData.getOrDefault("franchise", "Toyota"));
+        vehicleData.put("extras", sourceData.get("extras")); // Can be null
+        vehicleData.put("comments", sourceData.getOrDefault("comments", ""));
+        
+        return vehicleData;
+    }
+    
+    // Helper methods for generating IDs
+    private int generateVehicleId() {
+        return (int) (Math.random() * 9000000) + 1000000; // 7-digit ID
+    }
+    
+    private int generateStockId() {
+        return (int) (Math.random() * 9000000) + 1000000; // 7-digit stock ID
+    }
+    
+    private String generateVIN() {
+        return "JTF" + String.format("%014d", (long) (Math.random() * 99999999999999L));
+    }
+    
+    private String generateStockCode() {
+        return String.format("%04dUSP%06d", 
+            (int) (Math.random() * 9999) + 1, 
+            (int) (Math.random() * 999999) + 1);
+    }
+    
+    private String getCurrentTimestamp() {
+        return java.time.LocalDateTime.now().toString();
     }
 }

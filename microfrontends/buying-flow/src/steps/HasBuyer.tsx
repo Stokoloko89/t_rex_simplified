@@ -16,7 +16,10 @@ const HasBuyer: React.FC<HasBuyerProps> = ({
   isLoading = false,
 }) => {
   const handleSelection = (choice: string) => {
-    onSubmit({ has_buyer: choice });
+    console.log('HasBuyer - User selected:', choice);
+    const submissionData = { has_buyer: choice };
+    console.log('HasBuyer - Submitting data:', submissionData);
+    onSubmit(submissionData);
   };
 
   const message = initialData?.message || "Do you already have a buyer for your vehicle?";

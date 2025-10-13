@@ -1,6 +1,6 @@
 import React, { Suspense, useRef, useEffect, useState } from 'react';
 import { Alert, Box, Fade, CircularProgress, Typography } from '@mui/material';
-import { LoadingSpinner, StepperComponent } from '@t-rex/shared-ui';
+import { LoadingSpinner } from '@t-rex/shared-ui';
 import { useWorkflow } from '../App';
 
 // Step component imports
@@ -9,6 +9,7 @@ import VehicleSearch from '../steps/VehicleSearch';
 import VehicleDetails from '../steps/VehicleDetails';
 import PersonalInfo from '../steps/PersonalInfo';
 import Confirmation from '../steps/Confirmation';
+import VehicleValuationReport from '../steps/VehicleValuationReport';
 
 // New Core Application Flow components
 import VehicleKnowledge from '../steps/VehicleKnowledge';
@@ -29,6 +30,15 @@ import NoAssistanceNeeded from '../steps/NoAssistanceNeeded';
 import FinancingAssistanceComplete from '../steps/FinancingAssistanceComplete';
 import DealerNetworkComplete from '../steps/DealerNetworkComplete';
 
+// New Purchase Confirmation component
+import VehiclePurchaseConfirmation from '../steps/VehiclePurchaseConfirmation';
+
+// Vehicle Selling Form component
+import VehicleSellingForm from '../steps/VehicleSellingForm';
+
+// Buyer Financing Details component
+import BuyerFinancingDetails from '../steps/BuyerFinancingDetails';
+
 // Component mapping for dynamic loading
 const stepComponents: Record<string, React.ComponentType<any>> = {
   // Original components
@@ -37,6 +47,7 @@ const stepComponents: Record<string, React.ComponentType<any>> = {
   VehicleDetails,
   PersonalInfo,
   Confirmation,
+  VehicleValuationReport,
   
   // Enhanced buying flow
   VehicleKnowledge,
@@ -56,6 +67,15 @@ const stepComponents: Record<string, React.ComponentType<any>> = {
   NoAssistanceNeeded,
   FinancingAssistanceComplete,
   DealerNetworkComplete,
+  
+  // New Purchase Confirmation component
+  VehiclePurchaseConfirmation,
+  
+  // Vehicle Selling Form component
+  VehicleSellingForm,
+  
+  // Buyer Financing Details component
+  BuyerFinancingDetails,
 };
 
 const StepRenderer: React.FC = () => {
@@ -227,33 +247,11 @@ const StepRenderer: React.FC = () => {
     );
   }
 
-  // Dynamic stepper based on workflow type and progress
-  const getDynamicSteps = () => {
-    const stepId = currentStepConfig.stepId;
-    const totalSteps = currentStepConfig.totalSteps;
-    
-    // If we have dynamic total steps, create a generic stepper
-    if (typeof totalSteps === 'string' && (totalSteps as string).includes('-')) {
-      const [min, max] = (totalSteps as string).split('-').map(Number);
-      const currentStep = currentStepConfig.stepNumber || 1;
-      const estimatedTotal = Math.min(max, Math.max(min, currentStep + 2));
-      
-      return Array.from({ length: estimatedTotal }, (_, i) => `Step ${i + 1}`);
-    }
-    
-    // Fallback to original stepper for backward compatibility
-    return ['Intent', 'Search', 'Details', 'Info', 'Confirm'];
-  };
-
-  const steps = getDynamicSteps();
-  const activeStep = Math.min((currentStepConfig.stepNumber || 1) - 1, steps.length - 1);
+  // Stepper functionality removed for cleaner modal experience
 
   return (
     <Box>
-      <StepperComponent 
-        steps={steps} 
-        activeStep={activeStep} 
-      />
+      {/* Progress stepper removed for cleaner modal experience */}
       
       <Box 
         ref={containerRef}

@@ -21,14 +21,23 @@ const PrivateBuyer: React.FC<PrivateBuyerProps> = ({
   });
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    console.log('PrivateBuyer - Input change:', { field, value });
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      console.log('PrivateBuyer - Updated form data:', newData);
+      return newData;
+    });
   };
 
   const handleSubmit = () => {
-    onSubmit({ 
+    console.log('PrivateBuyer - handleSubmit called');
+    console.log('PrivateBuyer - Current form data:', formData);
+    const submissionData = { 
       private_buyer_details: formData,
       buyer_type: 'private'
-    });
+    };
+    console.log('PrivateBuyer - Submitting data:', submissionData);
+    onSubmit(submissionData);
   };
 
   const isFormValid = formData.financing;
