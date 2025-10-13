@@ -113,3 +113,36 @@ public/
 
 # Yarn Integrity file
 .yarn-integrity
+
+# Add these to your existing .gitignore
+
+# Build artifacts that might contain index.html
+**/dist/index.html
+**/build/index.html
+
+# Generated HTML files (if applicable)
+**/generated/
+**/temp/
+
+# Editor temp files
+*.tmp.html
+*.temp.html
+
+# System files that might affect HTML
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE specific files that might affect HTML generation
+.vscode/settings.json
+.vscode/launch.json
+.idea/workspace.xml
+.idea/tasks.xml
+*.swp
+*.swo
+*~
