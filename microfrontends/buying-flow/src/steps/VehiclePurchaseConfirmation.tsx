@@ -239,7 +239,18 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
       vin: vehicleData.vin || '',
       registration: vehicleData.registration || '',
       province: vehicleData.provinceName || '',
-      franchise: vehicleData.franchise || ''
+      franchise: vehicleData.franchise || '',
+      engineNo: vehicleData.engineNo || '',
+      bodyType: vehicleData.bodyType || 'Unknown',
+      transmission: vehicleData.transmission || 'Unknown',
+      fuelType: vehicleData.fuelType || 'Unknown',
+      engineSize: vehicleData.engineSize || '',
+      trim: vehicleData.trim || '',
+      extras: vehicleData.extras || '',
+      comments: vehicleData.comments || '',
+      firstPrice: vehicleData.firstPrice || vehicleData.price || 0,
+      loadDate: vehicleData.loadDate ? new Date(vehicleData.loadDate).toLocaleDateString() : '',
+      lastTouchDate: vehicleData.lastTouchDate ? new Date(vehicleData.lastTouchDate).toLocaleDateString() : ''
     };
   };
 
@@ -371,7 +382,7 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
           }}>
             <Box
               component="img"
-              src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=300&fit=crop&crop=center"
+              src="https://news-site-za.s3.af-south-1.amazonaws.com/images/2021/02/2012-Chevrolet-Sonic-Sedan.jpg"
               alt={`${vehicleData.make} ${vehicleData.model}`}
               sx={{
                 width: '100%',
@@ -412,36 +423,94 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
               <Stack spacing={2} sx={{ pt: 2, borderTop: '1px solid #f0f0f0' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Department:</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{displayData.department}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Color:</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{displayData.color}</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.department}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Mileage:</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{displayData.mileage}</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.mileage}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Condition:</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{displayData.condition}</Typography>
+                  <Typography variant="body2" color="text.secondary">Color:</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.color}</Typography>
                 </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Body Type:</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.bodyType}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Transmission:</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.transmission}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Fuel Type:</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.fuelType}</Typography>
+                </Box>
+                {displayData.engineSize && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">Engine Size:</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.engineSize}</Typography>
+                  </Box>
+                )}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Condition:</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.condition}</Typography>
+                </Box>
+                {displayData.stockCode && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">Stock Code:</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.stockCode}</Typography>
+                  </Box>
+                )}
                 {displayData.registration && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="body2" color="text.secondary">Registration:</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{displayData.registration}</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.registration}</Typography>
+                  </Box>
+                )}
+                {displayData.vin && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">VIN:</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>{displayData.vin}</Typography>
+                  </Box>
+                )}
+                {displayData.engineNo && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">Engine No:</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.engineNo}</Typography>
                   </Box>
                 )}
                 {displayData.province && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="body2" color="text.secondary">Province:</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{displayData.province}</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.province}</Typography>
                   </Box>
                 )}
                 {displayData.franchise && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="body2" color="text.secondary">Franchise:</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{displayData.franchise}</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.franchise}</Typography>
+                  </Box>
+                )}
+                {displayData.firstPrice !== displayData.price && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">Original Price:</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600, textDecoration: 'line-through', color: 'text.secondary' }}>
+                      {displayData.currency}{displayData.firstPrice?.toLocaleString()}
+                    </Typography>
+                  </Box>
+                )}
+                {displayData.comments && (
+                  <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #f0f0f0' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Comments:</Typography>
+                    <Typography variant="body1" sx={{ lineHeight: 1.4 }}>
+                      {displayData.comments}
+                    </Typography>
+                  </Box>
+                )}
+                {displayData.loadDate && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                    <Typography variant="body2" color="text.secondary">Added to Inventory:</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{displayData.loadDate}</Typography>
                   </Box>
                 )}
               </Stack>

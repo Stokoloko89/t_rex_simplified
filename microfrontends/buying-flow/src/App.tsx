@@ -178,6 +178,8 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   const mockNavigate = async (formData: any) => {
     console.log('Mock navigate called with:', formData);
     const currentStep = currentStepConfig?.stepId;
+    console.log('Current step ID:', currentStep);
+    console.log('Form data action:', formData.action);
     let nextStep: WorkflowStep | null = null;
 
     switch (currentStep) {
@@ -287,22 +289,46 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         }
         break;
       case 'vehicle-search':
+        console.log('App.tsx: Navigating from vehicle-search to SearchResults with data:', formData);
         nextStep = {
           stepId: 'search-results',
           componentName: 'SearchResults',
-          data: { ...formData, message: 'Here are vehicles matching your criteria' },
+          data: { 
+            ...formData, 
+            message: 'Here are vehicles matching your criteria',
+            vehicleSearch: formData.vehicleSearch // Ensure vehicleSearch data is preserved
+          },
           stepNumber: 4,
           totalSteps: 6
         };
         break;
       case 'search-results':
-        nextStep = {
-          stepId: 'buying-confirmation',
-          componentName: 'BuyingConfirmation',
-          data: { ...formData, message: 'Confirm your vehicle selection and provide contact details' },
-          stepNumber: 5,
-          totalSteps: 6
-        };
+        console.log('App.tsx: Navigating from search-results with action:', formData.action);
+        if (formData.action === 'vehicle-selected' && formData.selectedVehicle) {
+          nextStep = {
+            stepId: 'buying-confirmation',
+            componentName: 'BuyingConfirmation',
+            data: { 
+              ...formData, 
+              message: `Complete your purchase request for the ${formData.selectedVehicle.year} ${formData.selectedVehicle.makeName} ${formData.selectedVehicle.modelName}`,
+              selectedVehicle: formData.selectedVehicle
+            },
+            stepNumber: 5,
+            totalSteps: 6
+          };
+        } else {
+          // Fallback case
+          nextStep = {
+            stepId: 'buying-confirmation',
+            componentName: 'BuyingConfirmation',
+            data: { 
+              ...formData, 
+              message: 'Confirm your vehicle selection and provide contact details'
+            },
+            stepNumber: 5,
+            totalSteps: 6
+          };
+        }
         break;
       case 'has-buyer':
         // Handle HasBuyer transitions
@@ -469,6 +495,7 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       await smoothTransition(nextStep);
     } else {
       console.warn('No next step defined for current transition:', { currentStep, formData });
+      console.warn('Available cases in switch statement: intent-selection, vehicle-knowledge, vehicle-search, search-results, has-buyer, buyer-type, private-buyer, dealer-network, vehicle-selling-form, buyer-financing-details');
     }
   };
 

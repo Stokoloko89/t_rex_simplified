@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Test documentation for VehicleSearch navigation flow">
+    <meta name="author" content="T-Rex Development Team">
+    <title>VehicleSearch Navigation Test Suite</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .test-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .test-steps {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 20px;
+        }
+
+        .step {
+            display: flex;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 3px solid #28a745;
+        }
+
+        .step-number {
+            background: #007bff;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .debug-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+        }
+
+        .console-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .success { color: #28a745; }
+        .warning { color: #ffc107; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+
+        .edge-cases {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 15px;
+        }
+
+        .edge-case {
+            margin: 8px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 3px;
+        }
+
+        .test-metadata {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>🚗 VehicleSearch Navigation Test Suite</h1>
+        <p>Comprehensive testing documentation for vehicle search workflow navigation</p>
+    </div>
+
+    <div class="test-metadata">
+        <div class="tags">
+            <span class="tag">Navigation</span>
+            <span class="tag">VehicleSearch</span>
+            <span class="tag">Integration Test</span>
+            <span class="tag">Manual Test</span>
+        </div>
+        <p><strong>Test Environment:</strong> Local Development | <strong>Browser:</strong> Chrome/Firefox | <strong>URL:</strong> http://localhost:3002</p>
+        <p><strong>Last Updated:</strong> 2025-01-13 | <strong>Test Priority:</strong> High | <strong>Estimated Time:</strong> 5 minutes</p>
+    </div>
+
+    <section class="test-section">
+        <h2>📋 Test Overview</h2>
+        <p>This test validates the navigation flow from VehicleSearch component to SearchResults, ensuring proper state management and user experience continuity.</p>
+
+        <h3>Preconditions</h3>
+        <ul>
+            <li>Application is running on http://localhost:3002</li>
+            <li>Browser console is accessible (F12)</li>
+            <li>No active browser extensions that might interfere</li>
+        </ul>
+    </section>
+
+    <section class="test-section">
+        <h2>🧪 Test Steps</h2>
+        <div class="test-steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>
+                    <strong>Open Application</strong><br>
+                    Navigate to <code>http://localhost:3002</code> in your browser
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>
+                    <strong>Access Valuation Report</strong><br>
+                    Click the "Click here for your valuation report" link
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>
+                    <strong>Initiate Purchase Flow</strong><br>
+                    Click "I want to buy this Vehicle" button
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div>
+                    <strong>Confirm Vehicle Knowledge</strong><br>
+                    Click "Yes, I know exactly which vehicle I want to buy"
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">5</div>
+                <div>
+                    <strong>Verify VehicleSearch Page</strong><br>
+                    Confirm you are now on the VehicleSearch page<br>
+                    <em>Expected URL pattern: Contains 'vehicle-search' segment</em>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">6</div>
+                <div>
+                    <strong>Select Vehicle Make</strong><br>
+                    From the dropdown, select a vehicle make (e.g., "BMW")<br>
+                    <em>Note: Leave other fields empty for this test</em>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">7</div>
+                <div>
+                    <strong>Execute Search</strong><br>
+                    Click the "Search Vehicles" button to submit the form
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">8</div>
+                <div>
+                    <strong>Verify Navigation</strong><br>
+                    <span class="success">✅ Expected:</span> Page should navigate to SearchResults<br>
+                    <span class="warning">⚠️ Actual:</span> Check browser console for debug messages
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="test-section debug-section">
+        <h2>🔍 Debug Information Checklist</h2>
+        <p>After executing the test, verify the following messages appear in the browser console (F12 → Console tab):</p>
+
+        <div style="background: white; padding: 15px; border-radius: 4px;">
+            <div class="console-output">
+<span class="info">ℹ️ VehicleSearch handleSubmit called with searchData: {make: "BMW", model: "", ...}</span>
+<span class="info">ℹ️ VehicleSearch submitting: {nextStep: "SearchResults", action: "vehicle-search", ...}</span>
+<span class="info">ℹ️ Mock navigate called with: {nextStep: "SearchResults", action: "vehicle-search", ...}</span>
+<span class="info">ℹ️ Current step ID: vehicle-search</span>
+<span class="info">ℹ️ Form data action: vehicle-search</span>
+<span class="info">ℹ️ App.tsx: Navigating from vehicle-search to SearchResults with data: {...}</span>
+<span class="info">ℹ️ Transitioning to next step: {stepId: "search-results", componentName: "SearchResults", ...}</span>
+            </div>
+        </div>
+
+        <h3>Console Verification Points</h3>
+        <ul>
+            <li><label><input type="checkbox"> "VehicleSearch handleSubmit called" - Confirms form submission handler is triggered</label></li>
+            <li><label><input type="checkbox"> "Mock navigate called with:" - Verifies navigation function is called with correct parameters</label></li>
+            <li><label><input type="checkbox"> "Current step ID: vehicle-search" - Ensures current step context is correct</label></li>
+            <li><label><input type="checkbox"> "App.tsx: Navigating from vehicle-search to SearchResults" - Confirms main app navigation logic</label></li>
+            <li><label><input type="checkbox"> "Transitioning to next step:" - Validates workflow state transition</label></li>
+        </ul>
+    </section>
+
+    <section class="test-section">
+        <h2>✅ Expected Results</h2>
+        <div style="background: #d4edda; padding: 15px; border-radius: 4px; border-left: 4px solid #28a745;">
+            <strong>Success Criteria:</strong>
+            <ul>
+                <li>✅ Page navigates to SearchResults component</li>
+                <li>✅ All console messages appear in the specified order</li>
+                <li>✅ No JavaScript errors in the console</li>
+                <li>✅ Form data is correctly passed to the next step</li>
+                <li>✅ URL updates to reflect the new step</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="test-section edge-cases">
+        <h2>⚠️ Edge Cases & Error Scenarios</h2>
+
+        <h3>Test Additional Scenarios</h3>
+        <div class="edge-case">
+            <strong>Empty Form Submission:</strong> Try submitting without selecting any make/model
+            <br><em>Expected: Form validation should prevent submission or show appropriate error</em>
+        </div>
+
+        <div class="edge-case">
+            <strong>Network Interruption:</strong> Disconnect network during form submission
+            <br><em>Expected: Graceful error handling with user feedback</em>
+        </div>
+
+        <div class="edge-case">
+            <strong>Browser Refresh:</strong> Refresh the page during VehicleSearch
+            <br><em>Expected: Should maintain form state or reset gracefully</em>
+        </div>
+
+        <div class="edge-case">
+            <strong>Slow Network:</strong> Test with throttled network connection (DevTools → Network tab)
+            <br><em>Expected: Loading states should be displayed appropriately</em>
+        </div>
+
+        <h3>Browser Compatibility</h3>
+        <div class="edge-case">
+            <strong>Cross-browser Testing:</strong> Verify functionality in Chrome, Firefox, Safari, Edge
+        </div>
+    </section>
+
+    <section class="test-section">
+        <h2>📝 Test Results</h2>
+        <div style="background: white; border: 2px solid #007bff; border-radius: 4px; padding: 20px;">
+            <h3>Execution Log</h3>
+            <p><strong>Tester:</strong> ____________________ <strong>Date:</strong> _______________ <strong>Time:</strong> _______________</p>
+
+            <div style="margin: 15px 0;">
+                <strong>Test Result:</strong><br>
+                <label><input type="radio" name="result"> ✅ PASS</label>
+                <label><input type="radio" name="result"> ❌ FAIL</label>
+                <label><input type="radio" name="result"> ⚠️ PARTIAL</label>
+            </div>
+
+            <div style="margin: 15px 0;">
+                <strong>Notes/Issues:</strong><br>
+                <textarea style="width: 100%; min-height: 80px; border: 1px solid #ccc; border-radius: 4px; padding: 8px;" placeholder="Document any issues, unexpected behavior, or additional observations..."></textarea>
+            </div>
+        </div>
+    </section>
+
+    <section class="test-section">
+        <h2>🔗 Related Documentation</h2>
+        <ul>
+            <li><a href="T-Rex_Implementation_Plan.md">Implementation Plan</a></li>
+            <li><a href="TROUBLESHOOTING.md">Troubleshooting Guide</a></li>
+            <li><a href="VEHICLE_PURCHASE_CONFIRMATION_FEATURES.md">Vehicle Purchase Features</a></li>
+        </ul>
+    </section>
+
+    <section class="test-section">
+        <h2>🏗️ Application Architecture Diagram</h2>
+        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6;">
+            <pre class="mermaid">
+graph TB
+    %% Define styles for different component types
+    classDef hostApp fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef microfrontend fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef backend fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef ui fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef nginx fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+
+    %% Main entry point
+    User([👤 User]) --> NGINX[Nginx Reverse Proxy]
+
+    %% Host Application
+    NGINX --> HostApp[Host Application<br/>React + Module Federation]
+    HostApp class hostApp
+
+    %% Microfrontends
+    HostApp --> BuyingFlow[Buying Flow Microfrontend<br/>React + TypeScript]
+    BuyingFlow class microfrontend
+
+    %% Shared UI Components
+    subgraph "Shared Components"
+        SharedUI[Shared UI Library<br/>React Components]
+        SharedUI class ui
+    end
+
+    HostApp -.-> SharedUI
+    BuyingFlow -.-> SharedUI
+
+    %% Backend Services
+    subgraph "Backend Services"
+        WorkflowService[Workflow Service<br/>Java Spring Boot]
+        VehicleAPI[Vehicle API<br/>REST Endpoints]
+        Database[(PostgreSQL<br/>Vehicle & Workflow Data)]
+        WorkflowService class backend
+        VehicleAPI class backend
+    end
+
+    %% Buying Flow Steps
+    subgraph "Buying Flow Steps"
+        Start([Start]) --> ValuationReport[Vehicle Valuation Report]
+        ValuationReport --> IntentSelection[Intent Selection]
+        IntentSelection --> VehicleKnowledge[Vehicle Knowledge Check]
+        VehicleKnowledge --> VehicleSearchForm[Vehicle Search Form]
+        VehicleSearchForm --> SearchResults[Search Results]
+        SearchResults --> VehicleDetails[Vehicle Details]
+        VehicleDetails --> BuyerType[Buyer Type Selection]
+        BuyerType --> PersonalInfo[Personal Information]
+        PersonalInfo --> Financing[Financing Assistance]
+        Financing --> Confirmation[Purchase Confirmation]
+        Confirmation --> Complete[Transaction Complete]
+    end
+
+    %% Data Flow Connections
+    BuyingFlow -.-> WorkflowService
+    WorkflowService -.-> Database
+    VehicleAPI -.-> Database
+
+    %% Styling and layout
+    User -.-> HostApp
+    HostApp -.-> BuyingFlow
+
+    %% Technology labels
+    HostApp -.->|Module Federation| BuyingFlow
+    BuyingFlow -.->|REST API| WorkflowService
+    WorkflowService -.->|JDBC| Database
+
+    %% Click events for interactivity
+    click ValuationReport "microfrontends/buying-flow/src/steps/VehicleValuationReport.tsx"
+    click VehicleSearchForm "microfrontends/buying-flow/src/steps/VehicleSearch.tsx"
+    click SearchResults "microfrontends/buying-flow/src/steps/SearchResults.tsx"
+    click WorkflowService "backend/workflowservice/src/main/java/com/trex/workflowservice/WorkflowServiceApplication.java"
+</pre>
+        </div>
+        <p><em>💡 Click on components above to navigate to their source code</em></p>
+    </section>
+
+    <section class="test-section">
+        <h2>🔄 Workflow State Management</h2>
+        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6;">
+            <pre class="mermaid">
+stateDiagram-v2
+    [*] --> Start: Application Load
+    Start --> ValuationReport: "Click here for valuation report"
+    ValuationReport --> IntentSelection: "I want to buy this vehicle"
+    IntentSelection --> VehicleKnowledge: "Yes, I know which vehicle I want"
+    VehicleKnowledge --> VehicleSearchForm: "Search for vehicle"
+    VehicleSearchForm --> SearchResults: Form submission with data
+    SearchResults --> VehicleDetails: Select specific vehicle
+    VehicleDetails --> BuyerType: Choose buyer type
+    BuyerType --> PersonalInfo: Enter buyer information
+    PersonalInfo --> Financing: Financing assistance check
+    Financing --> Confirmation: Confirm purchase
+    Confirmation --> Complete: Final confirmation
+
+    %% Error states
+    VehicleSearchForm --> ErrorState: Invalid search/empty form
+    ErrorState --> VehicleSearchForm: Retry search
+    SearchResults --> NoResults: No vehicles found
+    NoResults --> VehicleSearchForm: Refine search
+
+    %% Notes
+    Note right of VehicleSearchForm: Validates form data<br/>Calls workflow service
+    Note right of SearchResults: Displays vehicle list<br/>Handles selection
+    Note right of Confirmation: Final purchase confirmation<br/>Creates transaction record
+
+    Complete --> [*]: Workflow finished
+    ErrorState --> [*]: User abandons flow
+</pre>
+        </div>
+    </section>
+
+    <section class="test-section">
+        <h2>🏛️ System Architecture Overview</h2>
+        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #dee2e6;">
+            <pre class="mermaid">
+graph LR
+    %% External Systems
+    subgraph "External Integrations"
+        DealerAPI[🚗 Dealer API]
+        FinanceAPI[💰 Finance Partner API]
+        Analytics[📊 Analytics Service]
+    end
+
+    %% T-Rex Platform
+    subgraph "T-Rex Microfrontend Platform"
+        %% Infrastructure Layer
+        subgraph "Infrastructure"
+            Docker[Docker Containers]
+            K8s[(Kubernetes<br/>Optional)]
+            NginxProxy[Nginx Proxy & Load Balancer]
+        end
+
+        %% Application Layer
+        subgraph "Applications"
+            HostApplication[Host App<br/>React + Webpack]
+            BuyingFlowMF[Buying Flow MF<br/>React + TypeScript]
+            SharedComponents[Shared UI<br/>Rollup + React]
+        end
+
+        %% Backend Layer
+        subgraph "Backend Services"
+            WorkflowEngine[Workflow Engine<br/>Java + Spring Boot]
+            VehicleService[Vehicle Service<br/>CRUD Operations]
+            StateManager[State Manager<br/>Workflow State]
+        end
+
+        %% Data Layer
+        subgraph "Data Persistence"
+            PostgresDB[(PostgreSQL<br/>Primary DB)]
+            RedisCache[(Redis Cache<br/>Session State)]
+            FileStorage[(File Storage<br/>Documents/Images)]
+        end
+    end
+
+    %% Connections
+    HostApplication --> NginxProxy
+    BuyingFlowMF --> NginxProxy
+    NginxProxy --> Docker
+
+    HostApplication -.->|Module Federation| BuyingFlowMF
+    HostApplication -.-> SharedComponents
+    BuyingFlowMF -.-> SharedComponents
+
+    WorkflowEngine --> PostgresDB
+    VehicleService --> PostgresDB
+    StateManager --> RedisCache
+
+    %% External connections
+    WorkflowEngine -.-> DealerAPI
+    WorkflowEngine -.-> FinanceAPI
+    Analytics -.-> PostgresDB
+
+    %% Styling
+    classDef infra fill:#e3f2fd,stroke:#1976d2
+    classDef app fill:#f3e5f5,stroke:#7b1fa2
+    classDef backend fill:#e8f5e8,stroke:#388e3c
+    classDef data fill:#fff3e0,stroke:#f57c00
+    classDef external fill:#fce4ec,stroke:#c2185b
+
+    class Docker,K8s,NginxProxy infra
+    class HostApplication,BuyingFlowMF,SharedComponents app
+    class WorkflowEngine,VehicleService,StateManager backend
+    class PostgresDB,RedisCache,FileStorage data
+    class DealerAPI,FinanceAPI,Analytics external
+</pre>
+        </div>
+    </section>
+
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #dee2e6; color: #6c757d; text-align: center;">
+        <p>© 2025 T-Rex Development Team | Test documentation with integrated architecture diagrams</p>
+    </footer>
+
+    <script type="module">
+        // Import Mermaid for diagram rendering
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/+esm';
+
+        // Initialize Mermaid with custom config
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontSize: '14px',
+                primaryColor: '#007bff',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#0056b3',
+                lineColor: '#007bff',
+                sectionBkgColor: '#f8f9fa',
+                altSectionBkgColor: '#e9ecef',
+                gridColor: '#dee2e6',
+                tertiaryColor: '#6c757d'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        // Auto-populate test date
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateField = document.querySelector('input[type="date"], input[placeholder*="Date"]');
+            if (dateField) {
+                dateField.value = new Date().toISOString().split('T')[0];
+            }
+        });
+
+        // Console verification helper
+        window.verifyConsoleOutput = function() {
+            const expectedMessages = [
+                'VehicleSearch handleSubmit called',
+                'Mock navigate called with:',
+                'Current step ID: vehicle-search',
+                'App.tsx: Navigating from vehicle-search to SearchResults',
+                'Transitioning to next step:'
+            ];
+
+            console.log('🔍 Console Verification Helper');
+            console.log('Expected messages to look for:', expectedMessages);
+            console.log('Check off each item in the Debug Checklist as you find them');
+        };
+
+        // Development helper - uncomment to enable
+        // window.verifyConsoleOutput();
+    </script>
+</body>
+</html>

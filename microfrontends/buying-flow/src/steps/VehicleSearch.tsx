@@ -124,11 +124,72 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     }
   }, [searchData.make]);
 
+  // Load filtered options when make or model changes
+  useEffect(() => {
+    const loadFilteredOptions = async () => {
+      if (searchData.make || searchData.model) {
+        try {
+          const params = new URLSearchParams();
+          if (searchData.make) params.append('make', searchData.make);
+          if (searchData.model) params.append('model', searchData.model);
+
+          // Load filtered options in parallel
+          const [bodyTypesRes, fuelTypesRes, provincesRes] = await Promise.all([
+            fetch(`http://localhost:8080/api/vehicles/filtered/body-types?${params}`),
+            fetch(`http://localhost:8080/api/vehicles/filtered/fuel-types?${params}`),
+            fetch(`http://localhost:8080/api/vehicles/filtered/provinces?${params}`)
+          ]);
+
+          const [bodyTypes, fuelTypes, provinces] = await Promise.all([
+            bodyTypesRes.json(),
+            fuelTypesRes.json(),
+            provincesRes.json()
+          ]);
+
+          setFilters(prev => ({
+            ...prev,
+            bodyTypes: bodyTypes || [],
+            fuelTypes: fuelTypes || [],
+            provinces: provinces || []
+          }));
+
+          // Clear selections that are no longer valid
+          setSearchData(prev => {
+            const newData = { ...prev };
+            if (prev.bodyType && !bodyTypes.includes(prev.bodyType)) {
+              newData.bodyType = '';
+            }
+            if (prev.fuelType && !fuelTypes.includes(prev.fuelType)) {
+              newData.fuelType = '';
+            }
+            if (prev.province && !provinces.includes(prev.province)) {
+              newData.province = '';
+            }
+            return newData;
+          });
+
+        } catch (error) {
+          console.error('Error loading filtered options:', error);
+        }
+      }
+    };
+
+    loadFilteredOptions();
+  }, [searchData.make, searchData.model]);
+
   const handleSubmit = () => {
-    onSubmit({
+    console.log('VehicleSearch handleSubmit called with searchData:', searchData);
+    const submissionData = {
+      nextStep: 'SearchResults',
+      stepId: 'search-results',
+      componentName: 'SearchResults',
+      action: 'vehicle-search',
+      intent: 'search-vehicles',
       ...initialData,
       vehicleSearch: searchData,
-    });
+    };
+    console.log('VehicleSearch submitting:', submissionData);
+    onSubmit(submissionData);
   };
 
   const handleInputChange = (field: string, value: any) => {

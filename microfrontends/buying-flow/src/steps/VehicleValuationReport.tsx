@@ -174,21 +174,19 @@ const VehicleValuationReport: React.FC<VehicleValuationReportProps> = ({
             brought to you by
           </Typography>
           
-          {/* Lightstone Logo SVG */}
+          {/* Company Logo */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}>
-            <svg width="120" height="25" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg">
-              {/* Lightstone text */}
-              <text x="0" y="25" fontFamily="Arial, sans-serif" fontSize="40" fontWeight="normal" fill="#2c5aa0">
-                Lightstone
-              </text>
-              
-              {/* Colored underline bars */}
-              <rect x="0" y="28" width="25" height="3" fill="#e74c3c" />
-              <rect x="25" y="28" width="25" height="3" fill="#f39c12" />
-              <rect x="50" y="28" width="25" height="3" fill="#27ae60" />
-              <rect x="75" y="28" width="25" height="3" fill="#3498db" />
-              <rect x="100" y="28" width="25" height="3" fill="#9b59b6" />
-            </svg>
+            <Box
+              component="img"
+              src="/Screenshot 2025-10-13 113036.png"
+              alt="Company Logo"
+              sx={{
+                height: '50px',
+                width: 'auto',
+                maxWidth: '200px',
+                objectFit: 'contain'
+              }}
+            />
           </Box>
           
           <Typography variant="body2" sx={{ 
