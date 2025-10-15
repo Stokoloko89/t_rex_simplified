@@ -39,6 +39,10 @@ import VehicleSellingForm from '../steps/VehicleSellingForm';
 // Buyer Financing Details component
 import BuyerFinancingDetails from '../steps/BuyerFinancingDetails';
 
+// New simplified flow components
+import FormCompletionConfirmation from '../steps/FormCompletionConfirmation';
+import VehicleHelpQuestion from '../steps/VehicleHelpQuestion';
+
 // Component mapping for dynamic loading
 const stepComponents: Record<string, React.ComponentType<any>> = {
   // Original components
@@ -76,6 +80,10 @@ const stepComponents: Record<string, React.ComponentType<any>> = {
   
   // Buyer Financing Details component
   BuyerFinancingDetails,
+
+  // New simplified flow components
+  FormCompletionConfirmation,
+  VehicleHelpQuestion,
 };
 
 const StepRenderer: React.FC = () => {
@@ -277,7 +285,7 @@ const StepRenderer: React.FC = () => {
                 <StepComponent
                   initialData={currentStepConfig.data}
                   onSubmit={navigate}
-                  onBack={(currentStepConfig as any).canGoBack ? goBack : undefined}
+                  onBack={goBack}
                   isLoading={isLoading}
                 />
               </Suspense>

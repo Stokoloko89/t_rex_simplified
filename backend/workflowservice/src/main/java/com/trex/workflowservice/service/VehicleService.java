@@ -191,4 +191,41 @@ public class VehicleService {
         summary.put("isLast", vehiclePage.isLast());
         return summary;
     }
+    
+    // Get filtered ranges based on current selections
+    public Map<String, Object> getFilteredRanges(String make, String model, String bodyType, String fuelType, String province) {
+        logger.info("Getting filtered ranges for make: {}, model: {}, bodyType: {}, fuelType: {}, province: {}", 
+                   make, model, bodyType, fuelType, province);
+        
+        Map<String, Object> ranges = new HashMap<>();
+        
+        // Get filtered price range
+        Object[] priceRange = vehicleRepository.findPriceRangeByFilters(make, model, bodyType, fuelType, province);
+        if (priceRange != null && priceRange.length == 2 && priceRange[0] != null && priceRange[1] != null) {
+            Map<String, BigDecimal> priceRangeMap = new HashMap<>();
+            priceRangeMap.put("min", (BigDecimal) priceRange[0]);
+            priceRangeMap.put("max", (BigDecimal) priceRange[1]);
+            ranges.put("priceRange", priceRangeMap);
+        }
+        
+        // Get filtered year range
+        Object[] yearRange = vehicleRepository.findYearRangeByFilters(make, model, bodyType, fuelType, province);
+        if (yearRange != null && yearRange.length == 2 && yearRange[0] != null && yearRange[1] != null) {
+            Map<String, Integer> yearRangeMap = new HashMap<>();
+            yearRangeMap.put("min", (Integer) yearRange[0]);
+            yearRangeMap.put("max", (Integer) yearRange[1]);
+            ranges.put("yearRange", yearRangeMap);
+        }
+        
+        // Get filtered mileage range
+        Object[] mileageRange = vehicleRepository.findMileageRangeByFilters(make, model, bodyType, fuelType, province);
+        if (mileageRange != null && mileageRange.length == 2 && mileageRange[0] != null && mileageRange[1] != null) {
+            Map<String, Integer> mileageRangeMap = new HashMap<>();
+            mileageRangeMap.put("min", (Integer) mileageRange[0]);
+            mileageRangeMap.put("max", (Integer) mileageRange[1]);
+            ranges.put("mileageRange", mileageRangeMap);
+        }
+        
+        return ranges;
+    }
 }

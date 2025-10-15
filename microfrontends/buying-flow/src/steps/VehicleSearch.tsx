@@ -11,9 +11,9 @@ import {
   Select,
   MenuItem,
   Slider,
-  Button as MuiButton,
+  Button,
+  CircularProgress,
 } from '@mui/material';
-import { Button } from '@t-rex/shared-ui';
 import { Search } from '@mui/icons-material';
 
 interface VehicleSearchProps {
@@ -177,6 +177,86 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     loadFilteredOptions();
   }, [searchData.make, searchData.model]);
 
+  // Load dynamic ranges when any filter changes (excluding slider values to prevent loops)
+  useEffect(() => {
+    const loadDynamicRanges = async () => {
+      // Only fetch if at least one filter is selected
+      if (searchData.make || searchData.model || searchData.bodyType || searchData.fuelType || searchData.province) {
+        try {
+          const params = new URLSearchParams();
+          if (searchData.make) params.append('make', searchData.make);
+          if (searchData.model) params.append('model', searchData.model);
+          if (searchData.bodyType) params.append('bodyType', searchData.bodyType);
+          if (searchData.fuelType) params.append('fuelType', searchData.fuelType);
+          if (searchData.province) params.append('province', searchData.province);
+
+          console.log('Fetching dynamic ranges with params:', params.toString());
+          
+          const response = await fetch(`http://localhost:8080/api/vehicles/filtered/ranges?${params}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (!response.ok) {
+            console.warn('Failed to fetch dynamic ranges:', response.status, response.statusText);
+            return;
+          }
+
+          const ranges = await response.json();
+          console.log('Received dynamic ranges:', ranges);
+
+          // Update filter ranges and adjust slider values in one update
+          setFilters(prev => {
+            const newFilters = { ...prev };
+            
+            if (ranges.priceRange) {
+              newFilters.priceRange = ranges.priceRange;
+            }
+            if (ranges.yearRange) {
+              newFilters.yearRange = ranges.yearRange;
+            }
+            
+            return newFilters;
+          });
+
+          // Adjust search data to fit within new ranges
+          setSearchData(prev => {
+            const newData = { ...prev };
+            
+            if (ranges.priceRange) {
+              newData.priceRange = [
+                Math.max(prev.priceRange[0], ranges.priceRange.min),
+                Math.min(prev.priceRange[1], ranges.priceRange.max)
+              ];
+            }
+            
+            if (ranges.yearRange) {
+              newData.yearRange = [
+                Math.max(prev.yearRange[0], ranges.yearRange.min),
+                Math.min(prev.yearRange[1], ranges.yearRange.max)
+              ];
+            }
+            
+            if (ranges.mileageRange) {
+              newData.mileageMax = Math.min(prev.mileageMax, ranges.mileageRange.max);
+            }
+            
+            return newData;
+          });
+
+        } catch (error) {
+          console.error('Error loading dynamic ranges (CORS or network issue):', error);
+          // Gracefully handle CORS errors - sliders will still work with initial ranges
+        }
+      }
+    };
+
+    loadDynamicRanges();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchData.make, searchData.model, searchData.bodyType, searchData.fuelType, searchData.province]);
+
   const handleSubmit = () => {
     console.log('VehicleSearch handleSubmit called with searchData:', searchData);
     const submissionData = {
@@ -199,13 +279,18 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     }));
   };
 
+  // Helper function to format large numbers with spaces as thousands separators
+  const formatPrice = (price: number): string => {
+    return price.toLocaleString('en-ZA').replace(/,/g, ' ');
+  };
+
   return (
     <Card>
-      <CardContent sx={{ pr: 4 }}>
+      <CardContent sx={{ pr: 8, pl: 8 }}>
         <Box textAlign="center" mb={4}>
-          <Search sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+          <Search sx={{ fontSize: 48, color: '#1e3a8a', mb: 2 }} />
           <Typography variant="h4" gutterBottom>
-            Find Your Perfect Vehicle
+            Find Your Vehicle
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Tell us what you're looking for and we'll help you find it
@@ -323,6 +408,18 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 { value: filters.yearRange.min, label: filters.yearRange.min.toString() },
                 { value: filters.yearRange.max, label: filters.yearRange.max.toString() },
               ]}
+              sx={{
+                color: '#1e3a8a',
+                '& .MuiSlider-thumb': {
+                  backgroundColor: '#1e3a8a',
+                },
+                '& .MuiSlider-track': {
+                  backgroundColor: '#1e3a8a',
+                },
+                '& .MuiSlider-rail': {
+                  backgroundColor: '#cbd5e1',
+                },
+              }}
             />
           </Grid>
 
@@ -339,9 +436,21 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
               step={10000}
               disabled={isLoadingFilters}
               marks={[
-                { value: Math.max(10000, filters.priceRange.min), label: `R${Math.max(10000, filters.priceRange.min / 1000)}K` },
+                { value: Math.max(10000, filters.priceRange.min), label: `R${formatPrice(Math.max(10000, filters.priceRange.min))}` },
                 { value: filters.priceRange.max, label: `R${filters.priceRange.max >= 1000000 ? (filters.priceRange.max / 1000000).toFixed(1) + 'M' : (filters.priceRange.max / 1000) + 'K'}` },
               ]}
+              sx={{
+                color: '#1e3a8a',
+                '& .MuiSlider-thumb': {
+                  backgroundColor: '#1e3a8a',
+                },
+                '& .MuiSlider-track': {
+                  backgroundColor: '#1e3a8a',
+                },
+                '& .MuiSlider-rail': {
+                  backgroundColor: '#cbd5e1',
+                },
+              }}
             />
           </Grid>
 
@@ -361,24 +470,52 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 { value: 10000, label: '10K' },
                 { value: 250000, label: '250K' },
               ]}
+              sx={{
+                color: '#1e3a8a',
+                '& .MuiSlider-thumb': {
+                  backgroundColor: '#1e3a8a',
+                },
+                '& .MuiSlider-track': {
+                  backgroundColor: '#1e3a8a',
+                },
+                '& .MuiSlider-rail': {
+                  backgroundColor: '#cbd5e1',
+                },
+              }}
             />
           </Grid>
         </Grid>
 
         <Box display="flex" justifyContent="space-between" mt={4}>
           {onBack && (
-            <MuiButton variant="outlined" onClick={onBack}>
+            <Button variant="outlined" onClick={onBack}>
               Back
-            </MuiButton>
+            </Button>
           )}
           <Box flex={1} />
           <Button
             variant="contained"
-            size="large"
+            size="medium"
+            startIcon={isLoading ? <CircularProgress size={20} sx={{ color: '#ffffff' }} /> : <Search />}  
             onClick={handleSubmit}
-            loading={isLoading}
+            disabled={isLoading}
+             sx={{
+                  px: 4,
+                  py: 1,
+                  fontSize: '1rem',
+                  fontWeight: 500,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  backgroundColor: '#1e3a8a',
+                  color: '#ffffff',
+                  boxShadow: '0 2px 8px rgba(30, 58, 138, 0.2)',
+                  '&:hover': {
+                    backgroundColor: '#1e40af',
+                    boxShadow: '0 3px 10px rgba(30, 58, 138, 0.3)',
+                  }
+                }}
           >
-            Search Vehicles
+            {isLoading ? 'Searching...' : 'Search Vehicles'}
           </Button>
         </Box>
       </CardContent>

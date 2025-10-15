@@ -94,7 +94,7 @@ storybook-static/
 
 # Gatsby
 .cache/
-public/
+# public/
 
 # Serverless
 .serverless/

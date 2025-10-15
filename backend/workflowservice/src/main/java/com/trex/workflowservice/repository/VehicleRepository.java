@@ -138,4 +138,52 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
            "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
            "v.transmission IS NOT NULL AND v.soldDate IS NULL ORDER BY v.transmission")
     List<String> findDistinctTransmissionsByMakeAndModel(@Param("make") String make, @Param("model") String model);
+    
+    // Get filtered price range based on make, model, bodyType, fuelType, province
+    @Query("SELECT MIN(v.price), MAX(v.price) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:bodyType IS NULL OR LOWER(v.bodyType) = LOWER(:bodyType)) AND " +
+           "(:fuelType IS NULL OR LOWER(v.fuelType) = LOWER(:fuelType)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "v.soldDate IS NULL AND v.price IS NOT NULL")
+    Object[] findPriceRangeByFilters(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("bodyType") String bodyType,
+        @Param("fuelType") String fuelType,
+        @Param("province") String province
+    );
+    
+    // Get filtered year range based on make, model, bodyType, fuelType, province
+    @Query("SELECT MIN(v.year), MAX(v.year) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:bodyType IS NULL OR LOWER(v.bodyType) = LOWER(:bodyType)) AND " +
+           "(:fuelType IS NULL OR LOWER(v.fuelType) = LOWER(:fuelType)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "v.soldDate IS NULL")
+    Object[] findYearRangeByFilters(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("bodyType") String bodyType,
+        @Param("fuelType") String fuelType,
+        @Param("province") String province
+    );
+    
+    // Get filtered mileage range based on make, model, bodyType, fuelType, province
+    @Query("SELECT MIN(v.mileage), MAX(v.mileage) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:bodyType IS NULL OR LOWER(v.bodyType) = LOWER(:bodyType)) AND " +
+           "(:fuelType IS NULL OR LOWER(v.fuelType) = LOWER(:fuelType)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "v.soldDate IS NULL AND v.mileage IS NOT NULL")
+    Object[] findMileageRangeByFilters(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("bodyType") String bodyType,
+        @Param("fuelType") String fuelType,
+        @Param("province") String province
+    );
 }

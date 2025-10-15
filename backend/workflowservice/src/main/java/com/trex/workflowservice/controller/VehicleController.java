@@ -7,7 +7,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -337,5 +343,35 @@ public class VehicleController {
             logger.error("Error retrieving transmissions for make: {} and model: {}", make, model, e);
             return ResponseEntity.internalServerError().build();
         }
+    }
+    
+    @CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.OPTIONS})
+    @GetMapping("/filtered/ranges")
+    public ResponseEntity<Map<String, Object>> getFilteredRanges(
+            @RequestParam(required = false) String make,
+            @RequestParam(required = false) String model,
+            @RequestParam(required = false) String bodyType,
+            @RequestParam(required = false) String fuelType,
+            @RequestParam(required = false) String province) {
+        logger.info("Get filtered ranges for make: {}, model: {}, bodyType: {}, fuelType: {}, province: {}", 
+                   make, model, bodyType, fuelType, province);
+        
+        try {
+            Map<String, Object> ranges = vehicleService.getFilteredRanges(make, model, bodyType, fuelType, province);
+            logger.info("Retrieved filtered ranges successfully");
+            return ResponseEntity.ok(ranges);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving filtered ranges", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error retrieving filtered ranges: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+    
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @RequestMapping(value = "/filtered/ranges", method = RequestMethod.OPTIONS)
+    public ResponseEntity<Void> optionsFilteredRanges() {
+        return ResponseEntity.ok().build();
     }
 }
