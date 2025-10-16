@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, Card, CardContent, Button, Stack, TextField, Grid, Divider, Alert, CardMedia } from '@mui/material';
-import { CheckCircle, Person, Email, Phone, DirectionsCar, LocalGasStation, Speed } from '@mui/icons-material';
+import { CheckCircle, Person, Email, Phone, DirectionsCar, LocalGasStation, Speed, LocationOn } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -17,6 +17,7 @@ const schema = yup.object({
   name: yup.string().required('Full name is required'),
   email: yup.string().email('Invalid email').required('Email is required'),
   phone: yup.string().required('Phone number is required'),
+  location: yup.string().required('Location is required'),
   preferredContact: yup.string().required('Preferred contact method is required'),
   comments: yup.string(),
 });
@@ -34,6 +35,7 @@ const BuyingConfirmation: React.FC<BuyingConfirmationProps> = ({
       name: initialData?.userInfo?.name || initialData?.contactInfo?.name || '',
       email: initialData?.userInfo?.email || initialData?.contactInfo?.email || '',
       phone: initialData?.userInfo?.phone || initialData?.contactInfo?.phone || '',
+      location: initialData?.userInfo?.location || initialData?.contactInfo?.location || '',
       preferredContact: initialData?.userInfo?.preferredContact || initialData?.contactInfo?.preferredContact || 'email',
       comments: initialData?.userInfo?.comments || initialData?.contactInfo?.comments || '',
     }
@@ -89,18 +91,16 @@ const BuyingConfirmation: React.FC<BuyingConfirmationProps> = ({
                   border: '1px solid #e0e0e0',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
                 }}>
-                  {vehicle.imageUrl && (
-                    <CardMedia
-                      component="img"
-                      height="200"
-                      image={vehicle.imageUrl}
-                      alt={`${vehicle.makeName} ${vehicle.modelName}`}
-                      sx={{ 
-                        objectFit: 'cover',
-                        borderBottom: '1px solid #e0e0e0'
-                      }}
-                    />
-                  )}
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={vehicle.imageUrl || 'https://images.unsplash.com/photo-1591293836027-e05b48473b67?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}
+                    alt={`${vehicle.makeName} ${vehicle.modelName}`}
+                    sx={{ 
+                      objectFit: 'cover',
+                      borderBottom: '1px solid #e0e0e0'
+                    }}
+                  />
                   <CardContent sx={{ p: 3 }}>
                     <Typography 
                       variant="h6" 
@@ -249,6 +249,24 @@ const BuyingConfirmation: React.FC<BuyingConfirmationProps> = ({
                         helperText={errors.phone?.message}
                         InputProps={{
                           startAdornment: <Phone sx={{ mr: 1, color: 'text.secondary' }} />
+                        }}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    name="location"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Location"
+                        fullWidth
+                        error={!!errors.location}
+                        helperText={errors.location?.message}
+                        placeholder="City or Province"
+                        InputProps={{
+                          startAdornment: <LocationOn sx={{ mr: 1, color: 'text.secondary' }} />
                         }}
                       />
                     )}
