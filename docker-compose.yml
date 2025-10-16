@@ -10,7 +10,8 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./backend/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./backend/init-database.sql:/docker-entrypoint-initdb.d/01-init-database.sql
+      - ./comprehensive-vehicles-400.sql:/docker-entrypoint-initdb.d/02-comprehensive-vehicles.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U t_rex_user -d t_rex_db"]
       interval: 30s

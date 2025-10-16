@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -13,6 +13,7 @@ import {
   Slider,
   Button,
   CircularProgress,
+  Autocomplete,
 } from '@mui/material';
 import { Search } from '@mui/icons-material';
 
@@ -38,12 +39,24 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     bodyType: '',
     fuelType: '',
     province: '',
+    city: '',
   });
 
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    makes: string[];
+    models: string[];
+    provinces: string[];
+    cities: string[];
+    fuelTypes: string[];
+    bodyTypes: string[];
+    transmissions: string[];
+    priceRange: { min: number; max: number };
+    yearRange: { min: number; max: number };
+  }>({
     makes: [],
     models: [],
     provinces: [],
+    cities: [],
     fuelTypes: [],
     bodyTypes: [],
     transmissions: [],
@@ -51,19 +64,42 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     yearRange: { min: 2000, max: 2025 }
   });
 
-  const [isLoadingFilters, setIsLoadingFilters] = useState(true);
+  const [isLoadingFilters, setIsLoadingFilters] = useState(false);
+  const [isLoadingModels, setIsLoadingModels] = useState(true);
 
-  // Load filters on component mount
+  // Cache for API responses to avoid duplicate calls
+  const apiCache = useRef<Map<string, any>>(new Map());
+  
+  // Debounce timer refs
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const rangesDebounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Load filters AND models on component mount
   useEffect(() => {
-    const loadFilters = async () => {
+    const loadFiltersAndModels = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/vehicles/filters');
-        const filtersData = await response.json();
+        // Load filters and models in parallel
+        const [filtersResponse, modelsResponse] = await Promise.all([
+          fetch('http://localhost:8080/api/vehicles/filters'),
+          fetch('http://localhost:8080/api/vehicles/models')
+        ]);
         
+        const [filtersData, modelsData] = await Promise.all([
+          filtersResponse.json(),
+          modelsResponse.json()
+        ]);
+        
+        console.log('Initial load - models:', modelsData.length);
+        
+        // Cache the models
+        apiCache.current.set('models-all', modelsData);
+        
+        // Set all filters including models in one update
         setFilters({
           makes: filtersData.makes || [],
-          models: [],
+          models: modelsData || [],  // Use fetched models, not from filters
           provinces: filtersData.provinces || [],
+          cities: filtersData.cities || [],
           fuelTypes: filtersData.fuelTypes || [],
           bodyTypes: filtersData.bodyTypes || [],
           transmissions: filtersData.transmissions || [],
@@ -90,136 +126,236 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         console.error('Error loading filters:', error);
       } finally {
         setIsLoadingFilters(false);
+        setIsLoadingModels(false);
       }
     };
 
-    loadFilters();
+    loadFiltersAndModels();
   }, []);
 
-  // Load models when make changes
+  // Load models when make changes (not on initial mount)
   useEffect(() => {
-    if (searchData.make) {
-      const loadModels = async () => {
-        try {
-          const response = await fetch(`http://localhost:8080/api/vehicles/makes/${searchData.make}/models`);
-          const models = await response.json();
-          setFilters(prev => ({
-            ...prev,
-            models: models || []
-          }));
-        } catch (error) {
-          console.error('Error loading models:', error);
-        }
-      };
-      loadModels();
-    } else {
-      setFilters(prev => ({
-        ...prev,
-        models: []
-      }));
-      setSearchData(prev => ({
-        ...prev,
-        model: ''
-      }));
+    // Skip if no make selected (initial state already loaded in first useEffect)
+    if (!searchData.make) {
+      return;
     }
-  }, [searchData.make]);
-
-  // Load filtered options when make or model changes
-  useEffect(() => {
-    const loadFilteredOptions = async () => {
-      if (searchData.make || searchData.model) {
-        try {
-          const params = new URLSearchParams();
-          if (searchData.make) params.append('make', searchData.make);
-          if (searchData.model) params.append('model', searchData.model);
-
-          // Load filtered options in parallel
-          const [bodyTypesRes, fuelTypesRes, provincesRes] = await Promise.all([
-            fetch(`http://localhost:8080/api/vehicles/filtered/body-types?${params}`),
-            fetch(`http://localhost:8080/api/vehicles/filtered/fuel-types?${params}`),
-            fetch(`http://localhost:8080/api/vehicles/filtered/provinces?${params}`)
-          ]);
-
-          const [bodyTypes, fuelTypes, provinces] = await Promise.all([
-            bodyTypesRes.json(),
-            fuelTypesRes.json(),
-            provincesRes.json()
-          ]);
-
+    
+    const loadModels = async () => {
+      console.log('Loading models for make:', searchData.make);
+      setIsLoadingModels(true);
+      try {
+        const cacheKey = `models-${searchData.make}`;
+        
+        // Check cache first
+        if (apiCache.current.has(cacheKey)) {
+          const cachedModels = apiCache.current.get(cacheKey);
+          console.log('Using cached models:', cachedModels.length);
           setFilters(prev => ({
             ...prev,
-            bodyTypes: bodyTypes || [],
-            fuelTypes: fuelTypes || [],
-            provinces: provinces || []
+            models: cachedModels || []
           }));
-
-          // Clear selections that are no longer valid
-          setSearchData(prev => {
-            const newData = { ...prev };
-            if (prev.bodyType && !bodyTypes.includes(prev.bodyType)) {
-              newData.bodyType = '';
-            }
-            if (prev.fuelType && !fuelTypes.includes(prev.fuelType)) {
-              newData.fuelType = '';
-            }
-            if (prev.province && !provinces.includes(prev.province)) {
-              newData.province = '';
-            }
-            return newData;
-          });
-
-        } catch (error) {
-          console.error('Error loading filtered options:', error);
+          setIsLoadingModels(false);
+          return;
         }
+        
+        // Load models for specific make
+        console.log('Fetching models for make:', searchData.make);
+        const response = await fetch(`http://localhost:8080/api/vehicles/makes/${searchData.make}/models`);
+        const models = await response.json();
+        console.log('Received models for make:', models.length);
+        apiCache.current.set(cacheKey, models);
+        setFilters(prev => ({
+          ...prev,
+          models: [...models] // Create new array reference
+        }));
+      } catch (error) {
+        console.error('Error loading models:', error);
+      } finally {
+        setIsLoadingModels(false);
+        console.log('Models loading complete');
       }
     };
+    loadModels();
+  }, [searchData.make]);
 
-    loadFilteredOptions();
-  }, [searchData.make, searchData.model]);
+  // Cities are now loaded with initial filters, no separate useEffect needed
 
-  // Load dynamic ranges when any filter changes (excluding slider values to prevent loops)
+  // Debounced fetch function with caching
+  const debouncedFetch = useCallback(async (url: string, cacheKey: string) => {
+    // Check cache first
+    if (apiCache.current.has(cacheKey)) {
+      return apiCache.current.get(cacheKey);
+    }
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    // Cache the result
+    apiCache.current.set(cacheKey, data);
+    
+    return data;
+  }, []);
+  
+  // Load filtered options when make, model, or city changes (with debouncing)
   useEffect(() => {
-    const loadDynamicRanges = async () => {
-      // Only fetch if at least one filter is selected
-      if (searchData.make || searchData.model || searchData.bodyType || searchData.fuelType || searchData.province) {
-        try {
-          const params = new URLSearchParams();
-          if (searchData.make) params.append('make', searchData.make);
-          if (searchData.model) params.append('model', searchData.model);
-          if (searchData.bodyType) params.append('bodyType', searchData.bodyType);
-          if (searchData.fuelType) params.append('fuelType', searchData.fuelType);
-          if (searchData.province) params.append('province', searchData.province);
+    // Clear existing timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    
+    // Only fetch if we have at least one filter
+    if (!searchData.make && !searchData.model && !searchData.city) {
+      return;
+    }
+    
+    // Debounce the API call by 300ms
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams();
+        if (searchData.make) params.append('make', searchData.make);
+        if (searchData.model) params.append('model', searchData.model);
+        if (searchData.city) params.append('city', searchData.city);
+        
+        const paramsString = params.toString();
+        const cacheKey = `filtered-options-${paramsString}`;
+        
+        // Check if we already have this in cache
+        if (apiCache.current.has(cacheKey)) {
+          const cached = apiCache.current.get(cacheKey);
+          setFilters(prev => ({
+            ...prev,
+            bodyTypes: cached.bodyTypes || [],
+            fuelTypes: cached.fuelTypes || [],
+            provinces: cached.provinces || [],
+            cities: cached.cities || []
+          }));
+          return;
+        }
 
-          console.log('Fetching dynamic ranges with params:', params.toString());
-          
-          const response = await fetch(`http://localhost:8080/api/vehicles/filtered/ranges?${params}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
+        // Load filtered options in parallel
+        const [bodyTypesRes, fuelTypesRes, provincesRes, citiesRes] = await Promise.all([
+          fetch(`http://localhost:8080/api/vehicles/filtered/body-types?${params}`),
+          fetch(`http://localhost:8080/api/vehicles/filtered/fuel-types?${params}`),
+          fetch(`http://localhost:8080/api/vehicles/filtered/provinces?${params}`),
+          fetch(`http://localhost:8080/api/vehicles/filtered/cities?${params}`)
+        ]);
 
-          if (!response.ok) {
-            console.warn('Failed to fetch dynamic ranges:', response.status, response.statusText);
-            return;
+        const [bodyTypes, fuelTypes, provinces, cities] = await Promise.all([
+          bodyTypesRes.json(),
+          fuelTypesRes.json(),
+          provincesRes.json(),
+          citiesRes.json()
+        ]);
+        
+        // Cache the combined result
+        apiCache.current.set(cacheKey, { bodyTypes, fuelTypes, provinces, cities });
+
+        setFilters(prev => ({
+          ...prev,
+          bodyTypes: bodyTypes || [],
+          fuelTypes: fuelTypes || [],
+          provinces: provinces || [],
+          cities: cities || []
+        }));
+
+        // Clear selections that are no longer valid
+        setSearchData(prev => {
+          const newData = { ...prev };
+          if (prev.bodyType && !bodyTypes.includes(prev.bodyType)) {
+            newData.bodyType = '';
           }
+          if (prev.fuelType && !fuelTypes.includes(prev.fuelType)) {
+            newData.fuelType = '';
+          }
+          if (prev.province && !provinces.includes(prev.province)) {
+            newData.province = '';
+          }
+          if (prev.city && !cities.includes(prev.city)) {
+            newData.city = '';
+          }
+          return newData;
+        });
 
-          const ranges = await response.json();
-          console.log('Received dynamic ranges:', ranges);
+      } catch (error) {
+        console.error('Error loading filtered options:', error);
+      }
+    }, 300); // 300ms debounce delay
+    
+    // Cleanup function
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [searchData.make, searchData.model, searchData.city]);
 
-          // Update filter ranges and adjust slider values in one update
-          setFilters(prev => {
-            const newFilters = { ...prev };
-            
-            if (ranges.priceRange) {
-              newFilters.priceRange = ranges.priceRange;
-            }
-            if (ranges.yearRange) {
-              newFilters.yearRange = ranges.yearRange;
-            }
-            
-            return newFilters;
-          });
+  // Load dynamic ranges when any filter changes (with debouncing)
+  useEffect(() => {
+    // Clear existing timer
+    if (rangesDebounceTimer.current) {
+      clearTimeout(rangesDebounceTimer.current);
+    }
+    
+    // Only fetch if at least one filter is selected
+    if (!searchData.make && !searchData.model && !searchData.bodyType && !searchData.fuelType && !searchData.province && !searchData.city) {
+      return;
+    }
+    
+    // Debounce by 500ms
+    rangesDebounceTimer.current = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams();
+        if (searchData.make) params.append('make', searchData.make);
+        if (searchData.model) params.append('model', searchData.model);
+        if (searchData.bodyType) params.append('bodyType', searchData.bodyType);
+        if (searchData.fuelType) params.append('fuelType', searchData.fuelType);
+        if (searchData.province) params.append('province', searchData.province);
+        if (searchData.city) params.append('city', searchData.city);
+        
+        const paramsString = params.toString();
+        const cacheKey = `ranges-${paramsString}`;
+        
+        // Check cache first
+        if (apiCache.current.has(cacheKey)) {
+          const cachedRanges = apiCache.current.get(cacheKey);
+          setFilters(prev => ({
+            ...prev,
+            priceRange: cachedRanges.priceRange || prev.priceRange,
+            yearRange: cachedRanges.yearRange || prev.yearRange
+          }));
+          return;
+        }
+
+        const response = await fetch(`http://localhost:8080/api/vehicles/filtered/ranges?${params}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          console.warn('Failed to fetch dynamic ranges:', response.status, response.statusText);
+          return;
+        }
+
+        const ranges = await response.json();
+        
+        // Cache the result
+        apiCache.current.set(cacheKey, ranges);
+
+        // Update filter ranges
+        setFilters(prev => {
+          const newFilters = { ...prev };
+          
+          if (ranges.priceRange) {
+            newFilters.priceRange = ranges.priceRange;
+          }
+          if (ranges.yearRange) {
+            newFilters.yearRange = ranges.yearRange;
+          }
+          
+          return newFilters;
+        });
 
           // Adjust search data to fit within new ranges
           setSearchData(prev => {
@@ -246,16 +382,18 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
             return newData;
           });
 
-        } catch (error) {
-          console.error('Error loading dynamic ranges (CORS or network issue):', error);
-          // Gracefully handle CORS errors - sliders will still work with initial ranges
-        }
+      } catch (error) {
+        console.error('Error loading dynamic ranges:', error);
+      }
+    }, 500); // 500ms debounce for ranges
+    
+    // Cleanup
+    return () => {
+      if (rangesDebounceTimer.current) {
+        clearTimeout(rangesDebounceTimer.current);
       }
     };
-
-    loadDynamicRanges();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchData.make, searchData.model, searchData.bodyType, searchData.fuelType, searchData.province]);
+  }, [searchData.make, searchData.model, searchData.bodyType, searchData.fuelType, searchData.province, searchData.city]);
 
   const handleSubmit = () => {
     console.log('VehicleSearch handleSubmit called with searchData:', searchData);
@@ -272,7 +410,28 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     onSubmit(submissionData);
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  // Debug: Log filters.models length
+  console.log('Render - filters.models.length:', filters.models?.length || 0);
+  
+  const handleInputChange = async (field: string, value: any) => {
+    // If model is selected, auto-populate make
+    if (field === 'model' && value && !searchData.make) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/vehicles/models/${value}/make`);
+        const makeData = await response.json();
+        if (makeData && makeData.make) {
+          setSearchData(prev => ({
+            ...prev,
+            make: makeData.make,
+            model: value,
+          }));
+          return;
+        }
+      } catch (error) {
+        console.error('Error fetching make for model:', error);
+      }
+    }
+    
     setSearchData(prev => ({
       ...prev,
       [field]: value,
@@ -308,7 +467,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 disabled={isLoadingFilters}
               >
                 <MenuItem value="">Any Make</MenuItem>
-                {filters.makes.map((make) => (
+                {(filters.makes || []).map((make) => (
                   <MenuItem key={make} value={make}>
                     {make}
                   </MenuItem>
@@ -318,22 +477,37 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
           </Grid>
           
           <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Model</InputLabel>
-              <Select
-                value={searchData.model}
-                label="Model"
-                onChange={(e) => handleInputChange('model', e.target.value)}
-                disabled={!searchData.make || filters.models.length === 0}
-              >
-                <MenuItem value="">Any Model</MenuItem>
-                {filters.models.map((model) => (
-                  <MenuItem key={model} value={model}>
-                    {model}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Autocomplete
+              value={searchData.model || null}
+              onChange={(event, newValue) => {
+                handleInputChange('model', newValue || '');
+              }}
+              inputValue={searchData.model || ''}
+              onInputChange={(event, newInputValue) => {
+                // Update input as user types
+                if (event && event.type === 'change') {
+                  handleInputChange('model', newInputValue);
+                }
+              }}
+              options={filters.models || []}
+              disabled={isLoadingModels}
+              freeSolo
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Model"
+                  placeholder="Type to search models..."
+                  helperText={
+                    isLoadingModels 
+                      ? 'Loading models...' 
+                      : `${(filters.models || []).length} models available`
+                  }
+                />
+              )}
+              noOptionsText="No models found"
+              loading={isLoadingModels}
+              loadingText="Loading models..."
+            />
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -346,7 +520,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 disabled={isLoadingFilters}
               >
                 <MenuItem value="">Any Body Type</MenuItem>
-                {filters.bodyTypes.map((bodyType) => (
+                {(filters.bodyTypes || []).map((bodyType) => (
                   <MenuItem key={bodyType} value={bodyType}>
                     {bodyType}
                   </MenuItem>
@@ -365,7 +539,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 disabled={isLoadingFilters}
               >
                 <MenuItem value="">Any Fuel Type</MenuItem>
-                {filters.fuelTypes.map((fuelType) => (
+                {(filters.fuelTypes || []).map((fuelType) => (
                   <MenuItem key={fuelType} value={fuelType}>
                     {fuelType}
                   </MenuItem>
@@ -384,9 +558,28 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 disabled={isLoadingFilters}
               >
                 <MenuItem value="">Any Province</MenuItem>
-                {filters.provinces.map((province) => (
+                {(filters.provinces || []).map((province) => (
                   <MenuItem key={province} value={province}>
                     {province}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>City</InputLabel>
+              <Select
+                value={searchData.city}
+                label="City"
+                onChange={(e) => handleInputChange('city', e.target.value)}
+                disabled={isLoadingFilters}
+              >
+                <MenuItem value="">Any City</MenuItem>
+                {(filters.cities || []).map((city) => (
+                  <MenuItem key={city} value={city}>
+                    {city}
                   </MenuItem>
                 ))}
               </Select>

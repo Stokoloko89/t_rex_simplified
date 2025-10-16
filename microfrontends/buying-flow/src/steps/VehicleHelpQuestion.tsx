@@ -72,7 +72,7 @@ const VehicleHelpQuestion: React.FC<VehicleHelpQuestionProps> = ({
               letterSpacing: '-0.02em'
             }}
           >
-            {initialData.message}
+            While you await the report, can we help you find a vehicle?
           </Typography>
 
           <Typography
@@ -81,11 +81,11 @@ const VehicleHelpQuestion: React.FC<VehicleHelpQuestionProps> = ({
               color: '#424242',
               mb: 3,
               fontWeight: 400,
-              maxWidth: 500,
+              maxWidth: 600,
               mx: 'auto'
             }}
           >
-            {initialData.subMessage}
+            We'll help you find vehicles that match your preferences and budget. Our advanced search tools will guide you to the perfect match.
           </Typography>
 
           {/* Action Button */}
@@ -119,7 +119,7 @@ const VehicleHelpQuestion: React.FC<VehicleHelpQuestionProps> = ({
           )}
 
           {/* Additional Info */}
-          <Box sx={{ mt: 3 }}>
+          {/* <Box sx={{ mt: 3 }}>
             <Typography
               variant="body2"
               color="text.secondary"
@@ -133,7 +133,7 @@ const VehicleHelpQuestion: React.FC<VehicleHelpQuestionProps> = ({
               We'll help you find vehicles that match your preferences and budget.
               Our advanced search tools will guide you to the perfect match.
             </Typography>
-          </Box>
+          </Box> */}
         </CardContent>
       </Card>
     </Container>

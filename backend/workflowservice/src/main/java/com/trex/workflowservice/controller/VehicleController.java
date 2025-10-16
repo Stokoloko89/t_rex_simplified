@@ -40,6 +40,7 @@ public class VehicleController {
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) String province,
+            @RequestParam(required = false) String city,
             @RequestParam(required = false) Integer maxMileage,
             @RequestParam(required = false) String fuelType,
             @RequestParam(required = false) String bodyType,
@@ -54,7 +55,7 @@ public class VehicleController {
         try {
             Page<Vehicle> vehiclePage = vehicleService.searchVehicles(
                 make, model, minYear, maxYear, minPrice, maxPrice, 
-                province, maxMileage, fuelType, bodyType, transmission,
+                province, city, maxMileage, fuelType, bodyType, transmission,
                 page, size, sortBy, sortDir
             );
             
@@ -196,6 +197,39 @@ public class VehicleController {
         }
     }
     
+    @GetMapping("/models")
+    public ResponseEntity<List<String>> getAllModels() {
+        logger.info("Get all models request");
+        
+        try {
+            List<String> models = vehicleService.getAllModels();
+            logger.info("Retrieved {} models", models.size());
+            return ResponseEntity.ok(models);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving models", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @GetMapping("/models/{model}/make")
+    public ResponseEntity<Map<String, String>> getMakeByModel(@PathVariable String model) {
+        logger.info("Get make for model: {}", model);
+        
+        try {
+            String make = vehicleService.getMakeByModel(model);
+            Map<String, String> response = new HashMap<>();
+            response.put("make", make);
+            response.put("model", model);
+            logger.info("Retrieved make: {} for model: {}", make, model);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving make for model: {}", model, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
     @GetMapping("/provinces")
     public ResponseEntity<List<String>> getAllProvinces() {
         logger.info("Get all provinces request");
@@ -207,6 +241,36 @@ public class VehicleController {
             
         } catch (Exception e) {
             logger.error("Error retrieving provinces", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @GetMapping("/cities")
+    public ResponseEntity<List<String>> getAllCities() {
+        logger.info("Get all cities request");
+        
+        try {
+            List<String> cities = vehicleService.getAllCities();
+            logger.info("Retrieved {} cities", cities.size());
+            return ResponseEntity.ok(cities);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving cities", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @GetMapping("/provinces/{province}/cities")
+    public ResponseEntity<List<String>> getCitiesByProvince(@PathVariable String province) {
+        logger.info("Get cities for province: {}", province);
+        
+        try {
+            List<String> cities = vehicleService.getCitiesByProvince(province);
+            logger.info("Retrieved {} cities for province: {}", cities.size(), province);
+            return ResponseEntity.ok(cities);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving cities for province: {}", province, e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -280,16 +344,17 @@ public class VehicleController {
     @GetMapping("/filtered/body-types")
     public ResponseEntity<List<String>> getBodyTypesByMakeAndModel(
             @RequestParam(required = false) String make,
-            @RequestParam(required = false) String model) {
-        logger.info("FILTERED API: Get body types filtered by make: {} and model: {}", make, model);
+            @RequestParam(required = false) String model,
+            @RequestParam(required = false) String city) {
+        logger.info("FILTERED API: Get body types filtered by make: {}, model: {}, city: {}", make, model, city);
         
         try {
-            List<String> bodyTypes = vehicleService.getBodyTypesByMakeAndModel(make, model);
-            logger.info("Retrieved {} body types for make: {} and model: {}", bodyTypes.size(), make, model);
+            List<String> bodyTypes = vehicleService.getBodyTypesByFilters(make, model, city);
+            logger.info("Retrieved {} body types for make: {}, model: {}, city: {}", bodyTypes.size(), make, model, city);
             return ResponseEntity.ok(bodyTypes);
             
         } catch (Exception e) {
-            logger.error("Error retrieving body types for make: {} and model: {}", make, model, e);
+            logger.error("Error retrieving body types for make: {}, model: {}, city: {}", make, model, city, e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -297,16 +362,17 @@ public class VehicleController {
     @GetMapping("/filtered/fuel-types")
     public ResponseEntity<List<String>> getFuelTypesByMakeAndModel(
             @RequestParam(required = false) String make,
-            @RequestParam(required = false) String model) {
-        logger.info("Get fuel types filtered by make: {} and model: {}", make, model);
+            @RequestParam(required = false) String model,
+            @RequestParam(required = false) String city) {
+        logger.info("Get fuel types filtered by make: {}, model: {}, city: {}", make, model, city);
         
         try {
-            List<String> fuelTypes = vehicleService.getFuelTypesByMakeAndModel(make, model);
-            logger.info("Retrieved {} fuel types for make: {} and model: {}", fuelTypes.size(), make, model);
+            List<String> fuelTypes = vehicleService.getFuelTypesByFilters(make, model, city);
+            logger.info("Retrieved {} fuel types for make: {}, model: {}, city: {}", fuelTypes.size(), make, model, city);
             return ResponseEntity.ok(fuelTypes);
             
         } catch (Exception e) {
-            logger.error("Error retrieving fuel types for make: {} and model: {}", make, model, e);
+            logger.error("Error retrieving fuel types for make: {}, model: {}, city: {}", make, model, city, e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -314,16 +380,39 @@ public class VehicleController {
     @GetMapping("/filtered/provinces")
     public ResponseEntity<List<String>> getProvincesByMakeAndModel(
             @RequestParam(required = false) String make,
-            @RequestParam(required = false) String model) {
-        logger.info("Get provinces filtered by make: {} and model: {}", make, model);
+            @RequestParam(required = false) String model,
+            @RequestParam(required = false) String city) {
+        logger.info("Get provinces filtered by make: {}, model: {}, city: {}", make, model, city);
         
         try {
-            List<String> provinces = vehicleService.getProvincesByMakeAndModel(make, model);
-            logger.info("Retrieved {} provinces for make: {} and model: {}", provinces.size(), make, model);
+            List<String> provinces = vehicleService.getProvincesByFilters(make, model, city);
+            logger.info("Retrieved {} provinces for make: {}, model: {}, city: {}", provinces.size(), make, model, city);
             return ResponseEntity.ok(provinces);
             
         } catch (Exception e) {
-            logger.error("Error retrieving provinces for make: {} and model: {}", make, model, e);
+            logger.error("Error retrieving provinces for make: {}, model: {}, city: {}", make, model, city, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @GetMapping("/filtered/cities")
+    public ResponseEntity<List<String>> getCitiesByFilters(
+            @RequestParam(required = false) String make,
+            @RequestParam(required = false) String model,
+            @RequestParam(required = false) String bodyType,
+            @RequestParam(required = false) String fuelType,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String city) {
+        logger.info("Get cities filtered by make: {}, model: {}, bodyType: {}, fuelType: {}, province: {}, city: {}", 
+                   make, model, bodyType, fuelType, province, city);
+        
+        try {
+            List<String> cities = vehicleService.getCitiesByAllFilters(make, model, bodyType, fuelType, province, city);
+            logger.info("Retrieved {} cities", cities.size());
+            return ResponseEntity.ok(cities);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving cities", e);
             return ResponseEntity.internalServerError().build();
         }
     }

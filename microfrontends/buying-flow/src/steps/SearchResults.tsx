@@ -31,6 +31,7 @@ interface Vehicle {
   mileage: number;
   colour: string;
   provinceName: string;
+  cityName: string;
   bodyType: string;
   transmission: string;
   fuelType: string;
@@ -66,6 +67,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     totalElements: 0,
     pageSize: 20,
   });
+  const [pageSize, setPageSize] = useState(20);
   const [sortBy, setSortBy] = useState('price');
   const [sortDir, setSortDir] = useState('asc');
 
@@ -80,7 +82,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       setError('No search criteria provided. Please go back and search again.');
       setIsLoadingResults(false);
     }
-  }, [initialData?.vehicleSearch, pagination.currentPage, sortBy, sortDir]);
+  }, [initialData?.vehicleSearch, pagination.currentPage, pageSize, sortBy, sortDir]);
 
   // Handle Escape key to close modals
   useEffect(() => {
@@ -113,6 +115,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       if (searchParams.bodyType) queryParams.append('bodyType', searchParams.bodyType);
       if (searchParams.fuelType) queryParams.append('fuelType', searchParams.fuelType);
       if (searchParams.province) queryParams.append('province', searchParams.province);
+      if (searchParams.city) queryParams.append('city', searchParams.city);
       
       if (searchParams.yearRange && searchParams.yearRange.length === 2) {
         queryParams.append('minYear', searchParams.yearRange[0].toString());
@@ -129,7 +132,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       }
       
       queryParams.append('page', page.toString());
-      queryParams.append('size', '20');
+      queryParams.append('size', pageSize.toString());
       queryParams.append('sortBy', sortBy);
       queryParams.append('sortDir', sortDir);
       
@@ -327,6 +330,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handlePageSizeChange = (event: any) => {
+    const newSize = parseInt(event.target.value);
+    setPageSize(newSize);
+    setPagination(prev => ({ ...prev, currentPage: 0, pageSize: newSize }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-ZA', {
       style: 'currency',
@@ -436,6 +446,20 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               >
                 <MenuItem value="asc">Low to High</MenuItem>
                 <MenuItem value="desc">High to Low</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 100 }}>
+              <InputLabel>Per Page</InputLabel>
+              <Select
+                value={pageSize}
+                label="Per Page"
+                onChange={handlePageSizeChange}
+              >
+                <MenuItem value={20}>20</MenuItem>
+                <MenuItem value={50}>50</MenuItem>
+                <MenuItem value={100}>100</MenuItem>
+                <MenuItem value={200}>200</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -580,7 +604,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <LocationOn sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
                       <Typography variant="body2" color="text.secondary">
-                        {vehicle.provinceName}
+                        {vehicle.cityName ? `${vehicle.cityName}, ${vehicle.provinceName}` : vehicle.provinceName}
                       </Typography>
                     </Box>
                     
@@ -640,28 +664,37 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           </Box>
 
           {pagination.totalPages > 1 && (
-            <Box display="flex" justifyContent="center" mt={4}>
-              <Pagination
-                count={pagination.totalPages}
-                page={pagination.currentPage + 1}
-                onChange={handlePageChange}
-                size="large"
-                sx={{
-                  '& .MuiPaginationItem-root': {
-                    color: '#666',
-                    '&.Mui-selected': {
-                      backgroundColor: '#1e3a8a',
-                      color: '#ffffff',
+            <Box mt={4}>
+              <Box display="flex" justifyContent="center" mb={2}>
+                <Typography variant="body2" color="text.secondary">
+                  Showing {pagination.currentPage * pageSize + 1} - {Math.min((pagination.currentPage + 1) * pageSize, pagination.totalElements)} of {pagination.totalElements} vehicles
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="center">
+                <Pagination
+                  count={pagination.totalPages}
+                  page={pagination.currentPage + 1}
+                  onChange={handlePageChange}
+                  size="large"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: '#666',
+                      '&.Mui-selected': {
+                        backgroundColor: '#1e3a8a',
+                        color: '#ffffff',
+                        '&:hover': {
+                          backgroundColor: '#1e40af'
+                        }
+                      },
                       '&:hover': {
-                        backgroundColor: '#1e40af'
+                        backgroundColor: '#f0f0f0'
                       }
-                    },
-                    '&:hover': {
-                      backgroundColor: '#f0f0f0'
                     }
-                  }
-                }}
-              />
+                  }}
+                />
+              </Box>
             </Box>
           )}
         </>
@@ -879,7 +912,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <LocationOn sx={{ color: 'text.secondary' }} />
                       <Typography variant="body1">
-                        <strong>Location:</strong> {modalVehicle.provinceName}
+                        <strong>Location:</strong> {modalVehicle.cityName ? `${modalVehicle.cityName}, ${modalVehicle.provinceName}` : modalVehicle.provinceName}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -932,7 +965,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
                   This {modalVehicle.year} {modalVehicle.makeName} {modalVehicle.modelName} is in {modalVehicle.condition.toLowerCase()} condition with {modalVehicle.mileage.toLocaleString()} kilometers on the odometer.
                   It features {modalVehicle.fuelType.toLowerCase()} fuel type with {modalVehicle.transmission.toLowerCase()} transmission.
-                  Located in {modalVehicle.provinceName}, this vehicle offers excellent value for money.
+                  Located in {modalVehicle.cityName ? `${modalVehicle.cityName}, ${modalVehicle.provinceName}` : modalVehicle.provinceName}, this vehicle offers excellent value for money.
                 </Typography>
               </Box>
 

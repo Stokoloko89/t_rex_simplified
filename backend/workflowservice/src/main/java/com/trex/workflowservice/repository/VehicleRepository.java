@@ -50,6 +50,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
            "(:minPrice IS NULL OR v.price >= :minPrice) AND " +
            "(:maxPrice IS NULL OR v.price <= :maxPrice) AND " +
            "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
            "(:maxMileage IS NULL OR v.mileage <= :maxMileage) AND " +
            "(:fuelType IS NULL OR LOWER(v.fuelType) = LOWER(:fuelType)) AND " +
            "(:bodyType IS NULL OR LOWER(v.bodyType) = LOWER(:bodyType)) AND " +
@@ -63,6 +64,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
         @Param("minPrice") BigDecimal minPrice,
         @Param("maxPrice") BigDecimal maxPrice,
         @Param("province") String province,
+        @Param("city") String city,
         @Param("maxMileage") Integer maxMileage,
         @Param("fuelType") String fuelType,
         @Param("bodyType") String bodyType,
@@ -74,13 +76,54 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     @Query("SELECT DISTINCT v.makeName FROM Vehicle v WHERE v.soldDate IS NULL ORDER BY v.makeName")
     List<String> findDistinctMakes();
     
-    // Get distinct models for a make
+    // Get distinct models by make
     @Query("SELECT DISTINCT v.modelName FROM Vehicle v WHERE LOWER(v.makeName) = LOWER(:make) AND v.soldDate IS NULL ORDER BY v.modelName")
     List<String> findDistinctModelsByMake(@Param("make") String make);
+    
+    // Get all distinct models
+    @Query("SELECT DISTINCT v.modelName FROM Vehicle v WHERE v.soldDate IS NULL ORDER BY v.modelName")
+    List<String> findDistinctModels();
+    
+    // Get make by model (returns first match)
+    @Query("SELECT v.makeName FROM Vehicle v WHERE LOWER(v.modelName) = LOWER(:model) AND v.soldDate IS NULL ORDER BY v.makeName")
+    List<String> findMakesByModel(@Param("model") String model);
     
     // Get distinct provinces
     @Query("SELECT DISTINCT v.provinceName FROM Vehicle v WHERE v.soldDate IS NULL ORDER BY v.provinceName")
     List<String> findDistinctProvinces();
+    
+    // Get distinct cities
+    @Query("SELECT DISTINCT v.cityName FROM Vehicle v WHERE v.cityName IS NOT NULL AND v.soldDate IS NULL ORDER BY v.cityName")
+    List<String> findDistinctCities();
+    
+    // Get distinct cities by province
+    @Query("SELECT DISTINCT v.cityName FROM Vehicle v WHERE LOWER(v.provinceName) = LOWER(:province) AND v.cityName IS NOT NULL AND v.soldDate IS NULL ORDER BY v.cityName")
+    List<String> findDistinctCitiesByProvince(@Param("province") String province);
+    
+    // Get distinct cities filtered by make, model, and city
+    @Query("SELECT DISTINCT v.cityName FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "v.cityName IS NOT NULL AND v.soldDate IS NULL ORDER BY v.cityName")
+    List<String> findDistinctCitiesByFilters(@Param("make") String make, @Param("model") String model, @Param("city") String city);
+    
+    // Get distinct cities filtered by all parameters
+    @Query("SELECT DISTINCT v.cityName FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:bodyType IS NULL OR LOWER(v.bodyType) = LOWER(:bodyType)) AND " +
+           "(:fuelType IS NULL OR LOWER(v.fuelType) = LOWER(:fuelType)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "v.cityName IS NOT NULL AND v.soldDate IS NULL ORDER BY v.cityName")
+    List<String> findDistinctCitiesByAllFilters(
+        @Param("make") String make, 
+        @Param("model") String model, 
+        @Param("bodyType") String bodyType,
+        @Param("fuelType") String fuelType,
+        @Param("province") String province,
+        @Param("city") String city);
     
     // Get distinct fuel types
     @Query("SELECT DISTINCT v.fuelType FROM Vehicle v WHERE v.fuelType IS NOT NULL AND v.soldDate IS NULL ORDER BY v.fuelType")
@@ -138,6 +181,28 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
            "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
            "v.transmission IS NOT NULL AND v.soldDate IS NULL ORDER BY v.transmission")
     List<String> findDistinctTransmissionsByMakeAndModel(@Param("make") String make, @Param("model") String model);
+    
+    // Filtered methods with city support
+    @Query("SELECT DISTINCT v.bodyType FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "v.bodyType IS NOT NULL AND v.soldDate IS NULL ORDER BY v.bodyType")
+    List<String> findDistinctBodyTypesByFilters(@Param("make") String make, @Param("model") String model, @Param("city") String city);
+    
+    @Query("SELECT DISTINCT v.fuelType FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "v.fuelType IS NOT NULL AND v.soldDate IS NULL ORDER BY v.fuelType")
+    List<String> findDistinctFuelTypesByFilters(@Param("make") String make, @Param("model") String model, @Param("city") String city);
+    
+    @Query("SELECT DISTINCT v.provinceName FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "v.soldDate IS NULL ORDER BY v.provinceName")
+    List<String> findDistinctProvincesByFilters(@Param("make") String make, @Param("model") String model, @Param("city") String city);
     
     // Get filtered price range based on make, model, bodyType, fuelType, province
     @Query("SELECT MIN(v.price), MAX(v.price) FROM Vehicle v WHERE " +

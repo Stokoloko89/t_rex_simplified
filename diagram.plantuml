@@ -1,0 +1,58 @@
+graph TD
+    Start[Run Vehicle Report] --> Decision1{Are you buying or selling a vehicle?}
+    
+    Decision1 -->|Buying| Buying[Buying]
+    Decision1 -->|Selling| Selling[Selling]
+    Decision1 -->|Neither| Neither[Neither]
+    
+    Buying --> P2P[P2P]
+    Buying --> Dealer[Dealer]
+    
+    Dealer --> VehicleQ{Do you have a vehicle in mind?}
+    
+    VehicleQ -->|Yes| VehicleYes[Vehicle in Mind: Yes]
+    VehicleQ -->|No| VehicleNo[Vehicle in Mind: No]
+    
+    VehicleYes --> AskDetails[Ask for vehicle details<br/>Make, Model, Type]
+    AskDetails --> Location[Customer Location]
+    Location --> CheckStock[Check IX stock for<br/>similar vehicles]
+    CheckStock --> ShowOptions[Show user 5 options<br/>allow for refresh to show<br/>another set of 5 options]
+    
+    VehicleNo --> HelpFind[Would you like us to help you<br/>find a vehicle?]
+    HelpLinks --> CAfinNo[CAfin]
+    CAfinNo --> CheckStockNo[Check IX stock for<br/>similar vehicles]
+    
+    Selling --> BuyerQ{Do you have a buyer for this vehicle?}
+    
+    BuyerQ -->|Yes| YesPath[Yes]
+    BuyerQ -->|No| NoPath[No]
+    
+    YesPath --> PrivateBuyer[Private Buyer]
+    YesPath --> DealerBuyer[Dealer]
+    
+    PrivateBuyer --> GoalQ1[How can the goal be accomplished?]
+    GoalQ1 --> FinanceCheck[Do you need Finance<br/>assistance?]
+    FinanceCheck --> LightstoneTeam[Lightstone F&I team]
+    
+    DealerBuyer --> GoalQ2[Will the goal meet your short and long term needs?]
+    GoalQ2 --> Stop[Stop]
+    
+    NoPath --> ExposeDealer[Expose to Dealer Network]
+    ExposeDealer --> GoalQ3[When will the goal be accomplished?]
+    GoalQ3 --> VDD[Do VDD]
+    VDD --> CreditCheck[Do credit check]
+    CreditCheck --> ShareLead[Share lead with Dealers<br/>1. Email<br/>2. Call]
+    
+    P2P --> P2PServices[P2P Services:<br/>- Lightstone F&I<br/>- AA VAPS]
+    
+    style Start fill:#666,stroke:#333,stroke-width:2px,color:#fff
+    style Buying fill:#90EE90,stroke:#333,stroke-width:2px
+    style Selling fill:#87CEEB,stroke:#333,stroke-width:2px
+    style Neither fill:#D3D3D3,stroke:#333,stroke-width:2px
+    style P2P fill:#98FB98,stroke:#333,stroke-width:2px
+    style Dealer fill:#90EE90,stroke:#333,stroke-width:2px
+    style VehicleYes fill:#ADD8E6,stroke:#333,stroke-width:2px
+    style VehicleNo fill:#90EE90,stroke:#333,stroke-width:2px
+    style PrivateBuyer fill:#B0C4DE,stroke:#333,stroke-width:2px
+    style DealerBuyer fill:#9370DB,stroke:#333,stroke-width:2px
+    style ExposeDealer fill:#DDA0DD,stroke:#333,stroke-width:2px
