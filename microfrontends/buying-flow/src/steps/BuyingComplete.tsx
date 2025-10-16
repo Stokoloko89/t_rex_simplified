@@ -47,8 +47,11 @@ const BuyingComplete: React.FC<BuyingCompleteProps> = ({
           <Typography variant="h6" sx={{ mb: 1 }}>
             What happens next?
           </Typography>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            You will receive a confirmation email shortly with details of your vehicle selection.
+          </Typography>
           <Typography variant="body2">
-            {nextSteps}
+            A dealership will be in contact with you within 24 hours to discuss your inquiry and next steps.
           </Typography>
         </Alert>
 
@@ -59,19 +62,31 @@ const BuyingComplete: React.FC<BuyingCompleteProps> = ({
             </Typography>
             <Stack spacing={2}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Schedule sx={{ mr: 2, color: 'primary.main' }} />
+                <Email sx={{ mr: 2, color: '#1e3a8a' }} />
                 <Box>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    Dealer Contact (Within 24 hours)
+                    Confirmation Email
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    A certified dealer will reach out to discuss your vehicle interest
+                    You'll receive an email confirmation with your vehicle selection details
                   </Typography>
                 </Box>
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Phone sx={{ mr: 2, color: 'primary.main' }} />
+                <Schedule sx={{ mr: 2, color: '#1e3a8a' }} />
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    Dealership Contact (Within 24 hours)
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    A certified dealership will reach out to discuss your vehicle interest
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Phone sx={{ mr: 2, color: '#1e3a8a' }} />
                 <Box>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
                     Vehicle Availability Check
@@ -83,7 +98,7 @@ const BuyingComplete: React.FC<BuyingCompleteProps> = ({
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Email sx={{ mr: 2, color: 'primary.main' }} />
+                <CheckCircle sx={{ mr: 2, color: '#1e3a8a' }} />
                 <Box>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
                     Personalized Quote
@@ -122,6 +137,13 @@ const BuyingComplete: React.FC<BuyingCompleteProps> = ({
             onClick={handleStartNew}
             startIcon={<Refresh />}
             size="large"
+            sx={{
+              backgroundColor: '#1e3a8a',
+              color: '#ffffff',
+              '&:hover': {
+                backgroundColor: '#1e40af'
+              }
+            }}
           >
             Start New Search
           </Button>

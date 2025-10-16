@@ -208,12 +208,13 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         console.log('App.tsx: Navigating from search-results with action:', formData.action);
         if (formData.action === 'vehicle-selected' && formData.selectedVehicle) {
           nextStep = {
-            stepId: 'buying-confirmation',
-            componentName: 'BuyingConfirmation',
+            stepId: 'vehicle-purchase-confirmation',
+            componentName: 'VehiclePurchaseConfirmation',
             data: { 
-              ...formData, 
-              message: `Complete your purchase request for the ${formData.selectedVehicle.year} ${formData.selectedVehicle.makeName} ${formData.selectedVehicle.modelName}`,
-              selectedVehicle: formData.selectedVehicle
+              ...formData,
+              vehicleData: formData.selectedVehicle,
+              personData: formData.personData || {},
+              message: `Complete your purchase request for the ${formData.selectedVehicle.year} ${formData.selectedVehicle.makeName} ${formData.selectedVehicle.modelName}`
             },
             stepNumber: 5,
             totalSteps: 6
@@ -221,13 +222,32 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         } else {
           // Fallback case
           nextStep = {
-            stepId: 'buying-confirmation',
-            componentName: 'BuyingConfirmation',
+            stepId: 'vehicle-purchase-confirmation',
+            componentName: 'VehiclePurchaseConfirmation',
             data: { 
-              ...formData, 
+              ...formData,
+              vehicleData: formData.selectedVehicles?.[0] || formData.selectedVehicle,
+              personData: formData.personData || {},
               message: 'Confirm your vehicle selection and provide contact details'
             },
             stepNumber: 5,
+            totalSteps: 6
+          };
+        }
+        break;
+      case 'vehicle-purchase-confirmation':
+        console.log('App.tsx: Navigating from vehicle-purchase-confirmation with action:', formData.action);
+        if (formData.action === 'contact-submitted' || formData.action === 'purchase-confirmed') {
+          nextStep = {
+            stepId: 'buying-complete',
+            componentName: 'BuyingComplete',
+            data: { 
+              ...formData, 
+              message: 'Thank you! Your request has been submitted successfully.',
+              nextSteps: 'You will receive a confirmation email shortly. A dealership will contact you within 24 hours.',
+              leadId: `LEAD-${Date.now()}`
+            },
+            stepNumber: 6,
             totalSteps: 6
           };
         }
@@ -433,7 +453,7 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
           totalSteps: 6
         };
         break;
-      case 'buying-confirmation':
+      case 'vehicle-purchase-confirmation':
         previousStep = {
           stepId: 'search-results',
           componentName: 'SearchResults',

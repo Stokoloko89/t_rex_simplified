@@ -462,7 +462,26 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         </Box>
       ) : (
         <>
-          <Grid container spacing={4}>
+          <Box sx={{ 
+            maxHeight: '70vh', 
+            overflowY: 'auto',
+            pr: 1,
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              backgroundColor: '#f0f0f0',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: '#1e3a8a',
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: '#1e40af',
+              },
+            },
+          }}>
+            <Grid container spacing={4}>
             {vehicles.map((vehicle) => (
               <Grid item xs={12} md={6} lg={6} key={vehicle.id}>
                 <Card 
@@ -617,7 +636,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 </Card>
               </Grid>
             ))}
-          </Grid>
+            </Grid>
+          </Box>
 
           {pagination.totalPages > 1 && (
             <Box display="flex" justifyContent="center" mt={4}>
@@ -625,8 +645,22 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 count={pagination.totalPages}
                 page={pagination.currentPage + 1}
                 onChange={handlePageChange}
-                color="primary"
                 size="large"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    color: '#666',
+                    '&.Mui-selected': {
+                      backgroundColor: '#1e3a8a',
+                      color: '#ffffff',
+                      '&:hover': {
+                        backgroundColor: '#1e40af'
+                      }
+                    },
+                    '&:hover': {
+                      backgroundColor: '#f0f0f0'
+                    }
+                  }
+                }}
               />
             </Box>
           )}
@@ -674,9 +708,16 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             px: 4,
             py: 1.5,
             fontSize: '1rem',
+            backgroundColor: '#1e3a8a',
+            color: '#ffffff',
             boxShadow: 'none',
             '&:hover': {
+              backgroundColor: '#1e40af',
               boxShadow: '0 4px 12px rgba(30, 58, 138, 0.25)'
+            },
+            '&:disabled': {
+              backgroundColor: '#d0d0d0',
+              color: '#999'
             }
           }}
         >
@@ -942,12 +983,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                         px: 4,
                         py: 1.5,
                         backgroundColor: '#1e3a8a',
+                        color: '#ffffff',
                         '&:hover': {
                           backgroundColor: '#1e40af',
                         }
                       }}
                     >
-                      Select This Vehicle
+                      Select this vehicle
                     </Button>
                   )}
                 </Box>
