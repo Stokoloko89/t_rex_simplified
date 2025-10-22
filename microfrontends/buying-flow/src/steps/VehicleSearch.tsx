@@ -66,6 +66,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
 
   const [isLoadingFilters, setIsLoadingFilters] = useState(false);
   const [isLoadingModels, setIsLoadingModels] = useState(true);
+  const [isLoadingBodyTypes, setIsLoadingBodyTypes] = useState(false);
 
   // Cache for API responses to avoid duplicate calls
   const apiCache = useRef<Map<string, any>>(new Map());
@@ -210,6 +211,8 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     
     // Debounce the API call by 300ms
     debounceTimer.current = setTimeout(async () => {
+      console.log('🔍 Fetching filtered options for:', { make: searchData.make, model: searchData.model, city: searchData.city });
+      setIsLoadingBodyTypes(true);
       try {
         const params = new URLSearchParams();
         if (searchData.make) params.append('make', searchData.make);
@@ -222,6 +225,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         // Check if we already have this in cache
         if (apiCache.current.has(cacheKey)) {
           const cached = apiCache.current.get(cacheKey);
+          console.log('✅ Using cached body types:', cached.bodyTypes);
           setFilters(prev => ({
             ...prev,
             bodyTypes: cached.bodyTypes || [],
@@ -229,6 +233,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
             provinces: cached.provinces || [],
             cities: cached.cities || []
           }));
+          setIsLoadingBodyTypes(false);
           return;
         }
 
@@ -246,6 +251,8 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
           provincesRes.json(),
           citiesRes.json()
         ]);
+        
+        console.log('✅ Fetched body types for model:', searchData.model, '→', bodyTypes);
         
         // Cache the combined result
         apiCache.current.set(cacheKey, { bodyTypes, fuelTypes, provinces, cities });
@@ -277,7 +284,9 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         });
 
       } catch (error) {
-        console.error('Error loading filtered options:', error);
+        console.error('❌ Error loading filtered options:', error);
+      } finally {
+        setIsLoadingBodyTypes(false);
       }
     }, 300); // 300ms debounce delay
     
@@ -517,7 +526,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 value={searchData.bodyType}
                 label="Body Type"
                 onChange={(e) => handleInputChange('bodyType', e.target.value)}
-                disabled={isLoadingFilters}
+                disabled={isLoadingFilters || isLoadingBodyTypes}
               >
                 <MenuItem value="">Any Body Type</MenuItem>
                 {(filters.bodyTypes || []).map((bodyType) => (
@@ -527,6 +536,16 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 ))}
               </Select>
             </FormControl>
+            {isLoadingBodyTypes && (
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                Updating body types based on selected model...
+              </Typography>
+            )}
+            {!isLoadingBodyTypes && searchData.model && filters.bodyTypes.length > 0 && (
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                {filters.bodyTypes.length} body type{filters.bodyTypes.length !== 1 ? 's' : ''} available for {searchData.model}
+              </Typography>
+            )}
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -679,13 +698,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
           </Grid>
         </Grid>
 
-        <Box display="flex" justifyContent="space-between" mt={4}>
-          {onBack && (
-            <Button variant="outlined" onClick={onBack}>
-              Back
-            </Button>
-          )}
-          <Box flex={1} />
+        <Box display="flex" justifyContent="center" mt={4}>
           <Button
             variant="contained"
             size="medium"

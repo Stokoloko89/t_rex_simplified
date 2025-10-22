@@ -438,7 +438,7 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             buttonText: 'Yes, help me find a vehicle'
           },
           stepNumber: 1,
-          totalSteps: 3
+          totalSteps: 5
         };
         break;
       case 'search-results':
@@ -449,8 +449,8 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             message: 'Search for your perfect vehicle',
             ...currentData // Preserve search criteria
           },
-          stepNumber: 3,
-          totalSteps: 6
+          stepNumber: 2,
+          totalSteps: 5
         };
         break;
       case 'vehicle-purchase-confirmation':
@@ -462,8 +462,8 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             vehicleSearch: currentData?.vehicleSearch,
             ...currentData // Preserve all data including selected vehicles
           },
-          stepNumber: 4,
-          totalSteps: 6
+          stepNumber: 3,
+          totalSteps: 5
         };
         break;
       case 'buyer-type':
@@ -530,6 +530,18 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             ...currentData
           },
           stepNumber: 3,
+          totalSteps: 5
+        };
+        break;
+      case 'buying-complete':
+        previousStep = {
+          stepId: 'vehicle-purchase-confirmation',
+          componentName: 'VehiclePurchaseConfirmation',
+          data: {
+            message: 'Complete your vehicle purchase request',
+            ...currentData
+          },
+          stepNumber: 4,
           totalSteps: 5
         };
         break;

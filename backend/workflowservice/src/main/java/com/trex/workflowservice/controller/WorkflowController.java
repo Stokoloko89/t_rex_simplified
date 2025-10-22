@@ -148,6 +148,7 @@ import java.util.HashMap;
         return switch (currentStep) {
             case "intent-selection" -> handleIntentSelection(data);
             case "vehicle-valuation-report" -> handleVehicleValuationReport(data);
+            case "vehicle-help-question" -> handleVehicleHelpQuestion(data);
             case "vehicle-purchase-confirmation" -> handleVehiclePurchaseConfirmation(data);
             case "vehicle-knowledge" -> handleVehicleKnowledge(data);
             case "vehicle-search" -> handleVehicleSearch(data);
@@ -392,6 +393,36 @@ import java.util.HashMap;
             );
         } else {
             return createErrorResponse("Invalid action or intent from vehicle valuation report: " + action + "/" + intent);
+        }
+    }
+
+    private Map<String, Object> handleVehicleHelpQuestion(Map<String, Object> data) {
+        log.info("handleVehicleHelpQuestion called with data: {}", data);
+        
+        String action = (String) data.get("action");
+        
+        if ("start_vehicle_search".equals(action)) {
+            // PHASE 1: Route to VehicleSearch
+            return Map.of(
+                    "stepId", "vehicle-search",
+                    "componentName", "VehicleSearch",
+                    "data", Map.of(
+                        "message", "Tell us about the vehicle you're looking for",
+                        "fields", Map.of(
+                            "make", "Vehicle Make",
+                            "model", "Vehicle Model",
+                            "year", "Year",
+                            "budget", "Budget Range"
+                        )
+                    ),
+                    "stepNumber", 2,
+                    "totalSteps", "5",
+                    "canGoBack", true,
+                    "previousStep", "vehicle-help-question",
+                    "status", "SUCCESS"
+            );
+        } else {
+            return createErrorResponse("Invalid action from vehicle help question: " + action);
         }
     }
 
@@ -842,24 +873,18 @@ import java.util.HashMap;
         }
         
         return switch (currentStep) {
-            // VEHICLE VALUATION REPORT FLOW BACK NAVIGATION
+            // PHASE 1: BUYING FLOW BACK NAVIGATION
             case "vehicle-purchase-confirmation" -> {
-                log.error("Going back from vehicle-purchase-confirmation to vehicle-valuation-report");
+                log.info("Going back from vehicle-purchase-confirmation to search-results (Phase 1)");
                 yield Map.of(
-                    "stepId", "vehicle-valuation-report",
-                    "componentName", "VehicleValuationReport",
+                    "stepId", "search-results",
+                    "componentName", "SearchResults",
                     "data", Map.of(
-                        "message", "Professional Vehicle Valuation Report",
-                        "reportData", Map.of(
-                            "make", "Toyota",
-                            "model", "Corolla",
-                            "year", 2020,
-                            "marketValue", 285000
-                        )
+                        "message", "Here are vehicles matching your criteria"
                     ),
-                    "stepNumber", 1,
-                    "totalSteps", "3",
-                    "canGoBack", false,
+                    "stepNumber", 3,
+                    "totalSteps", "5",
+                    "canGoBack", true,
                     "status", "SUCCESS"
                 );
             }
@@ -884,7 +909,26 @@ import java.util.HashMap;
                 );
             }
             
-            case "vehicle-search", "carin-analytics" -> {
+            case "vehicle-search" -> {
+                // PHASE 1: Go back to vehicle-help-question
+                log.info("Going back from vehicle-search to vehicle-help-question (Phase 1)");
+                yield Map.of(
+                    "stepId", "vehicle-help-question",
+                    "componentName", "VehicleHelpQuestion",
+                    "data", Map.of(
+                        "message", "Can we help you find a vehicle?",
+                        "subMessage", "Click the button below to start searching for a vehicle.",
+                        "showButton", true,
+                        "buttonText", "Yes, help me find a vehicle"
+                    ),
+                    "stepNumber", 1,
+                    "totalSteps", "5",
+                    "canGoBack", false,
+                    "status", "SUCCESS"
+                );
+            }
+            
+            case "carin-analytics" -> {
                 log.error("Going back from {} to vehicle-knowledge", currentStep);
                 yield Map.of(
                     "stepId", "vehicle-knowledge",
@@ -1046,9 +1090,24 @@ import java.util.HashMap;
                 }
             }
             
+            // PHASE 1: Allow back from buying-complete
+            case "buying-complete" -> {
+                log.info("Going back from buying-complete to vehicle-purchase-confirmation (Phase 1)");
+                yield Map.of(
+                    "stepId", "vehicle-purchase-confirmation",
+                    "componentName", "VehiclePurchaseConfirmation",
+                    "data", Map.of(
+                        "message", "Complete your vehicle purchase request"
+                    ),
+                    "stepNumber", 4,
+                    "totalSteps", "5",
+                    "canGoBack", true,
+                    "status", "SUCCESS"
+                );
+            }
             
             // COMPLETION STEPS - Generally cannot go back
-            case "buying-complete", "selling-complete", "financing-assistance-complete", 
+            case "selling-complete", "financing-assistance-complete", 
                  "dealer-network-complete", "no-assistance-needed" -> {
                 log.error("Cannot go back from completion step: {}", currentStep);
                 yield createErrorResponse("Cannot go back from completion step: " + currentStep);
