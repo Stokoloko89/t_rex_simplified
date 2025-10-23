@@ -204,6 +204,71 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
            "v.soldDate IS NULL ORDER BY v.provinceName")
     List<String> findDistinctProvincesByFilters(@Param("make") String make, @Param("model") String model, @Param("city") String city);
     
+    // New queries with all filter parameters for full dynamic filtering
+    @Query("SELECT DISTINCT v.modelName FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:bodyType IS NULL OR LOWER(v.bodyType) = LOWER(:bodyType)) AND " +
+           "(:fuelType IS NULL OR LOWER(v.fuelType) = LOWER(:fuelType)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "v.soldDate IS NULL ORDER BY v.modelName")
+    List<String> findDistinctModelsByAllFilters(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("bodyType") String bodyType,
+        @Param("fuelType") String fuelType,
+        @Param("province") String province,
+        @Param("city") String city);
+    
+    @Query("SELECT DISTINCT v.bodyType FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:bodyType IS NULL OR LOWER(v.bodyType) = LOWER(:bodyType)) AND " +
+           "(:fuelType IS NULL OR LOWER(v.fuelType) = LOWER(:fuelType)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "v.bodyType IS NOT NULL AND v.soldDate IS NULL ORDER BY v.bodyType")
+    List<String> findDistinctBodyTypesByAllFilters(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("bodyType") String bodyType,
+        @Param("fuelType") String fuelType,
+        @Param("province") String province,
+        @Param("city") String city);
+    
+    @Query("SELECT DISTINCT v.fuelType FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:bodyType IS NULL OR LOWER(v.bodyType) = LOWER(:bodyType)) AND " +
+           "(:fuelType IS NULL OR LOWER(v.fuelType) = LOWER(:fuelType)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "v.fuelType IS NOT NULL AND v.soldDate IS NULL ORDER BY v.fuelType")
+    List<String> findDistinctFuelTypesByAllFilters(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("bodyType") String bodyType,
+        @Param("fuelType") String fuelType,
+        @Param("province") String province,
+        @Param("city") String city);
+    
+    @Query("SELECT DISTINCT v.provinceName FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:bodyType IS NULL OR LOWER(v.bodyType) = LOWER(:bodyType)) AND " +
+           "(:fuelType IS NULL OR LOWER(v.fuelType) = LOWER(:fuelType)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "v.soldDate IS NULL ORDER BY v.provinceName")
+    List<String> findDistinctProvincesByAllFilters(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("bodyType") String bodyType,
+        @Param("fuelType") String fuelType,
+        @Param("province") String province,
+        @Param("city") String city);
+    
     // Get filtered price range based on make, model, bodyType, fuelType, province
     @Query("SELECT MIN(v.price), MAX(v.price) FROM Vehicle v WHERE " +
            "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +

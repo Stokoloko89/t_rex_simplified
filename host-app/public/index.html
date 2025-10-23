@@ -4,21 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AA Inform - Vehicle Valuation & Financial Services</title>
-    <meta name="importmap-type" content="systemjs-importmap" />
-    <script type="systemjs-importmap">
+    <script type="importmap">
     {
       "imports": {
-        "single-spa": "https://unpkg.com/single-spa@5.9.5/lib/system/single-spa.min.js",
-        "react": "https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js",
-        "react-dom": "https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js",
+        "single-spa": "https://esm.sh/single-spa@6.0.3",
+        "react": "https://esm.sh/react@19.2.0",
+        "React": "https://esm.sh/react@19.2.0",
+        "react-dom": "https://esm.sh/react-dom@19.2.0",
+        "ReactDOM": "https://esm.sh/react-dom@19.2.0",
+        "react-dom/": "https://esm.sh/react-dom@19.2.0&dev/",
+        "react-dom/client": "https://esm.sh/react-dom@19.2.0/client",
+        "ReactDOM/client": "https://esm.sh/react-dom@19.2.0/client",
+        "react/jsx-runtime": "https://esm.sh/react@19.2.0/jsx-runtime",
+        "react/jsx-dev-runtime": "https://esm.sh/react@19.2.0/jsx-dev-runtime",
         "@t-rex/buying-flow": "http://localhost:3001/buying-flow.js"
       }
     }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/systemjs@6.14.0/dist/system.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/systemjs@6.14.0/dist/extras/amd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/systemjs@6.14.0/dist/extras/named-exports.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/systemjs@6.14.0/dist/extras/use-default.min.js"></script>
+    
+    <!-- Make React and ReactDOM available globally for microfrontends -->
+    <script type="module">
+      import React from 'react';
+      import ReactDOMClient from 'react-dom/client';
+      import * as ReactJSXRuntime from 'react/jsx-runtime';
+      import * as ReactJSXDevRuntime from 'react/jsx-dev-runtime';
+      
+      window.React = React;
+      window.ReactDOMClient = ReactDOMClient;
+      window.ReactDOM = ReactDOMClient;
+      
+      // Make JSX runtime available
+      Object.assign(window.React, ReactJSXRuntime);
+      Object.assign(window.React, ReactJSXDevRuntime);
+    </script>
     <style>
         * {
             margin: 0;
@@ -355,6 +373,8 @@
 
         /* T-Rex Microfrontend Container */
         #microfrontend-container {
+            display: flex;
+            align-items: center;
             background: #ffffff;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -427,37 +447,7 @@
     </div>
 </footer>
 
-    <script src="/t-rex-root-config.js"></script>
-    
-    <!-- SystemJS configuration for module loading -->
-    <script>
-        System.config({
-            baseURL: '/',
-            defaultExtension: 'js',
-            meta: {
-                '*.js': { babelOptions: { esmodules: false } }
-            },
-            map: {
-                '@t-rex/buying-flow': 'http://localhost:3001/buying-flow.js',
-                '@t-rex/shared-ui': '/t-rex-bundles/shared-ui.js',
-                'react': 'https://cdn.jsdelivr.net/npm/react@18.2.0/index.js',
-                'react-dom': 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/index.js',
-                'single-spa': 'https://cdn.jsdelivr.net/npm/single-spa@5.9.3/lib/system/single-spa.min.js',
-                '@mui/material': 'https://cdn.jsdelivr.net/npm/@mui/material@5.14.0/umd/material-ui.production.min.js',
-                '@mui/icons-material': 'https://cdn.jsdelivr.net/npm/@mui/icons-material@5.14.0/umd/material-icons.production.min.js',
-                '@emotion/react': 'https://cdn.jsdelivr.net/npm/@emotion/react@11.11.0/dist/emotion-react.umd.min.js',
-                '@emotion/styled': 'https://cdn.jsdelivr.net/npm/@emotion/styled@11.11.0/dist/emotion-styled.umd.min.js',
-                'axios': 'https://cdn.jsdelivr.net/npm/axios@1.4.0/dist/axios.min.js'
-            },
-            packages: {
-                '@t-rex/buying-flow': {
-                    main: 'index.js'
-                },
-                '@t-rex/shared-ui': {
-                    main: 'index.js'
-                }
-            }
-        });
-    </script>
+    <!-- Load T-Rex root configuration as ES module -->
+    <script type="module" src="/t-rex-root-config.js"></script>
 </body>
 </html>

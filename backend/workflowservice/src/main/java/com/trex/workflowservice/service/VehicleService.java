@@ -230,6 +230,27 @@ public class VehicleService {
         return vehicleRepository.findDistinctProvincesByFilters(make, model, city);
     }
     
+    // New methods with all filter parameters
+    public List<String> getModelsByAllFilters(String make, String model, String bodyType, String fuelType, String province, String city) {
+        logger.info("Getting models filtered by all parameters");
+        return vehicleRepository.findDistinctModelsByAllFilters(make, model, bodyType, fuelType, province, city);
+    }
+    
+    public List<String> getBodyTypesByAllFilters(String make, String model, String bodyType, String fuelType, String province, String city) {
+        logger.info("Getting body types filtered by all parameters");
+        return vehicleRepository.findDistinctBodyTypesByAllFilters(make, model, bodyType, fuelType, province, city);
+    }
+    
+    public List<String> getFuelTypesByAllFilters(String make, String model, String bodyType, String fuelType, String province, String city) {
+        logger.info("Getting fuel types filtered by all parameters");
+        return vehicleRepository.findDistinctFuelTypesByAllFilters(make, model, bodyType, fuelType, province, city);
+    }
+    
+    public List<String> getProvincesByAllFilters(String make, String model, String bodyType, String fuelType, String province, String city) {
+        logger.info("Getting provinces filtered by all parameters");
+        return vehicleRepository.findDistinctProvincesByAllFilters(make, model, bodyType, fuelType, province, city);
+    }
+    
     // Helper method to create a vehicle search summary
     public Map<String, Object> getSearchSummary(Page<Vehicle> vehiclePage) {
         Map<String, Object> summary = new HashMap<>();

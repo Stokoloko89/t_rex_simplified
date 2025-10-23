@@ -1,4 +1,7 @@
-import React, { useEffect, useState, createContext, useContext } from 'react';
+// React is available globally from the host app
+declare const React: typeof import('react');
+const { useEffect, useState, createContext, useContext } = React;
+
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Container, Box } from '@mui/material';

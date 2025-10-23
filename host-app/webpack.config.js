@@ -10,7 +10,11 @@ module.exports = {
     filename: 't-rex-root-config.js',
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/',
-    libraryTarget: 'system',
+    libraryTarget: 'module',
+    module: true,
+  },
+  experiments: {
+    outputModule: true,
   },
   devServer: {
     port: 3002,
@@ -42,5 +46,6 @@ module.exports = {
   ],
   externals: [
     'single-spa',
+    '@t-rex/buying-flow',
   ],
 };

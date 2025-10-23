@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+// React is available globally from the host app
+declare const React: typeof import('react');
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
 import {
   Card,
   CardContent,
   Typography,
   Box,
   TextField,
-  Grid,
   FormControl,
   InputLabel,
   Select,
@@ -79,26 +80,78 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
   useEffect(() => {
     const loadFiltersAndModels = async () => {
       try {
-        // Load filters and models in parallel
-        const [filtersResponse, modelsResponse] = await Promise.all([
-          fetch('http://localhost:8080/api/vehicles/filters'),
-          fetch('http://localhost:8080/api/vehicles/models')
-        ]);
+        // Load filters first
+        const filtersResponse = await fetch('http://localhost:8080/api/vehicles/filters');
+        const filtersData = await filtersResponse.json();
         
-        const [filtersData, modelsData] = await Promise.all([
-          filtersResponse.json(),
-          modelsResponse.json()
-        ]);
+        // Try to load all models from dedicated endpoint
+        let modelsData = null;
+        try {
+          const modelsResponse = await fetch('http://localhost:8080/api/vehicles/models');
+          console.log('Models response status:', modelsResponse.status);
+          
+          if (modelsResponse.ok) {
+            modelsData = await modelsResponse.json();
+          } else {
+            console.warn('Models API returned non-OK status:', modelsResponse.status);
+          }
+        } catch (modelsError) {
+          console.warn('Models API endpoint not available, will use filters.models:', modelsError);
+        }
         
-        console.log('Initial load - models:', modelsData.length);
+        console.log('Raw modelsData:', modelsData);
         
-        // Cache the models
-        apiCache.current.set('models-all', modelsData);
+        // Ensure modelsData is an array
+        let modelsArray = Array.isArray(modelsData) ? modelsData : [];
+        
+        // Fallback 1: If models endpoint returns empty/undefined, try to get from filters
+        if (modelsArray.length === 0 && filtersData.models && Array.isArray(filtersData.models)) {
+          console.log('Using models from filters endpoint as fallback');
+          modelsArray = filtersData.models;
+        }
+        
+        // Fallback 2: If still empty, aggregate models by fetching per make
+        if (modelsArray.length === 0) {
+          const makesArray = Array.isArray(filtersData.makes) ? filtersData.makes : [];
+          if (makesArray.length > 0) {
+            try {
+              const results = await Promise.allSettled(
+                makesArray.map((m: string) =>
+                  fetch(`http://localhost:8080/api/vehicles/makes/${encodeURIComponent(m)}/models`).then(res =>
+                    res.ok ? res.json() : []
+                  )
+                )
+              );
+              const collected = new Set<string>();
+              results.forEach(r => {
+                if (r.status === 'fulfilled' && Array.isArray(r.value)) {
+                  (r.value as any[]).forEach((model: any) => {
+                    if (typeof model === 'string' && model) collected.add(model);
+                  });
+                }
+              });
+              modelsArray = Array.from(collected).sort((a, b) => a.localeCompare(b));
+              console.log('Aggregated models from makes:', modelsArray.length);
+            } catch (aggErr) {
+              console.warn('Failed aggregating models from makes', aggErr);
+            }
+          }
+        }
+        
+        console.log('Initial load - models array length:', modelsArray.length);
+        
+        // Cache all initial filter lists for reset functionality
+        apiCache.current.set('models-all', modelsArray);
+        apiCache.current.set('makes-all', filtersData.makes || []);
+        apiCache.current.set('bodyTypes-all', filtersData.bodyTypes || []);
+        apiCache.current.set('fuelTypes-all', filtersData.fuelTypes || []);
+        apiCache.current.set('provinces-all', filtersData.provinces || []);
+        apiCache.current.set('cities-all', filtersData.cities || []);
         
         // Set all filters including models in one update
         setFilters({
           makes: filtersData.makes || [],
-          models: modelsData || [],  // Use fetched models, not from filters
+          models: modelsArray,  // Use fetched models or fallback to filters.models
           provinces: filtersData.provinces || [],
           cities: filtersData.cities || [],
           fuelTypes: filtersData.fuelTypes || [],
@@ -163,11 +216,12 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         console.log('Fetching models for make:', searchData.make);
         const response = await fetch(`http://localhost:8080/api/vehicles/makes/${searchData.make}/models`);
         const models = await response.json();
-        console.log('Received models for make:', models.length);
-        apiCache.current.set(cacheKey, models);
+        const modelsArray = Array.isArray(models) ? models : [];
+        console.log('Received models for make:', modelsArray.length);
+        apiCache.current.set(cacheKey, modelsArray);
         setFilters(prev => ({
           ...prev,
-          models: [...models] // Create new array reference
+          models: [...modelsArray] // Create new array reference
         }));
       } catch (error) {
         console.error('Error loading models:', error);
@@ -197,26 +251,56 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     return data;
   }, []);
   
-  // Load filtered options when make, model, or city changes (with debouncing)
+  // Load filtered options when ANY filter changes (with debouncing)
   useEffect(() => {
     // Clear existing timer
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
     
-    // Only fetch if we have at least one filter
-    if (!searchData.make && !searchData.model && !searchData.city) {
+    // Check if all filters are empty
+    const hasAnyFilter = searchData.make || searchData.model || searchData.bodyType || 
+                         searchData.fuelType || searchData.province || searchData.city;
+    
+    // If no filters at all, reset ALL filter lists to initial state
+    if (!hasAnyFilter) {
+      const cachedAllModels = apiCache.current.get('models-all');
+      const cachedAllBodyTypes = apiCache.current.get('bodyTypes-all');
+      const cachedAllFuelTypes = apiCache.current.get('fuelTypes-all');
+      const cachedAllProvinces = apiCache.current.get('provinces-all');
+      const cachedAllCities = apiCache.current.get('cities-all');
+      
+      console.log('🔄 Resetting all filters to initial state');
+      setFilters(prev => ({
+        ...prev,
+        models: cachedAllModels || prev.models,
+        bodyTypes: cachedAllBodyTypes || prev.bodyTypes,
+        fuelTypes: cachedAllFuelTypes || prev.fuelTypes,
+        provinces: cachedAllProvinces || prev.provinces,
+        cities: cachedAllCities || prev.cities
+      }));
       return;
     }
     
     // Debounce the API call by 300ms
     debounceTimer.current = setTimeout(async () => {
-      console.log('🔍 Fetching filtered options for:', { make: searchData.make, model: searchData.model, city: searchData.city });
+      console.log('🔍 Fetching filtered options for:', { 
+        make: searchData.make, 
+        model: searchData.model, 
+        bodyType: searchData.bodyType,
+        fuelType: searchData.fuelType,
+        province: searchData.province,
+        city: searchData.city 
+      });
       setIsLoadingBodyTypes(true);
+      setIsLoadingModels(true);
       try {
         const params = new URLSearchParams();
         if (searchData.make) params.append('make', searchData.make);
         if (searchData.model) params.append('model', searchData.model);
+        if (searchData.bodyType) params.append('bodyType', searchData.bodyType);
+        if (searchData.fuelType) params.append('fuelType', searchData.fuelType);
+        if (searchData.province) params.append('province', searchData.province);
         if (searchData.city) params.append('city', searchData.city);
         
         const paramsString = params.toString();
@@ -225,40 +309,49 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         // Check if we already have this in cache
         if (apiCache.current.has(cacheKey)) {
           const cached = apiCache.current.get(cacheKey);
-          console.log('✅ Using cached body types:', cached.bodyTypes);
+          console.log('✅ Using cached filtered options');
           setFilters(prev => ({
             ...prev,
+            models: cached.models || [],
             bodyTypes: cached.bodyTypes || [],
             fuelTypes: cached.fuelTypes || [],
             provinces: cached.provinces || [],
             cities: cached.cities || []
           }));
           setIsLoadingBodyTypes(false);
+          setIsLoadingModels(false);
           return;
         }
 
-        // Load filtered options in parallel
-        const [bodyTypesRes, fuelTypesRes, provincesRes, citiesRes] = await Promise.all([
-          fetch(`http://localhost:8080/api/vehicles/filtered/body-types?${params}`),
-          fetch(`http://localhost:8080/api/vehicles/filtered/fuel-types?${params}`),
-          fetch(`http://localhost:8080/api/vehicles/filtered/provinces?${params}`),
-          fetch(`http://localhost:8080/api/vehicles/filtered/cities?${params}`)
-        ]);
+        // Build filtered endpoints - fetch models, bodyTypes, fuelTypes, provinces, cities
+        const endpoints = [
+          `http://localhost:8080/api/vehicles/filtered/models?${params}`,
+          `http://localhost:8080/api/vehicles/filtered/body-types?${params}`,
+          `http://localhost:8080/api/vehicles/filtered/fuel-types?${params}`,
+          `http://localhost:8080/api/vehicles/filtered/provinces?${params}`,
+          `http://localhost:8080/api/vehicles/filtered/cities?${params}`
+        ];
 
-        const [bodyTypes, fuelTypes, provinces, cities] = await Promise.all([
-          bodyTypesRes.json(),
-          fuelTypesRes.json(),
-          provincesRes.json(),
-          citiesRes.json()
-        ]);
+        // Load filtered options in parallel
+        const responses = await Promise.all(endpoints.map(url => fetch(url)));
+        const [models, bodyTypes, fuelTypes, provinces, cities] = await Promise.all(
+          responses.map(res => res.json())
+        );
         
-        console.log('✅ Fetched body types for model:', searchData.model, '→', bodyTypes);
+        console.log('✅ Fetched filtered options:', { 
+          models: models.length,
+          bodyTypes: bodyTypes.length, 
+          fuelTypes: fuelTypes.length,
+          provinces: provinces.length,
+          cities: cities.length
+        });
         
         // Cache the combined result
-        apiCache.current.set(cacheKey, { bodyTypes, fuelTypes, provinces, cities });
+        apiCache.current.set(cacheKey, { models, bodyTypes, fuelTypes, provinces, cities });
 
         setFilters(prev => ({
           ...prev,
+          models: models || [],
           bodyTypes: bodyTypes || [],
           fuelTypes: fuelTypes || [],
           provinces: provinces || [],
@@ -287,6 +380,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         console.error('❌ Error loading filtered options:', error);
       } finally {
         setIsLoadingBodyTypes(false);
+        setIsLoadingModels(false);
       }
     }, 300); // 300ms debounce delay
     
@@ -296,7 +390,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [searchData.make, searchData.model, searchData.city]);
+  }, [searchData.make, searchData.model, searchData.bodyType, searchData.fuelType, searchData.province, searchData.city]);
 
   // Load dynamic ranges when any filter changes (with debouncing)
   useEffect(() => {
@@ -465,11 +559,13 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
           </Typography>
         </Box>
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+          <Box>
             <FormControl fullWidth>
-              <InputLabel>Make</InputLabel>
+              <InputLabel id="make-select-label">Make</InputLabel>
               <Select
+                labelId="make-select-label"
+                id="make-select"
                 value={searchData.make}
                 label="Make"
                 onChange={(e) => handleInputChange('make', e.target.value)}
@@ -483,9 +579,9 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 ))}
               </Select>
             </FormControl>
-          </Grid>
+          </Box>
           
-          <Grid item xs={12} md={6}>
+          <Box>
             <Autocomplete
               value={searchData.model || null}
               onChange={(event, newValue) => {
@@ -517,12 +613,14 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
               loading={isLoadingModels}
               loadingText="Loading models..."
             />
-          </Grid>
+          </Box>
 
-          <Grid item xs={12} md={6}>
+          <Box>
             <FormControl fullWidth>
-              <InputLabel>Body Type</InputLabel>
+              <InputLabel id="body-type-select-label">Body Type</InputLabel>
               <Select
+                labelId="body-type-select-label"
+                id="body-type-select"
                 value={searchData.bodyType}
                 label="Body Type"
                 onChange={(e) => handleInputChange('bodyType', e.target.value)}
@@ -546,12 +644,14 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 {filters.bodyTypes.length} body type{filters.bodyTypes.length !== 1 ? 's' : ''} available for {searchData.model}
               </Typography>
             )}
-          </Grid>
+          </Box>
 
-          <Grid item xs={12} md={6}>
+          <Box>
             <FormControl fullWidth>
-              <InputLabel>Fuel Type</InputLabel>
+              <InputLabel id="fuel-type-select-label">Fuel Type</InputLabel>
               <Select
+                labelId="fuel-type-select-label"
+                id="fuel-type-select"
                 value={searchData.fuelType}
                 label="Fuel Type"
                 onChange={(e) => handleInputChange('fuelType', e.target.value)}
@@ -565,12 +665,14 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 ))}
               </Select>
             </FormControl>
-          </Grid>
+          </Box>
 
-          <Grid item xs={12} md={6}>
+          <Box>
             <FormControl fullWidth>
-              <InputLabel>Province</InputLabel>
+              <InputLabel id="province-select-label">Province</InputLabel>
               <Select
+                labelId="province-select-label"
+                id="province-select"
                 value={searchData.province}
                 label="Province"
                 onChange={(e) => handleInputChange('province', e.target.value)}
@@ -584,12 +686,14 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 ))}
               </Select>
             </FormControl>
-          </Grid>
+          </Box>
 
-          <Grid item xs={12} md={6}>
+          <Box>
             <FormControl fullWidth>
-              <InputLabel>City</InputLabel>
+              <InputLabel id="city-select-label">City</InputLabel>
               <Select
+                labelId="city-select-label"
+                id="city-select"
                 value={searchData.city}
                 label="City"
                 onChange={(e) => handleInputChange('city', e.target.value)}
@@ -603,9 +707,9 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 ))}
               </Select>
             </FormControl>
-          </Grid>
+          </Box>
 
-          <Grid item xs={12}>
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <Typography gutterBottom>
               Year Range: {searchData.yearRange[0]} - {searchData.yearRange[1]}
             </Typography>
@@ -633,9 +737,9 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 },
               }}
             />
-          </Grid>
+          </Box>
 
-          <Grid item xs={12}>
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <Typography gutterBottom>
               Price Range: R{searchData.priceRange[0].toLocaleString()} - R{searchData.priceRange[1].toLocaleString()}
             </Typography>
@@ -664,9 +768,9 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 },
               }}
             />
-          </Grid>
+          </Box>
 
-          <Grid item xs={12}>
+          <Box sx={{ gridColumn: '1 / -1' }}>
             <Typography gutterBottom>
               Maximum Mileage: {searchData.mileageMax.toLocaleString()} kilometers
             </Typography>
@@ -695,8 +799,8 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                 },
               }}
             />
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
         <Box display="flex" justifyContent="center" mt={4}>
           <Button

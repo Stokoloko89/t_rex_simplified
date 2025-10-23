@@ -22,7 +22,7 @@ function handleMicrofrontendError(error) {
 registerApplication({
   name: '@t-rex/buying-flow',
   app: () => {
-    return System.import('@t-rex/buying-flow').catch(error => {
+    return import('@t-rex/buying-flow').catch(error => {
       handleMicrofrontendError(error);
       // Return a minimal lifecycle to prevent single-spa errors
       return {
@@ -58,7 +58,7 @@ console.log('T-Rex root config loaded successfully');
 // Development helpers
 if (process.env.NODE_ENV === 'development') {
   window.singleSpa = {
-    getAppNames: () => window.System.resolve('@t-rex/buying-flow'),
+    getAppNames: () => ['@t-rex/buying-flow'],
     getAppStatus: (name) => window.singleSpa.getAppStatus(name),
   };
 }

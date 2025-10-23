@@ -1,4 +1,5 @@
-import React from 'react';
+// React is available globally from the host app
+declare const React: typeof import('react');
 import {
   Box,
   Typography,

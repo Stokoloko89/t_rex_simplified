@@ -6,10 +6,36 @@ A cost-effective, scalable microfrontend application built with React, Spring Bo
 
 This application follows a **backend-driven workflow orchestration** pattern with:
 
-- **Frontend**: React microfrontends with Material UI
-- **Backend**: Spring Boot microservices with PostgreSQL
+- **Frontend**: React 18 microfrontends with Material-UI v7
+- **Backend**: Spring Boot 3.1 with PostgreSQL 15
 - **Orchestration**: Single-SPA for microfrontend management
-- **Deployment**: Docker containers with nginx
+- **Deployment**: Docker containers with multi-stage builds
+- **State Management**: Backend-driven workflow engine with persistent state
+- **API**: RESTful endpoints with comprehensive vehicle search and filtering
+
+### Technology Stack
+
+#### Frontend
+- **React 18.3** - UI library with hooks and concurrent features
+- **Material-UI 7.3** - Modern component library with CSS Grid layouts
+- **Single-SPA 6.0** - Microfrontend orchestration framework
+- **TypeScript 5.x** - Type-safe JavaScript
+- **Webpack 5** - Module bundler with code splitting
+- **pnpm 8.x** - Fast, disk space efficient package manager
+
+#### Backend
+- **Spring Boot 3.1** - Java application framework
+- **Spring Data JPA** - Database abstraction layer
+- **PostgreSQL 15** - Relational database
+- **Hibernate** - ORM with query optimization
+- **Maven 3.8** - Build and dependency management
+- **Resilience4j** - Circuit breaker and fault tolerance
+
+#### DevOps
+- **Docker** - Containerization
+- **Docker Compose** - Multi-container orchestration
+- **Nginx** - Reverse proxy and static file serving
+- **Multi-stage builds** - Optimized Docker images
 
 ## 📁 Project Structure
 
@@ -76,21 +102,85 @@ pnpm run install:all
 
 ### 2. Start with Docker (Recommended)
 
+#### Option A: Backend Only (For Frontend Development)
+
 ```bash
-# Start all services
+# Start database and backend API
+docker-compose up -d db workflowservice
+
+# Check backend health
+curl http://localhost:8080/actuator/health
+
+# View backend logs
+docker-compose logs -f workflowservice
+```
+
+This is the **recommended approach** for frontend development as it:
+- Starts only the backend services you need
+- Allows you to run frontend locally with hot reload
+- Provides faster iteration cycles
+- Uses less system resources
+
+#### Option B: Full Stack with Docker
+
+```bash
+# Start all services (database, backend, and frontend)
 docker-compose up --build
 
 # Or start in detached mode
 docker-compose up -d --build
+
+# Stop all services
+docker-compose down
+
+# Rebuild and restart specific service
+docker-compose up --build -d workflowservice
 ```
 
-Services will be available at:
-- **Host Application**: http://localhost:3000
-- **Buying Flow**: http://localhost:3001
-- **Workflow API**: http://localhost:8080
-- **PostgreSQL**: localhost:5432
+#### Docker Services
 
-### 3. Local Development
+Services will be available at:
+- **Workflow API**: http://localhost:8080
+  - Health: http://localhost:8080/actuator/health
+  - API Docs: http://localhost:8080/api/vehicles/filters
+- **PostgreSQL**: localhost:5432
+  - Database: `t_rex_db`
+  - User: `t_rex_user`
+  - Password: `password`
+- **Host Application** (if running full stack): http://localhost:3000
+- **Buying Flow** (if running full stack): http://localhost:3001
+
+#### Docker Commands Reference
+
+```bash
+# View all running containers
+docker-compose ps
+
+# View logs for all services
+docker-compose logs -f
+
+# View logs for specific service
+docker-compose logs -f workflowservice
+docker-compose logs -f db
+
+# Restart a service
+docker-compose restart workflowservice
+
+# Rebuild backend after code changes
+docker-compose up --build -d workflowservice
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (fresh database)
+docker-compose down -v
+
+# Execute commands in running container
+docker-compose exec workflowservice sh
+docker-compose exec db psql -U t_rex_user -d t_rex_db
+```
+
+### 3. Local Development (Without Docker)
 
 #### Backend (Spring Boot)
 
@@ -138,6 +228,52 @@ pnpm --filter "./packages/*" build     # All packages
 pnpm --filter "*flow*" start          # Packages matching pattern
 pnpm --filter "!host-app" build       # Exclude specific package
 ```
+
+## 🔌 API Endpoints
+
+### Vehicle Search & Filters
+
+The backend provides comprehensive vehicle search and filtering capabilities:
+
+```bash
+# Get all available filters (makes, models, provinces, etc.)
+GET /api/vehicles/filters
+
+# Get all vehicle models (fixed in latest version)
+GET /api/vehicles/models
+
+# Get models for a specific make
+GET /api/vehicles/makes/{make}/models
+
+# Get all makes
+GET /api/vehicles/makes
+
+# Search vehicles with filters
+GET /api/vehicles/search?make=Toyota&model=Corolla&minYear=2020&maxYear=2024
+
+# Get filtered body types based on make/model selection
+GET /api/vehicles/filtered/body-types?make=Toyota&model=Corolla
+
+# Get dynamic price/year/mileage ranges based on current filters
+GET /api/vehicles/filtered/ranges?make=Toyota&model=Corolla
+```
+
+### Recent Bug Fixes
+
+**Issue**: `/api/vehicles/models` endpoint was returning 400 Bad Request
+
+**Root Cause**: Spring Boot 3.x path mapping conflict between:
+- `@GetMapping("/models")` - Get all models
+- `@GetMapping("/models/{model}/make")` - Get make by model
+
+**Solution**: Reordered endpoint definitions and added explicit `produces = "application/json"` to help Spring's path matcher distinguish between the two endpoints.
+
+**Frontend Resilience**: Added multi-level fallback strategy:
+1. Try `/api/vehicles/models` endpoint
+2. Fallback to `filters.models` if available
+3. Aggregate models by fetching from each make via `/makes/{make}/models`
+
+This ensures the Model autocomplete always has data even if the primary endpoint fails.
 
 ## 🔧 Development Workflow
 

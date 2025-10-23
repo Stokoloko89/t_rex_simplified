@@ -1,4 +1,6 @@
-import React, { Suspense, useRef, useEffect, useState } from 'react';
+// React is available globally from the host app
+declare const React: typeof import('react');
+const { Suspense, useRef, useEffect, useState } = React;
 import { Alert, Box, Fade, CircularProgress, Typography } from '@mui/material';
 import { LoadingSpinner } from '@t-rex/shared-ui';
 import { useWorkflow } from '../App';

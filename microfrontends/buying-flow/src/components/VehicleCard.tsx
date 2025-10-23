@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+// React is available globally from the host app
+declare const React: typeof import('react');
+const { useState } = React;
 import { Card, CardContent, Typography, Box, Chip, Stack, Avatar, IconButton } from '@mui/material';
 import { DirectionsCar, LocalGasStation, Speed, Engineering, Phone, Directions, FavoriteBorder, Favorite } from '@mui/icons-material';
 import { formatCurrency, formatDistance, formatFuelConsumption, formatPower } from '@t-rex/shared-ui';
