@@ -29,8 +29,12 @@ module.exports = (env) => ({
   output: {
     filename: 'buying-flow.js',
     path: path.resolve(__dirname, 'dist'),
-    libraryTarget: env?.standalone ? 'var' : 'system',
+    libraryTarget: env?.standalone ? 'var' : 'module',
     library: env?.standalone ? 'buyingFlow' : undefined,
+    module: !env?.standalone,
+  },
+  experiments: {
+    outputModule: !env?.standalone,
   },
   devServer: {
     port: 3001,
@@ -39,10 +43,14 @@ module.exports = (env) => ({
       'Access-Control-Allow-Origin': '*',
     },
   },
-  externals: env?.standalone ? {} : {
-    react: 'react',
-    'react-dom': 'react-dom',
-  },
+  externals: env?.standalone ? {} : [
+    'react',
+    'react-dom',
+    'react-dom/client',
+    'react/jsx-runtime',
+    'react/jsx-dev-runtime',
+    /^react\/.*/,
+  ],
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',

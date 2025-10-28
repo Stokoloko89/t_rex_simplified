@@ -1,4 +1,7 @@
-import React, { useEffect, useState, createContext, useContext } from 'react';
+// React is available globally from the host app
+declare const React: typeof import('react');
+const { useEffect, useState, createContext, useContext } = React;
+
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Container, Box } from '@mui/material';
@@ -52,72 +55,26 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   );
 
   useEffect(() => {
-    // Detect if this is being loaded as a modal (check URL params or parent context)
-    const urlParams = new URLSearchParams(window.location.search);
-    const isModal = urlParams.get('modal') === 'true' || window.parent !== window;
-    const requestedStep = urlParams.get('step');
-    
-    // Check for global flag set by host app or other modal contexts
-    const globalFlag = (window as any).LOAD_VEHICLE_VALUATION_REPORT;
-    const isInHostApp = window.location.port === '3002' || window.location.href.includes('3002');
-    const isSystemJSContext = window.System && window.location.port === '3001';
-    const shouldLoadValuationReport = isModal || requestedStep === 'VehicleValuationReport' || isInHostApp || isSystemJSContext || globalFlag;
-
-    // Initial load of the workflow
+    // Simplified flow: Always start with vehicle help question
     const loadInitialStep = async () => {
       setIsLoading(true);
       setError(null);
-      
-      if (shouldLoadValuationReport) {
-        console.log('Loading VehicleValuationReport - detected modal context:', { isModal, requestedStep, isInHostApp, isSystemJSContext, globalFlag });
-        
-        // Always load VehicleValuationReport directly when in modal context
-        const config = {
-          stepId: 'vehicle-valuation-report',
-          componentName: 'VehicleValuationReport',
-          data: { 
-            message: 'Vehicle Valuation Report',
-            title: 'Vehicle Valuation Report',
-            modalTitle: 'Vehicle Valuation Report',
-            hideEmoji: true,
-            noIcon: true,
-            vehicleData: {
-              make: 'Toyota',
-              model: 'Corolla',
-              year: 2020,
-              mileage: 45000,
-              condition: 'Good'
-            }
-          },
-          hideProgress: true,
-          hideIcon: true,
-          noEmoji: true,
-          stepNumber: 1,
-          totalSteps: 1
-        };
-        console.log('Setting VehicleValuationReport config:', config);
-        setCurrentStepConfig(config);
-      } else {
-        try {
-          const response = await axios.post(`${API_BASE_URL}/workflow/start`, { 
-            sessionId,
-            workflowType: 'buying'
-          });
-          setCurrentStepConfig(response.data);
-        } catch (error: any) {
-          console.error('Error starting workflow:', error);
-          setError('Failed to start workflow. Using mock data for development.');
-          // Mock data for development when backend is not available
-          setCurrentStepConfig({
-            stepId: 'intent-selection',
-            componentName: 'IntentSelection',
-            data: { message: 'What would you like to do today?' },
-            stepNumber: 1,
-            totalSteps: 5
-          });
-        }
-      }
-      
+
+      // Start with vehicle help question instead of form completion confirmation
+      const config = {
+        stepId: 'vehicle-help-question',
+        componentName: 'VehicleHelpQuestion',
+        data: {
+          message: 'Can we help you find a vehicle?',
+          subMessage: 'Click the button below to start searching for a vehicle.',
+          showButton: true,
+          buttonText: 'Yes, help me find a vehicle'
+        },
+        stepNumber: 1,
+        totalSteps: 3
+      };
+
+      setCurrentStepConfig(config);
       setIsLoading(false);
     };
     loadInitialStep();
@@ -183,67 +140,15 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     let nextStep: WorkflowStep | null = null;
 
     switch (currentStep) {
-      case 'vehicle-valuation-report':
-        // Handle navigation from VehicleValuationReport based on nextStep
-        const { nextStep: componentName, action, intent, vehicleInterest, vehicleToSell, valuationData } = formData;
-        console.log('Valuation report navigation:', { componentName, action, intent });
-        
-        if (componentName === 'VehiclePurchaseConfirmation' && intent === 'buying') {
+      case 'vehicle-help-question':
+        // Handle navigation from vehicle help question
+        if (formData.action === 'start_vehicle_search') {
           nextStep = {
-            stepId: 'vehicle-purchase-confirmation',
-            componentName: 'VehiclePurchaseConfirmation',
-            data: { 
-              ...formData,
-              intent: 'buying',
-              message: `Complete your purchase request for the ${vehicleInterest}`,
-              vehicleInterest,
-              valuationData
-            },
-            stepNumber: 2,
-            totalSteps: 3
-          };
-          console.log('Created VehiclePurchaseConfirmation step:', nextStep);
-        } else if (componentName === 'VehicleKnowledge' && intent === 'buying') {
-          nextStep = {
-            stepId: 'vehicle-knowledge',
-            componentName: 'VehicleKnowledge',
-            data: { 
-              ...formData,
-              intent: 'buying',
-              message: `Great! You're interested in purchasing a ${vehicleInterest}.`,
-              subMessage: 'Do you know exactly which vehicle you want to buy?',
-              vehicleInterest,
-              valuationData
-            },
-            stepNumber: 2,
-            totalSteps: 6
-          };
-        } else if (componentName === 'HasBuyer' && intent === 'selling') {
-          nextStep = {
-            stepId: 'has-buyer',
-            componentName: 'HasBuyer',
-            data: { 
-              ...formData,
-              intent: 'selling',
-              message: `Let's help you sell your ${vehicleToSell}.`,
-              subMessage: 'Do you already have a buyer for your vehicle?',
-              vehicleToSell,
-              valuationData,
-              estimatedValue: `R${valuationData?.marketValue?.toLocaleString() || '285,000'}`
-            },
-            stepNumber: 2,
-            totalSteps: 4
-          };
-        } else if (componentName === 'DealerNetwork' && intent === 'dealer-network') {
-          nextStep = {
-            stepId: 'dealer-network',
-            componentName: 'DealerNetwork',
-            data: { 
-              ...formData,
-              intent: 'dealer-network',
-              message: `Finding dealers with similar ${vehicleInterest} vehicles`,
-              vehicleInterest,
-              valuationData
+            stepId: 'vehicle-search',
+            componentName: 'VehicleSearch',
+            data: {
+              message: 'Search for your desired vehicle',
+              subMessage: 'Let\'s find the right vehicle for you!'
             },
             stepNumber: 2,
             totalSteps: 3
@@ -282,7 +187,7 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
           nextStep = {
             stepId: 'carin-analytics',
             componentName: 'CarInAnalytics',
-            data: { ...formData, message: 'Let us help you find the perfect vehicle' },
+            data: { ...formData, message: 'Let us help you find the right vehicle' },
             stepNumber: 3,
             totalSteps: 7
           };
@@ -306,12 +211,13 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         console.log('App.tsx: Navigating from search-results with action:', formData.action);
         if (formData.action === 'vehicle-selected' && formData.selectedVehicle) {
           nextStep = {
-            stepId: 'buying-confirmation',
-            componentName: 'BuyingConfirmation',
+            stepId: 'vehicle-purchase-confirmation',
+            componentName: 'VehiclePurchaseConfirmation',
             data: { 
-              ...formData, 
-              message: `Complete your purchase request for the ${formData.selectedVehicle.year} ${formData.selectedVehicle.makeName} ${formData.selectedVehicle.modelName}`,
-              selectedVehicle: formData.selectedVehicle
+              ...formData,
+              vehicleData: formData.selectedVehicle,
+              personData: formData.personData || {},
+              message: `Complete your purchase request for the ${formData.selectedVehicle.year} ${formData.selectedVehicle.makeName} ${formData.selectedVehicle.modelName}`
             },
             stepNumber: 5,
             totalSteps: 6
@@ -319,13 +225,32 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         } else {
           // Fallback case
           nextStep = {
-            stepId: 'buying-confirmation',
-            componentName: 'BuyingConfirmation',
+            stepId: 'vehicle-purchase-confirmation',
+            componentName: 'VehiclePurchaseConfirmation',
             data: { 
-              ...formData, 
+              ...formData,
+              vehicleData: formData.selectedVehicles?.[0] || formData.selectedVehicle,
+              personData: formData.personData || {},
               message: 'Confirm your vehicle selection and provide contact details'
             },
             stepNumber: 5,
+            totalSteps: 6
+          };
+        }
+        break;
+      case 'vehicle-purchase-confirmation':
+        console.log('App.tsx: Navigating from vehicle-purchase-confirmation with action:', formData.action);
+        if (formData.action === 'contact-submitted' || formData.action === 'purchase-confirmed') {
+          nextStep = {
+            stepId: 'buying-complete',
+            componentName: 'BuyingComplete',
+            data: { 
+              ...formData, 
+              message: 'Thank you! Your request has been submitted successfully.',
+              nextSteps: 'You will receive a confirmation email shortly. A dealership will contact you within 24 hours.',
+              leadId: `LEAD-${Date.now()}`
+            },
+            stepNumber: 6,
             totalSteps: 6
           };
         }
@@ -501,44 +426,130 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
   const mockGoBack = async () => {
     const currentStep = currentStepConfig?.stepId;
+    const currentData = currentStepConfig?.data;
     let previousStep: WorkflowStep | null = null;
 
     switch (currentStep) {
-      case 'vehicle-knowledge':
-        previousStep = {
-          stepId: 'intent-selection',
-          componentName: 'IntentSelection',
-          data: { message: 'What would you like to do today?' },
-          stepNumber: 1,
-          totalSteps: 6
-        };
-        break;
       case 'vehicle-search':
         previousStep = {
-          stepId: 'vehicle-knowledge',
-          componentName: 'VehicleKnowledge',
-          data: { message: 'Do you already know which vehicle you want to buy?' },
-          stepNumber: 2,
-          totalSteps: 6
+          stepId: 'vehicle-help-question',
+          componentName: 'VehicleHelpQuestion',
+          data: {
+            message: 'Can we help you find a vehicle?',
+            subMessage: 'Click the button below to start searching for a vehicle.',
+            showButton: true,
+            buttonText: 'Yes, help me find a vehicle'
+          },
+          stepNumber: 1,
+          totalSteps: 5
         };
         break;
       case 'search-results':
         previousStep = {
           stepId: 'vehicle-search',
           componentName: 'VehicleSearch',
-          data: { message: 'Search for your desired vehicle' },
-          stepNumber: 3,
-          totalSteps: 6
+          data: {
+            message: 'Search for your perfect vehicle',
+            ...currentData // Preserve search criteria
+          },
+          stepNumber: 2,
+          totalSteps: 5
         };
         break;
-      case 'buying-confirmation':
+      case 'vehicle-purchase-confirmation':
         previousStep = {
           stepId: 'search-results',
           componentName: 'SearchResults',
-          data: { message: 'Here are vehicles matching your criteria' },
-          stepNumber: 4,
-          totalSteps: 6
+          data: {
+            message: 'Here are vehicles matching your criteria',
+            vehicleSearch: currentData?.vehicleSearch,
+            ...currentData // Preserve all data including selected vehicles
+          },
+          stepNumber: 3,
+          totalSteps: 5
         };
+        break;
+      case 'buyer-type':
+        previousStep = {
+          stepId: 'has-buyer',
+          componentName: 'HasBuyer',
+          data: {
+            message: 'Do you already have a buyer for your vehicle?',
+            valuationData: currentData?.valuationData,
+            ...currentData
+          },
+          stepNumber: 1,
+          totalSteps: 4
+        };
+        break;
+      case 'private-buyer':
+        previousStep = {
+          stepId: 'buyer-type',
+          componentName: 'BuyerType',
+          data: {
+            message: 'What type of buyer do you have?',
+            previousChoice: 'has_buyer',
+            ...currentData
+          },
+          stepNumber: 2,
+          totalSteps: 4
+        };
+        break;
+      case 'dealer-network':
+        // Check where we came from based on data
+        if (currentData?.previousChoice === 'no_buyer') {
+          previousStep = {
+            stepId: 'has-buyer',
+            componentName: 'HasBuyer',
+            data: {
+              message: 'Do you already have a buyer for your vehicle?',
+              valuationData: currentData?.valuationData,
+              ...currentData
+            },
+            stepNumber: 1,
+            totalSteps: 3
+          };
+        } else if (currentData?.buyerType === 'dealer') {
+          previousStep = {
+            stepId: 'buyer-type',
+            componentName: 'BuyerType',
+            data: {
+              message: 'What type of buyer do you have?',
+              previousChoice: 'has_buyer',
+              ...currentData
+            },
+            stepNumber: 2,
+            totalSteps: 4
+          };
+        }
+        break;
+      case 'buyer-financing-details':
+        previousStep = {
+          stepId: 'private-buyer',
+          componentName: 'PrivateBuyer',
+          data: {
+            message: 'Provide details about your private buyer',
+            buyerType: 'private',
+            ...currentData
+          },
+          stepNumber: 3,
+          totalSteps: 5
+        };
+        break;
+      case 'buying-complete':
+        previousStep = {
+          stepId: 'vehicle-purchase-confirmation',
+          componentName: 'VehiclePurchaseConfirmation',
+          data: {
+            message: 'Complete your vehicle purchase request',
+            ...currentData
+          },
+          stepNumber: 4,
+          totalSteps: 5
+        };
+        break;
+      default:
+        console.warn('No back navigation defined for step:', currentStep);
         break;
     }
 

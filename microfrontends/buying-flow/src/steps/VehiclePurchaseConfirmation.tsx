@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
@@ -45,6 +45,7 @@ interface PersonData {
   phone?: string;
   preferredContact?: 'email' | 'phone' | 'whatsapp';
   location?: string;
+  city?: string;
 }
 
 interface VehicleData {
@@ -90,11 +91,21 @@ interface VehicleData {
   engineSize?: string;
 }
 
+interface SearchFilters {
+  make?: string;
+  model?: string;
+  bodyType?: string;
+  fuelType?: string;
+  province?: string;
+  city?: string;
+}
+
 interface VehiclePurchaseConfirmationProps {
   initialData?: {
     personData?: PersonData;
     vehicleData?: VehicleData;
     valuationData?: VehicleData;
+    searchFilters?: SearchFilters;
   };
   onSubmit: (data: any) => void;
   onBack?: () => void;
@@ -133,6 +144,10 @@ const schema = yup.object({
       'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 
       'Limpopo', 'Mpumalanga', 'Northern Cape', 'North West', 'Western Cape'
     ], 'Please select a valid South African province'),
+  city: yup
+    .string()
+    .required('City is required')
+    .min(2, 'City name must be at least 2 characters'),
   comments: yup
     .string()
     .max(1000, 'Comments must be less than 1000 characters'),
@@ -149,10 +164,9 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
   onBack,
   isLoading = false,
 }) => {
-  const [showThankYou, setShowThankYou] = useState(false);
-
-  // Extract person data from initialData for prepopulation
+  // Extract person data and search filters from initialData
   const personData = initialData?.personData || {};
+  const searchFilters = initialData?.searchFilters || {};
   
   // Mock user data for prepopulation (in real app, this would come from user session/profile)
   const mockUserData = {
@@ -160,8 +174,13 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
     email: 'sarah.johnson@gmail.com',
     phone: '+27 83 456 7890',
     location: 'Western Cape',
+    city: 'Cape Town',
     preferredContact: 'whatsapp' as const
   };
+  
+  // State for cities dropdown
+  const [cities, setCities] = useState<string[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
   
   const { control, handleSubmit, formState: { errors, isValid }, watch } = useForm({
     resolver: yupResolver(schema),
@@ -171,11 +190,55 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
       email: personData.email || mockUserData.email,
       phone: personData.phone || mockUserData.phone,
       location: personData.location || mockUserData.location,
+      city: personData.city || mockUserData.city,
       preferredContact: personData.preferredContact || mockUserData.preferredContact,
       comments: '',
       assistanceTypes: ['financing'], // Default to financing assistance
     }
   });
+  
+  const selectedProvince = watch('location');
+  
+  // Load cities dynamically based on province AND search filters
+  useEffect(() => {
+    const loadCities = async () => {
+      setLoadingCities(true);
+      try {
+        // Build query parameters based on available filters
+        const params = new URLSearchParams();
+        
+        // Add search filters from vehicle search
+        if (searchFilters.make) params.append('make', searchFilters.make);
+        if (searchFilters.model) params.append('model', searchFilters.model);
+        if (searchFilters.bodyType) params.append('bodyType', searchFilters.bodyType);
+        if (searchFilters.fuelType) params.append('fuelType', searchFilters.fuelType);
+        
+        // Add selected province from form
+        if (selectedProvince) params.append('province', selectedProvince);
+        
+        // Use filtered cities endpoint if we have any filters
+        const hasFilters = searchFilters.make || searchFilters.model || searchFilters.bodyType || searchFilters.fuelType || selectedProvince;
+        
+        if (hasFilters) {
+          const response = await fetch(`http://localhost:8080/api/vehicles/filtered/cities?${params}`);
+          const citiesData = await response.json();
+          setCities(citiesData || []);
+        } else {
+          // No filters, load all cities
+          const response = await fetch('http://localhost:8080/api/vehicles/cities');
+          const citiesData = await response.json();
+          setCities(citiesData || []);
+        }
+      } catch (error) {
+        console.error('Error loading cities:', error);
+        setCities([]);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+    
+    loadCities();
+  }, [selectedProvince, searchFilters.make, searchFilters.model, searchFilters.bodyType, searchFilters.fuelType]);
 
   // Get vehicle data from initialData with proper structure
   const vehicleData: VehicleData = initialData?.vehicleData || initialData?.valuationData || {
@@ -263,88 +326,24 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
     try {
       schema.validateSync(formData, { abortEarly: false });
       
-      setShowThankYou(true);
-      // After showing thank you, complete the process
-      setTimeout(() => {
-        onSubmit({
-          contactInfo: {
-            ...formData,
-            submittedAt: new Date().toISOString(),
-            validatedData: true
-          },
-          vehicleData: vehicleData,
-          assistanceRequested: formData.assistanceTypes,
-          confirmed: true,
-          nextStep: 'PurchaseComplete'
-        });
-      }, 3000);
+      // Navigate directly to BuyingComplete without showing interim screen
+      onSubmit({
+        contactInfo: {
+          ...formData,
+          submittedAt: new Date().toISOString(),
+          validatedData: true
+        },
+        vehicleData: vehicleData,
+        assistanceRequested: formData.assistanceTypes,
+        confirmed: true,
+        action: 'purchase-confirmed',
+        nextStep: 'BuyingComplete'
+      });
     } catch (validationError) {
       console.error('Form validation failed:', validationError);
       // The form validation should prevent this, but handle edge cases
     }
   };
-
-  const handleStartNew = () => {
-    window.location.reload();
-  };
-
-  // Thank You Screen
-  if (showThankYou) {
-    return (
-      <Box sx={{ maxWidth: 700, mx: 'auto', p: 4 }}>
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <CheckCircle sx={{ fontSize: 80, color: '#4caf50', mb: 3 }} />
-          <Typography variant="h3" component="h1" gutterBottom sx={{ color: '#4caf50', fontWeight: 'bold' }}>
-            Request Submitted Successfully!
-          </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
-            Your vehicle purchase inquiry has been received and our team will contact you within 24 hours.
-          </Typography>
-        </Box>
-
-        <Card sx={{ mb: 4, border: '2px solid #4caf50' }}>
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-              Request Summary
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              <strong>Vehicle:</strong> {displayData.year} {displayData.make} {displayData.model}
-              {displayData.variant && ` ${displayData.variant}`}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              <strong>Estimated Value:</strong> {displayData.currency}{displayData.price?.toLocaleString()}
-            </Typography>
-            {displayData.stockCode && (
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                <strong>Stock Code:</strong> {displayData.stockCode}
-              </Typography>
-            )}
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              <strong>Assistance Requested:</strong> {selectedAssistanceTypes.join(', ')}
-            </Typography>
-          </CardContent>
-        </Card>
-
-        <Box sx={{ textAlign: 'center' }}>
-          <Button 
-            variant="contained" 
-            onClick={handleStartNew}
-            size="large"
-            sx={{ 
-              backgroundColor: '#ffc107',
-              color: '#333',
-              fontWeight: 'bold',
-              px: 4,
-              py: 2,
-              '&:hover': { backgroundColor: '#e6ac00' }
-            }}
-          >
-            Start New Request
-          </Button>
-        </Box>
-      </Box>
-    );
-  }
 
   // Main Form
   return (
@@ -373,54 +372,53 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
       </Box>
 
       <Grid container spacing={4}>
-        {/* Vehicle Summary */}
-        <Grid item xs={12} md={5}>
-          <Card sx={{ 
-            height: '100%',
-            border: '2px solid #ffc107',
-            boxShadow: '0 4px 12px rgba(255,193,7,0.1)'
-          }}>
-            <Box
-              component="img"
-              src="https://news-site-za.s3.af-south-1.amazonaws.com/images/2021/02/2012-Chevrolet-Sonic-Sedan.jpg"
-              alt={`${vehicleData.make} ${vehicleData.model}`}
-              sx={{
-                width: '100%',
-                height: '200px',
-                objectFit: 'cover',
-                borderBottom: '1px solid #e0e0e0'
+      {/* Vehicle Summary */}
+      <Grid item xs={12} md={5}>
+        <Card sx={{ 
+          border: '2px solid #1e3a8a',
+          boxShadow: '0 4px 12px rgba(30, 58, 138, 0.1)'
+        }}>
+          <Box
+            component="img"
+            src="https://news-site-za.s3.af-south-1.amazonaws.com/images/2021/02/2012-Chevrolet-Sonic-Sedan.jpg"
+            alt={`${vehicleData.make} ${vehicleData.model}`}
+            sx={{
+              width: '100%',
+              height: '200px',
+              objectFit: 'cover',
+              borderBottom: '1px solid #e0e0e0'
+            }}
+          />
+          <CardContent sx={{ p: 3 }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                mb: 2, 
+                display: 'flex', 
+                alignItems: 'center',
+                fontWeight: 700,
+                color: '#333333'
               }}
-            />
-            <CardContent sx={{ p: 3 }}>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
-                  display: 'flex', 
-                  alignItems: 'center',
-                  fontWeight: 700,
-                  color: '#333333'
-                }}
-              >
-                <DirectionsCar sx={{ mr: 1.5, color: '#ffc107' }} />
-                Selected Vehicle
+            >
+              <DirectionsCar sx={{ mr: 1.5, color: '#1e3a8a' }} />
+              Selected Vehicle
+            </Typography>
+            
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, color: '#333333' }}>
+                {displayData.year} {displayData.make} {displayData.model}
               </Typography>
-              
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, color: '#333333' }}>
-                  {displayData.year} {displayData.make} {displayData.model}
+              {displayData.variant && (
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {displayData.variant}
                 </Typography>
-                {displayData.variant && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    {displayData.variant}
-                  </Typography>
-                )}
-                <Typography variant="h4" sx={{ fontWeight: 700, color: '#ffc107' }}>
-                  {displayData.currency}{displayData.price?.toLocaleString()}
-                </Typography>
-              </Box>
+              )}
+              <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e3a8a' }}>
+                {displayData.currency}{displayData.price?.toLocaleString()}
+              </Typography>
+            </Box>
 
-              <Stack spacing={2} sx={{ pt: 2, borderTop: '1px solid #f0f0f0' }}>
+            <Stack spacing={2} sx={{ pt: 2, borderTop: '1px solid #f0f0f0' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Department:</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.department}</Typography>
@@ -485,12 +483,12 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                     <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.province}</Typography>
                   </Box>
                 )}
-                {displayData.franchise && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">Franchise:</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.franchise}</Typography>
-                  </Box>
-                )}
+                {/* {displayData.franchise && (
+                  // <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  //   <Typography variant="body2" color="text.secondary">Franchise:</Typography>
+                  //   <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.franchise}</Typography>
+                  // </Box>
+                )} */}
                 {displayData.firstPrice !== displayData.price && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="body2" color="text.secondary">Original Price:</Typography>
@@ -535,7 +533,7 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                         color: '#333333'
                       }}
                     >
-                      <Person sx={{ mr: 1.5, color: '#ffc107' }} />
+                      <Person sx={{ mr: 1.5, color: '#1e3a8a' }} />
                       Contact Information
                     </Typography>
                     {(personData.name || personData.email || personData.phone) && (
@@ -647,6 +645,43 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <Controller
+                        name="city"
+                        control={control}
+                        render={({ field }) => (
+                          <FormControl fullWidth error={!!errors.city}>
+                            <InputLabel id="city-label">City *</InputLabel>
+                            <Select
+                              {...field}
+                              labelId="city-label"
+                              label="City *"
+                              disabled={!selectedProvince || loadingCities}
+                              sx={{ backgroundColor: field.value ? '#f8f9fa' : 'white' }}
+                            >
+                              <MenuItem value="">
+                                <em>{loadingCities ? 'Loading cities...' : 'Select a city'}</em>
+                              </MenuItem>
+                              {(cities || []).map((city) => (
+                                <MenuItem key={city} value={city}>
+                                  {city}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                            {errors.city && (
+                              <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                                {errors.city.message}
+                              </Typography>
+                            )}
+                            {!errors.city && (
+                              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, ml: 1.5 }}>
+                                {selectedProvince ? 'Select your city for nearest dealer matching' : 'Select a province first'}
+                              </Typography>
+                            )}
+                          </FormControl>
+                        )}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Controller
                         name="preferredContact"
                         control={control}
                         render={({ field }) => (
@@ -674,7 +709,7 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
               </Card>
 
               {/* Assistance Selection Card */}
-              <Card sx={{ border: '1px solid #e0e0e0' }}>
+              {/* <Card sx={{ border: '1px solid #e0e0e0' }}>
                 <CardContent sx={{ p: 4 }}>
                   <Typography 
                     variant="h6" 
@@ -686,7 +721,7 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                       color: '#333333'
                     }}
                   >
-                    <Assignment sx={{ mr: 1.5, color: '#ffc107' }} />
+                    <Assignment sx={{ mr: 1.5, color: '#1e3a8a' }} />
                     Select Assistance Needed
                   </Typography>
 
@@ -697,6 +732,7 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                       <FormControl component="fieldset" error={!!errors.assistanceTypes}>
                         <FormGroup>
                           <FormControlLabel 
+                            sx={{ alignItems: 'flex-start', mb: 2 }}
                             control={
                               <Checkbox 
                                 checked={field.value?.includes('financing')}
@@ -705,20 +741,21 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                                   if (e.target.checked) {
                                     field.onChange([...currentValue, 'financing']);
                                   } else {
-                                    field.onChange(currentValue.filter((v: string) => v !== 'financing'));
+                                    field.onChange(currentValue.filter((v: string | undefined) => v !== 'financing'));
                                   }
                                 }}
+                                sx={{ pt: 0.5 }}
                               />
                             }
                             label={
                               <Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  <AccountBalance sx={{ mr: 1, color: '#ffc107' }} />
+                                  <AccountBalance sx={{ mr: 1, color: '#1e3a8a' }} />
                                   <Typography variant="body1" sx={{ fontWeight: 600 }}>
                                     Finance Assistance
                                   </Typography>
                                 </Box>
-                                <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                                   Help with vehicle financing, bank applications, and loan approvals
                                 </Typography>
                               </Box>
@@ -763,7 +800,7 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                     )}
                   />
                 </CardContent>
-              </Card>
+              </Card> */}
 
               {/* Additional Comments */}
               <Card sx={{ border: '1px solid #e0e0e0' }}>
@@ -823,12 +860,12 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                     px: 6,
                     py: 2,
                     fontSize: '1.1rem',
-                    backgroundColor: '#ffc107',
-                    color: '#333333',
+                    backgroundColor: '#1e3a8a',
+                    color: '#ffffff',
                     boxShadow: 'none',
                     '&:hover': {
-                      backgroundColor: '#e6ac00',
-                      boxShadow: '0 4px 12px rgba(255,193,7,0.3)'
+                      backgroundColor: '#1e40af',
+                      boxShadow: '0 4px 12px rgba(30, 58, 138, 0.25)'
                     },
                     '&:disabled': {
                       backgroundColor: '#f0f0f0',

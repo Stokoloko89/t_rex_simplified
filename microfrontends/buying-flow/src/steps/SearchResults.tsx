@@ -31,11 +31,13 @@ interface Vehicle {
   mileage: number;
   colour: string;
   provinceName: string;
+  cityName: string;
   bodyType: string;
   transmission: string;
   fuelType: string;
   engineSize: string;
   condition: string;
+  imageUrl?: string;
 }
 
 interface SearchResultsProps {
@@ -54,13 +56,18 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoadingResults, setIsLoadingResults] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [modalVehicle, setModalVehicle] = useState<Vehicle | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVehicles, setSelectedVehicles] = useState<Vehicle[]>([]);
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [pagination, setPagination] = useState({
     currentPage: 0,
     totalPages: 1,
     totalElements: 0,
     pageSize: 20,
   });
+  const [pageSize, setPageSize] = useState(20);
   const [sortBy, setSortBy] = useState('price');
   const [sortDir, setSortDir] = useState('asc');
 
@@ -75,7 +82,25 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       setError('No search criteria provided. Please go back and search again.');
       setIsLoadingResults(false);
     }
-  }, [initialData?.vehicleSearch, pagination.currentPage, sortBy, sortDir]);
+  }, [initialData?.vehicleSearch, pagination.currentPage, pageSize, sortBy, sortDir]);
+
+  // Handle Escape key to close modals
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (isImageViewerOpen) {
+          handleImageViewerClose();
+        } else if (isModalOpen) {
+          handleModalClose();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isImageViewerOpen, isModalOpen]);
 
   const searchVehicles = async (page = 0) => {
     setIsLoadingResults(true);
@@ -90,6 +115,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       if (searchParams.bodyType) queryParams.append('bodyType', searchParams.bodyType);
       if (searchParams.fuelType) queryParams.append('fuelType', searchParams.fuelType);
       if (searchParams.province) queryParams.append('province', searchParams.province);
+      if (searchParams.city) queryParams.append('city', searchParams.city);
       
       if (searchParams.yearRange && searchParams.yearRange.length === 2) {
         queryParams.append('minYear', searchParams.yearRange[0].toString());
@@ -106,7 +132,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       }
       
       queryParams.append('page', page.toString());
-      queryParams.append('size', '20');
+      queryParams.append('size', pageSize.toString());
       queryParams.append('sortBy', sortBy);
       queryParams.append('sortDir', sortDir);
       
@@ -153,7 +179,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             transmission: 'Automatic',
             fuelType: 'Petrol',
             engineSize: '2.0L',
-            condition: 'Excellent'
+            condition: 'Excellent',
+            imageUrl: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
           },
           {
             id: 2,
@@ -170,7 +197,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             transmission: 'Automatic',
             fuelType: 'Petrol',
             engineSize: '2.0L',
-            condition: 'Excellent'
+            condition: 'Excellent',
+            imageUrl: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
           },
           {
             id: 3,
@@ -187,7 +215,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             transmission: 'Automatic',
             fuelType: 'Petrol',
             engineSize: '2.0L',
-            condition: 'Excellent'
+            condition: 'Excellent',
+            imageUrl: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
           }
         ];
         
@@ -208,20 +237,87 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   };
 
   const handleVehicleSelect = (vehicle: Vehicle) => {
-    setSelectedVehicle(vehicle);
+    setModalVehicle(vehicle);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setModalVehicle(null);
+  };
+
+  const handleModalSelectVehicle = (vehicle: Vehicle) => {
+    setSelectedVehicles(prev => {
+      // Check if vehicle is already selected
+      const isAlreadySelected = prev.some(v => v.id === vehicle.id);
+      if (isAlreadySelected) {
+        return prev;
+      }
+      return [...prev, vehicle];
+    });
+    setIsModalOpen(false);
+  };
+
+  const handleUnselectVehicle = (vehicleId: number) => {
+    setSelectedVehicles(prev => prev.filter(v => v.id !== vehicleId));
+  };
+
+  const isVehicleSelected = (vehicleId: number): boolean => {
+    return selectedVehicles.some(v => v.id === vehicleId);
+  };
+
+  const handleImageClick = (index: number = 0) => {
+    setCurrentImageIndex(index);
+    setIsImageViewerOpen(true);
+  };
+
+  const handleImageViewerClose = () => {
+    setIsImageViewerOpen(false);
+    setCurrentImageIndex(0);
+  };
+
+  const handleNextImage = () => {
+    if (modalVehicle) {
+      const images = getVehicleImages(modalVehicle);
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (modalVehicle) {
+      const images = getVehicleImages(modalVehicle);
+      setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    }
+  };
+
+  const getVehicleImages = (vehicle: Vehicle): string[] => {
+    // For now, return the single image or fallback
+    // In production, this would return an array of multiple images
+    const images = [];
+    if (vehicle.imageUrl) {
+      images.push(vehicle.imageUrl);
+    }
+    // Add fallback image
+    images.push('https://images.unsplash.com/photo-1591293836027-e05b48473b67?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+    
+    // Add more mock images for demonstration
+    images.push('https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070&auto=format&fit=crop');
+    images.push('https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=2070&auto=format&fit=crop');
+    
+    return images;
   };
 
   const handleSubmit = () => {
-    if (!selectedVehicle) {
-      alert('Please select a vehicle to continue');
+    if (selectedVehicles.length === 0) {
+      alert('Please select at least one vehicle to continue');
       return;
     }
     
-    console.log('SearchResults - Submitting with selected vehicle:', selectedVehicle);
+    console.log('SearchResults - Submitting with selected vehicles:', selectedVehicles);
     
     onSubmit({
       ...initialData,
-      selectedVehicle: selectedVehicle,
+      selectedVehicles: selectedVehicles,
       nextStep: 'BuyingConfirmation', // Define next step
       action: 'vehicle-selected',
       intent: 'buying'
@@ -230,6 +326,15 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setPagination(prev => ({ ...prev, currentPage: value - 1 }));
+    searchVehicles(value - 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageSizeChange = (event: any) => {
+    const newSize = parseInt(event.target.value);
+    setPageSize(newSize);
+    setPagination(prev => ({ ...prev, currentPage: 0, pageSize: newSize }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const formatPrice = (price: number) => {
@@ -343,6 +448,20 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 <MenuItem value="desc">High to Low</MenuItem>
               </Select>
             </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 100 }}>
+              <InputLabel>Per Page</InputLabel>
+              <Select
+                value={pageSize}
+                label="Per Page"
+                onChange={handlePageSizeChange}
+              >
+                <MenuItem value={20}>20</MenuItem>
+                <MenuItem value={50}>50</MenuItem>
+                <MenuItem value={100}>100</MenuItem>
+                <MenuItem value={200}>200</MenuItem>
+              </Select>
+            </FormControl>
           </Box>
         </Box>
         
@@ -367,9 +486,28 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         </Box>
       ) : (
         <>
-          <Grid container spacing={4}>
+          <Box sx={{ 
+            maxHeight: '70vh', 
+            overflowY: 'auto',
+            pr: 1,
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              backgroundColor: '#f0f0f0',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: '#1e3a8a',
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: '#1e40af',
+              },
+            },
+          }}>
+            <Grid container spacing={4}>
             {vehicles.map((vehicle) => (
-              <Grid item xs={12} md={6} lg={4} key={vehicle.id}>
+              <Grid item xs={12} md={6} lg={6} key={vehicle.id}>
                 <Card 
                   sx={{ 
                     cursor: 'pointer',
@@ -377,11 +515,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     display: 'flex',
                     flexDirection: 'column',
                     transition: 'all 0.2s ease-in-out',
-                    border: selectedVehicle?.id === vehicle.id 
-                      ? '2px solid #007AFF' 
+                    border: isVehicleSelected(vehicle.id) 
+                      ? '2px solid #1e3a8a' 
                       : '1px solid #e0e0e0',
-                    boxShadow: selectedVehicle?.id === vehicle.id
-                      ? '0 8px 24px rgba(0, 122, 255, 0.15)'
+                    boxShadow: isVehicleSelected(vehicle.id)
+                      ? '0 8px 24px rgba(30, 58, 138, 0.15)'
                       : '0 2px 8px rgba(0, 0, 0, 0.08)',
                     '&:hover': {
                       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
@@ -390,6 +528,46 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                   }}
                   onClick={() => handleVehicleSelect(vehicle)}
                 >
+                  {/* Vehicle Image */}
+                  <Box sx={{
+                    height: 200,
+                    backgroundImage: vehicle.imageUrl
+                      ? `url(${vehicle.imageUrl})`
+                      : `url(https://images.unsplash.com/photo-1591293836027-e05b48473b67?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    position: 'relative',
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 100%)',
+                    }
+                  }}>
+                    {/* Image overlay for selected state */}
+                    {isVehicleSelected(vehicle.id) && (
+                      <Box sx={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 12,
+                        backgroundColor: '#1e3a8a',
+                        color: 'white',
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        zIndex: 1
+                      }}>
+                        Selected
+                      </Box>
+                    )}
+                  </Box>
+
                   <CardContent sx={{ 
                     p: 3, 
                     flexGrow: 1,
@@ -426,7 +604,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <LocationOn sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
                       <Typography variant="body2" color="text.secondary">
-                        {vehicle.provinceName}
+                        {vehicle.cityName ? `${vehicle.cityName}, ${vehicle.provinceName}` : vehicle.provinceName}
                       </Typography>
                     </Box>
                     
@@ -435,7 +613,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                       variant="h5" 
                       sx={{ 
                         fontWeight: 700,
-                        color: '#007AFF',
+                        color: '#1e3a8a',
                         mb: 3,
                         fontSize: '1.75rem'
                       }}
@@ -477,25 +655,46 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                       <Typography variant="body2" color="text.secondary">
                         {vehicle.colour} • {vehicle.bodyType} • {vehicle.engineSize}
                       </Typography>
-                      {selectedVehicle?.id === vehicle.id && (
-                        <Chip label="Selected" color="primary" size="small" sx={{ mt: 1 }} />
-                      )}
                     </Box>
                   </CardContent>
                 </Card>
               </Grid>
             ))}
-          </Grid>
+            </Grid>
+          </Box>
 
           {pagination.totalPages > 1 && (
-            <Box display="flex" justifyContent="center" mt={4}>
-              <Pagination
-                count={pagination.totalPages}
-                page={pagination.currentPage + 1}
-                onChange={handlePageChange}
-                color="primary"
-                size="large"
-              />
+            <Box mt={4}>
+              <Box display="flex" justifyContent="center" mb={2}>
+                <Typography variant="body2" color="text.secondary">
+                  Showing {pagination.currentPage * pageSize + 1} - {Math.min((pagination.currentPage + 1) * pageSize, pagination.totalElements)} of {pagination.totalElements} vehicles
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="center">
+                <Pagination
+                  count={pagination.totalPages}
+                  page={pagination.currentPage + 1}
+                  onChange={handlePageChange}
+                  size="large"
+                  showFirstButton
+                  showLastButton
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: '#666',
+                      '&.Mui-selected': {
+                        backgroundColor: '#1e3a8a',
+                        color: '#ffffff',
+                        '&:hover': {
+                          backgroundColor: '#1e40af'
+                        }
+                      },
+                      '&:hover': {
+                        backgroundColor: '#f0f0f0'
+                      }
+                    }
+                  }}
+                />
+              </Box>
             </Box>
           )}
         </>
@@ -534,7 +733,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         <Button 
           variant="contained" 
           onClick={handleSubmit}
-          disabled={isLoading || !selectedVehicle}
+          disabled={isLoading || selectedVehicles.length === 0}
           sx={{ 
             ml: 'auto',
             textTransform: 'none',
@@ -542,15 +741,473 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             px: 4,
             py: 1.5,
             fontSize: '1rem',
+            backgroundColor: '#1e3a8a',
+            color: '#ffffff',
             boxShadow: 'none',
             '&:hover': {
-              boxShadow: '0 4px 12px rgba(0, 122, 255, 0.25)'
+              backgroundColor: '#1e40af',
+              boxShadow: '0 4px 12px rgba(30, 58, 138, 0.25)'
+            },
+            '&:disabled': {
+              backgroundColor: '#d0d0d0',
+              color: '#999'
             }
           }}
         >
-          Continue with Selected Vehicle
+          Continue with {selectedVehicles.length > 0 ? `${selectedVehicles.length} ` : ''}Selected Vehicle{selectedVehicles.length !== 1 ? 's' : ''}
         </Button>
+        {selectedVehicles.length > 0 && (
+          <Button 
+            variant="outlined" 
+            onClick={() => setSelectedVehicles([])}
+            disabled={isLoading}
+            sx={{
+              ml: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+              px: 3,
+              py: 1.5,
+              borderColor: '#ff4444',
+              color: '#ff4444',
+              '&:hover': {
+                borderColor: '#cc0000',
+                backgroundColor: '#fff5f5',
+                color: '#cc0000'
+              }
+            }}
+          >
+            Clear All ({selectedVehicles.length})
+          </Button>
+        )}
       </Box>
+
+      {/* Vehicle Detail Modal */}
+      {isModalOpen && modalVehicle && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            p: 2,
+          }}
+          onClick={handleModalClose}
+        >
+          <Card
+            sx={{
+              maxWidth: 800,
+              maxHeight: '90vh',
+              width: '100%',
+              overflow: 'auto',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                zIndex: 1,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                borderRadius: '50%',
+                width: 40,
+                height: 40,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                },
+              }}
+              onClick={handleModalClose}
+            >
+              ✕
+            </Box>
+
+            {/* Vehicle Image */}
+            <Box 
+              sx={{
+                height: 300,
+                backgroundImage: modalVehicle.imageUrl
+                  ? `url(${modalVehicle.imageUrl})`
+                  : `url(https://images.unsplash.com/photo-1591293836027-e05b48473b67?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                position: 'relative',
+                cursor: 'pointer',
+                '&:hover::before': {
+                  content: '"🔍 Click to view images"',
+                  position: 'absolute',
+                  bottom: 16,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  color: 'white',
+                  px: 2,
+                  py: 1,
+                  borderRadius: 1,
+                  fontSize: '0.875rem',
+                }
+              }}
+              onClick={() => handleImageClick(0)}
+            >
+              {/* Selected indicator */}
+              {isVehicleSelected(modalVehicle.id) && (
+                <Box sx={{
+                  position: 'absolute',
+                  top: 16,
+                  left: 16,
+                  backgroundColor: '#1e3a8a',
+                  color: 'white',
+                  px: 2,
+                  py: 1,
+                  borderRadius: 1,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                }}>
+                  Currently Selected
+                </Box>
+              )}
+            </Box>
+
+            <CardContent sx={{ p: 4 }}>
+              {/* Vehicle Header */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h4" component="h2" sx={{ fontWeight: 700, mb: 1 }}>
+                  {modalVehicle.year} {modalVehicle.makeName} {modalVehicle.modelName}
+                </Typography>
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+                  {modalVehicle.variantName}
+                </Typography>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                  <Chip
+                    label={modalVehicle.condition}
+                    color={modalVehicle.condition === 'Excellent' ? 'success' : 'default'}
+                    size="medium"
+                  />
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e3a8a' }}>
+                    {formatPrice(modalVehicle.price)}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Vehicle Details Grid */}
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    Vehicle Information
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <LocationOn sx={{ color: 'text.secondary' }} />
+                      <Typography variant="body1">
+                        <strong>Location:</strong> {modalVehicle.cityName ? `${modalVehicle.cityName}, ${modalVehicle.provinceName}` : modalVehicle.provinceName}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Speed sx={{ color: 'text.secondary' }} />
+                      <Typography variant="body1">
+                        <strong>Mileage:</strong> {modalVehicle.mileage.toLocaleString()} km
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <LocalGasStation sx={{ color: 'text.secondary' }} />
+                      <Typography variant="body1">
+                        <strong>Fuel Type:</strong> {modalVehicle.fuelType}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Settings sx={{ color: 'text.secondary' }} />
+                      <Typography variant="body1">
+                        <strong>Transmission:</strong> {modalVehicle.transmission}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    Specifications
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    <Typography variant="body1">
+                      <strong>Body Type:</strong> {modalVehicle.bodyType}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Engine Size:</strong> {modalVehicle.engineSize}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Colour:</strong> {modalVehicle.colour}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Stock ID:</strong> #{modalVehicle.usedVehicleStockId}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              {/* Description/Features */}
+              <Box sx={{ mb: 4, p: 3, backgroundColor: '#f8f9fa', borderRadius: 2 }}>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  About This Vehicle
+                </Typography>
+                <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+                  This {modalVehicle.year} {modalVehicle.makeName} {modalVehicle.modelName} is in {modalVehicle.condition.toLowerCase()} condition with {modalVehicle.mileage.toLocaleString()} kilometers on the odometer.
+                  It features {modalVehicle.fuelType.toLowerCase()} fuel type with {modalVehicle.transmission.toLowerCase()} transmission.
+                  Located in {modalVehicle.cityName ? `${modalVehicle.cityName}, ${modalVehicle.provinceName}` : modalVehicle.provinceName}, this vehicle offers excellent value for money.
+                </Typography>
+              </Box>
+
+              {/* Action Buttons */}
+              <Box sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 2,
+                pt: 3,
+                borderTop: '1px solid #e0e0e0'
+              }}>
+                <Button
+                  variant="outlined"
+                  onClick={handleModalClose}
+                  sx={{ px: 4, py: 1.5 }}
+                >
+                  Close
+                </Button>
+
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  {isVehicleSelected(modalVehicle.id) ? (
+                    <Button
+                      variant="outlined"
+                      onClick={() => {
+                        handleUnselectVehicle(modalVehicle.id);
+                        handleModalClose();
+                      }}
+                      sx={{
+                        px: 4,
+                        py: 1.5,
+                        borderColor: '#ff4444',
+                        color: '#ff4444',
+                        '&:hover': {
+                          borderColor: '#cc0000',
+                          backgroundColor: '#fff5f5',
+                          color: '#cc0000'
+                        }
+                      }}
+                    >
+                      Unselect Vehicle
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      onClick={() => handleModalSelectVehicle(modalVehicle)}
+                      sx={{
+                        px: 4,
+                        py: 1.5,
+                        backgroundColor: '#1e3a8a',
+                        color: '#ffffff',
+                        '&:hover': {
+                          backgroundColor: '#1e40af',
+                        }
+                      }}
+                    >
+                      Select this vehicle
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+      )}
+
+      {/* Image Viewer Modal */}
+      {isImageViewerOpen && modalVehicle && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.95)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            p: 2,
+          }}
+          onClick={handleImageViewerClose}
+        >
+          {/* Close Button */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 24,
+              right: 24,
+              zIndex: 1,
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              borderRadius: '50%',
+              width: 48,
+              height: 48,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: 'white',
+              fontSize: '24px',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              },
+            }}
+            onClick={handleImageViewerClose}
+          >
+            ✕
+          </Box>
+
+          {/* Image Counter */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 24,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              color: 'white',
+              px: 3,
+              py: 1,
+              borderRadius: 2,
+              fontSize: '0.875rem',
+            }}
+          >
+            {currentImageIndex + 1} / {getVehicleImages(modalVehicle).length}
+          </Box>
+
+          {/* Previous Button */}
+          {getVehicleImages(modalVehicle).length > 1 && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: 24,
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '50%',
+                width: 56,
+                height: 56,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'white',
+                fontSize: '32px',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                },
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrevImage();
+              }}
+            >
+              ‹
+            </Box>
+          )}
+
+          {/* Image */}
+          <Box
+            component="img"
+            src={getVehicleImages(modalVehicle)[currentImageIndex]}
+            alt={`${modalVehicle.year} ${modalVehicle.makeName} ${modalVehicle.modelName}`}
+            sx={{
+              maxWidth: '90%',
+              maxHeight: '90vh',
+              objectFit: 'contain',
+              borderRadius: 2,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Next Button */}
+          {getVehicleImages(modalVehicle).length > 1 && (
+            <Box
+              sx={{
+                position: 'absolute',
+                right: 24,
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '50%',
+                width: 56,
+                height: 56,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'white',
+                fontSize: '32px',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                },
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNextImage();
+              }}
+            >
+              ›
+            </Box>
+          )}
+
+          {/* Image Thumbnails */}
+          {getVehicleImages(modalVehicle).length > 1 && (
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 24,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                gap: 1,
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                p: 1.5,
+                borderRadius: 2,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {getVehicleImages(modalVehicle).map((img, index) => (
+                <Box
+                  key={index}
+                  component="img"
+                  src={img}
+                  alt={`Thumbnail ${index + 1}`}
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    objectFit: 'cover',
+                    borderRadius: 1,
+                    cursor: 'pointer',
+                    border: currentImageIndex === index ? '3px solid #1e3a8a' : '3px solid transparent',
+                    opacity: currentImageIndex === index ? 1 : 0.6,
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      opacity: 1,
+                    },
+                  }}
+                  onClick={() => setCurrentImageIndex(index)}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
+      )}
     </Box>
   );
 };

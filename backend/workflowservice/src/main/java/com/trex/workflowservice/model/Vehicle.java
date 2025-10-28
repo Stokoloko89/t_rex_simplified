@@ -51,6 +51,9 @@ public class Vehicle {
     @Column(name = "province_name", length = 50)
     private String provinceName;
     
+    @Column(name = "city_name", length = 100)
+    private String cityName;
+    
     @Column(length = 100)
     private String trim;
     
@@ -173,6 +176,9 @@ public class Vehicle {
     
     public String getProvinceName() { return provinceName; }
     public void setProvinceName(String provinceName) { this.provinceName = provinceName; }
+    
+    public String getCityName() { return cityName; }
+    public void setCityName(String cityName) { this.cityName = cityName; }
     
     public String getTrim() { return trim; }
     public void setTrim(String trim) { this.trim = trim; }

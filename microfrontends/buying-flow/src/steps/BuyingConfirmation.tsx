@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, Card, CardContent, Button, Stack, TextField, Grid, Divider, Alert, CardMedia } from '@mui/material';
-import { CheckCircle, Person, Email, Phone, DirectionsCar, LocalGasStation, Speed } from '@mui/icons-material';
+import { CheckCircle, Person, Email, Phone, DirectionsCar, LocalGasStation, Speed, LocationOn } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -17,6 +17,7 @@ const schema = yup.object({
   name: yup.string().required('Full name is required'),
   email: yup.string().email('Invalid email').required('Email is required'),
   phone: yup.string().required('Phone number is required'),
+  location: yup.string().required('Location is required'),
   preferredContact: yup.string().required('Preferred contact method is required'),
   comments: yup.string(),
 });
@@ -31,22 +32,27 @@ const BuyingConfirmation: React.FC<BuyingConfirmationProps> = ({
     resolver: yupResolver(schema),
     mode: 'onChange',
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      preferredContact: 'email',
-      comments: '',
+      name: initialData?.userInfo?.name || initialData?.contactInfo?.name || '',
+      email: initialData?.userInfo?.email || initialData?.contactInfo?.email || '',
+      phone: initialData?.userInfo?.phone || initialData?.contactInfo?.phone || '',
+      location: initialData?.userInfo?.location || initialData?.contactInfo?.location || '',
+      preferredContact: initialData?.userInfo?.preferredContact || initialData?.contactInfo?.preferredContact || 'email',
+      comments: initialData?.userInfo?.comments || initialData?.contactInfo?.comments || '',
     }
   });
 
-  const selectedVehicle = initialData?.selectedVehicle;
+  const selectedVehicles = initialData?.selectedVehicles || (initialData?.selectedVehicle ? [initialData.selectedVehicle] : []);
   const message = initialData?.message || "Confirm your vehicle selection and provide contact details";
 
   const onFormSubmit = (formData: any) => {
     onSubmit({
+      ...initialData,
       contactInfo: formData,
-      selectedVehicle: selectedVehicle,
-      confirmed: true
+      selectedVehicles: selectedVehicles,
+      confirmed: true,
+      nextStep: 'BuyingComplete',
+      action: 'contact-submitted',
+      intent: 'complete-purchase'
     });
   };
 
@@ -76,86 +82,99 @@ const BuyingConfirmation: React.FC<BuyingConfirmationProps> = ({
       </Box>
 
       <Grid container spacing={4}>
-        {/* Vehicle Summary */}
-        {selectedVehicle && (
+        {/* Selected Vehicles Summary */}
+        {selectedVehicles.length > 0 && (
           <Grid item xs={12} md={6}>
-            <Card sx={{ 
-              height: '100%',
-              border: '1px solid #e0e0e0',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
-            }}>
-              {selectedVehicle.image && (
-                <CardMedia
-                  component="img"
-                  height="240"
-                  image={selectedVehicle.image}
-                  alt={`${selectedVehicle.make} ${selectedVehicle.model}`}
-                  sx={{ 
-                    objectFit: 'cover',
-                    borderBottom: '1px solid #e0e0e0'
-                  }}
-                />
-              )}
-              <CardContent sx={{ p: 4 }}>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    mb: 3, 
-                    display: 'flex', 
-                    alignItems: 'center',
-                    fontWeight: 600,
-                    color: '#1a1a1a'
-                  }}
-                >
-                  <DirectionsCar sx={{ mr: 1.5, color: '#007AFF' }} />
-                  Selected Vehicle
-                </Typography>
-                
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, color: '#1a1a1a' }}>
-                    {selectedVehicle.year} {selectedVehicle.make} {selectedVehicle.model}
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#007AFF' }}>
-                    {selectedVehicle.price ? formatCurrency(selectedVehicle.price) : selectedVehicle.price}
-                  </Typography>
-                </Box>
-
-                <Stack spacing={2} sx={{ pt: 2, borderTop: '1px solid #f0f0f0' }}>
-                  {selectedVehicle.fuelConsumption && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <LocalGasStation sx={{ mr: 1, fontSize: 20, color: 'text.secondary' }} />
-                        <Typography variant="body2" color="text.secondary">Fuel Economy:</Typography>
-                      </Box>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {formatFuelConsumption(selectedVehicle.fuelConsumption)}
+            <Stack spacing={3}>
+              {selectedVehicles.map((vehicle: any, index: number) => (
+                <Card key={vehicle.id || index} sx={{ 
+                  border: '1px solid #e0e0e0',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
+                }}>
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={vehicle.imageUrl || 'https://images.unsplash.com/photo-1591293836027-e05b48473b67?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}
+                    alt={`${vehicle.makeName} ${vehicle.modelName}`}
+                    sx={{ 
+                      objectFit: 'cover',
+                      borderBottom: '1px solid #e0e0e0'
+                    }}
+                  />
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        mb: 2, 
+                        display: 'flex', 
+                        alignItems: 'center',
+                        fontWeight: 600,
+                        color: '#1a1a1a'
+                      }}
+                    >
+                      <DirectionsCar sx={{ mr: 1.5, color: '#1e3a8a' }} />
+                      {selectedVehicles.length > 1 ? `Vehicle ${index + 1} of ${selectedVehicles.length}` : 'Selected Vehicle'}
+                    </Typography>
+                    
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5, color: '#1a1a1a' }}>
+                        {vehicle.year} {vehicle.makeName} {vehicle.modelName}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {vehicle.variantName}
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e3a8a' }}>
+                        R{vehicle.price?.toLocaleString()}
                       </Typography>
                     </Box>
-                  )}
 
-                  {selectedVehicle.mileage && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Speed sx={{ mr: 1, fontSize: 20, color: 'text.secondary' }} />
-                        <Typography variant="body2" color="text.secondary">Mileage:</Typography>
-                      </Box>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {formatDistance(selectedVehicle.mileage)}
-                      </Typography>
-                    </Box>
-                  )}
+                    <Stack spacing={1.5} sx={{ pt: 2, borderTop: '1px solid #f0f0f0' }}>
+                      {vehicle.fuelType && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <LocalGasStation sx={{ mr: 1, fontSize: 18, color: 'text.secondary' }} />
+                            <Typography variant="body2" color="text.secondary">Fuel Type:</Typography>
+                          </Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {vehicle.fuelType}
+                          </Typography>
+                        </Box>
+                      )}
 
-                  {selectedVehicle.rating && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Rating:</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {selectedVehicle.rating}/5 ⭐
-                      </Typography>
-                    </Box>
-                  )}
-                </Stack>
-              </CardContent>
-            </Card>
+                      {vehicle.mileage && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Speed sx={{ mr: 1, fontSize: 18, color: 'text.secondary' }} />
+                            <Typography variant="body2" color="text.secondary">Mileage:</Typography>
+                          </Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {vehicle.mileage.toLocaleString()} km
+                          </Typography>
+                        </Box>
+                      )}
+
+                      {vehicle.provinceName && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Typography variant="body2" color="text.secondary">Location:</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {vehicle.provinceName}
+                          </Typography>
+                        </Box>
+                      )}
+
+                      {vehicle.colour && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Typography variant="body2" color="text.secondary">Colour:</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {vehicle.colour}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
           </Grid>
         )}
 
@@ -177,7 +196,7 @@ const BuyingConfirmation: React.FC<BuyingConfirmationProps> = ({
                   color: '#1a1a1a'
                 }}
               >
-                <Person sx={{ mr: 1.5, color: '#007AFF' }} />
+                <Person sx={{ mr: 1.5, color: '#1e3a8a' }} />
                 Contact Information
               </Typography>
 
@@ -230,6 +249,24 @@ const BuyingConfirmation: React.FC<BuyingConfirmationProps> = ({
                         helperText={errors.phone?.message}
                         InputProps={{
                           startAdornment: <Phone sx={{ mr: 1, color: 'text.secondary' }} />
+                        }}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    name="location"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Location"
+                        fullWidth
+                        error={!!errors.location}
+                        helperText={errors.location?.message}
+                        placeholder="City or Province"
+                        InputProps={{
+                          startAdornment: <LocationOn sx={{ mr: 1, color: 'text.secondary' }} />
                         }}
                       />
                     )}
@@ -307,9 +344,12 @@ const BuyingConfirmation: React.FC<BuyingConfirmationProps> = ({
                         px: 4,
                         py: 1.5,
                         fontSize: '1rem',
+                        backgroundColor: '#1e3a8a',
+                        color: '#ffffff',
                         boxShadow: 'none',
                         '&:hover': {
-                          boxShadow: '0 4px 12px rgba(0, 122, 255, 0.25)'
+                          backgroundColor: '#1e40af',
+                          boxShadow: '0 4px 12px rgba(30, 58, 138, 0.25)'
                         }
                       }}
                     >

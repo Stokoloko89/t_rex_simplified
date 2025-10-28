@@ -5,7 +5,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Production builds
-dist/
+# dist/
 build/
 
 # Environment variables
@@ -94,7 +94,7 @@ storybook-static/
 
 # Gatsby
 .cache/
-public/
+# public/
 
 # Serverless
 .serverless/
@@ -117,7 +117,7 @@ public/
 # Add these to your existing .gitignore
 
 # Build artifacts that might contain index.html
-**/dist/index.html
+# **/dist/index.html
 **/build/index.html
 
 # Generated HTML files (if applicable)

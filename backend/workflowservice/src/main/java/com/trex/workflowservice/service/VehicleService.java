@@ -33,6 +33,7 @@ public class VehicleService {
             BigDecimal minPrice, 
             BigDecimal maxPrice,
             String province,
+            String city,
             Integer maxMileage,
             String fuelType,
             String bodyType,
@@ -43,9 +44,9 @@ public class VehicleService {
             String sortDir) {
         
         logger.info("Searching vehicles with filters - make: {}, model: {}, minYear: {}, maxYear: {}, " +
-                   "minPrice: {}, maxPrice: {}, province: {}, maxMileage: {}, fuelType: {}, bodyType: {}, " +
+                   "minPrice: {}, maxPrice: {}, province: {}, city: {}, maxMileage: {}, fuelType: {}, bodyType: {}, " +
                    "transmission: {}, page: {}, size: {}, sortBy: {}, sortDir: {}", 
-                   make, model, minYear, maxYear, minPrice, maxPrice, province, maxMileage, 
+                   make, model, minYear, maxYear, minPrice, maxPrice, province, city, maxMileage, 
                    fuelType, bodyType, transmission, page, size, sortBy, sortDir);
         
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
@@ -53,7 +54,7 @@ public class VehicleService {
         
         return vehicleRepository.findVehiclesWithFilters(
             make, model, minYear, maxYear, minPrice, maxPrice, 
-            province, maxMileage, fuelType, bodyType, transmission, pageable
+            province, city, maxMileage, fuelType, bodyType, transmission, pageable
         );
     }
     
@@ -92,9 +93,33 @@ public class VehicleService {
         return vehicleRepository.findDistinctModelsByMake(make);
     }
     
+    public List<String> getAllModels() {
+        logger.info("Getting all models");
+        return vehicleRepository.findDistinctModels();
+    }
+    
+    public String getMakeByModel(String model) {
+        logger.info("Getting make for model: {}", model);
+        List<String> makes = vehicleRepository.findMakesByModel(model);
+        if (makes != null && !makes.isEmpty()) {
+            return makes.get(0);
+        }
+        return null;
+    }
+    
     public List<String> getAllProvinces() {
         logger.info("Getting all distinct provinces");
         return vehicleRepository.findDistinctProvinces();
+    }
+    
+    public List<String> getAllCities() {
+        logger.info("Getting all distinct cities");
+        return vehicleRepository.findDistinctCities();
+    }
+    
+    public List<String> getCitiesByProvince(String province) {
+        logger.info("Getting cities for province: {}", province);
+        return vehicleRepository.findDistinctCitiesByProvince(province);
     }
     
     public List<String> getAllFuelTypes() {
@@ -118,6 +143,7 @@ public class VehicleService {
         Map<String, Object> filters = new HashMap<>();
         filters.put("makes", getAllMakes());
         filters.put("provinces", getAllProvinces());
+        filters.put("cities", getAllCities());
         filters.put("fuelTypes", getAllFuelTypes());
         filters.put("bodyTypes", getAllBodyTypes());
         filters.put("transmissions", getAllTransmissions());
@@ -178,6 +204,53 @@ public class VehicleService {
         return vehicleRepository.findDistinctTransmissionsByMakeAndModel(make, model);
     }
     
+    public List<String> getCitiesByFilters(String make, String model, String city) {
+        logger.info("Getting cities filtered by make: {}, model: {}, city: {}", make, model, city);
+        return vehicleRepository.findDistinctCitiesByFilters(make, model, city);
+    }
+    
+    public List<String> getCitiesByAllFilters(String make, String model, String bodyType, String fuelType, String province, String city) {
+        logger.info("Getting cities filtered by make: {}, model: {}, bodyType: {}, fuelType: {}, province: {}, city: {}", 
+                   make, model, bodyType, fuelType, province, city);
+        return vehicleRepository.findDistinctCitiesByAllFilters(make, model, bodyType, fuelType, province, city);
+    }
+    
+    public List<String> getBodyTypesByFilters(String make, String model, String city) {
+        logger.info("Getting body types filtered by make: {}, model: {}, city: {}", make, model, city);
+        return vehicleRepository.findDistinctBodyTypesByFilters(make, model, city);
+    }
+    
+    public List<String> getFuelTypesByFilters(String make, String model, String city) {
+        logger.info("Getting fuel types filtered by make: {}, model: {}, city: {}", make, model, city);
+        return vehicleRepository.findDistinctFuelTypesByFilters(make, model, city);
+    }
+    
+    public List<String> getProvincesByFilters(String make, String model, String city) {
+        logger.info("Getting provinces filtered by make: {}, model: {}, city: {}", make, model, city);
+        return vehicleRepository.findDistinctProvincesByFilters(make, model, city);
+    }
+    
+    // New methods with all filter parameters
+    public List<String> getModelsByAllFilters(String make, String model, String bodyType, String fuelType, String province, String city) {
+        logger.info("Getting models filtered by all parameters");
+        return vehicleRepository.findDistinctModelsByAllFilters(make, model, bodyType, fuelType, province, city);
+    }
+    
+    public List<String> getBodyTypesByAllFilters(String make, String model, String bodyType, String fuelType, String province, String city) {
+        logger.info("Getting body types filtered by all parameters");
+        return vehicleRepository.findDistinctBodyTypesByAllFilters(make, model, bodyType, fuelType, province, city);
+    }
+    
+    public List<String> getFuelTypesByAllFilters(String make, String model, String bodyType, String fuelType, String province, String city) {
+        logger.info("Getting fuel types filtered by all parameters");
+        return vehicleRepository.findDistinctFuelTypesByAllFilters(make, model, bodyType, fuelType, province, city);
+    }
+    
+    public List<String> getProvincesByAllFilters(String make, String model, String bodyType, String fuelType, String province, String city) {
+        logger.info("Getting provinces filtered by all parameters");
+        return vehicleRepository.findDistinctProvincesByAllFilters(make, model, bodyType, fuelType, province, city);
+    }
+    
     // Helper method to create a vehicle search summary
     public Map<String, Object> getSearchSummary(Page<Vehicle> vehiclePage) {
         Map<String, Object> summary = new HashMap<>();
@@ -190,5 +263,42 @@ public class VehicleService {
         summary.put("isFirst", vehiclePage.isFirst());
         summary.put("isLast", vehiclePage.isLast());
         return summary;
+    }
+    
+    // Get filtered ranges based on current selections
+    public Map<String, Object> getFilteredRanges(String make, String model, String bodyType, String fuelType, String province) {
+        logger.info("Getting filtered ranges for make: {}, model: {}, bodyType: {}, fuelType: {}, province: {}", 
+                   make, model, bodyType, fuelType, province);
+        
+        Map<String, Object> ranges = new HashMap<>();
+        
+        // Get filtered price range
+        Object[] priceRange = vehicleRepository.findPriceRangeByFilters(make, model, bodyType, fuelType, province);
+        if (priceRange != null && priceRange.length == 2 && priceRange[0] != null && priceRange[1] != null) {
+            Map<String, BigDecimal> priceRangeMap = new HashMap<>();
+            priceRangeMap.put("min", (BigDecimal) priceRange[0]);
+            priceRangeMap.put("max", (BigDecimal) priceRange[1]);
+            ranges.put("priceRange", priceRangeMap);
+        }
+        
+        // Get filtered year range
+        Object[] yearRange = vehicleRepository.findYearRangeByFilters(make, model, bodyType, fuelType, province);
+        if (yearRange != null && yearRange.length == 2 && yearRange[0] != null && yearRange[1] != null) {
+            Map<String, Integer> yearRangeMap = new HashMap<>();
+            yearRangeMap.put("min", (Integer) yearRange[0]);
+            yearRangeMap.put("max", (Integer) yearRange[1]);
+            ranges.put("yearRange", yearRangeMap);
+        }
+        
+        // Get filtered mileage range
+        Object[] mileageRange = vehicleRepository.findMileageRangeByFilters(make, model, bodyType, fuelType, province);
+        if (mileageRange != null && mileageRange.length == 2 && mileageRange[0] != null && mileageRange[1] != null) {
+            Map<String, Integer> mileageRangeMap = new HashMap<>();
+            mileageRangeMap.put("min", (Integer) mileageRange[0]);
+            mileageRangeMap.put("max", (Integer) mileageRange[1]);
+            ranges.put("mileageRange", mileageRangeMap);
+        }
+        
+        return ranges;
     }
 }
