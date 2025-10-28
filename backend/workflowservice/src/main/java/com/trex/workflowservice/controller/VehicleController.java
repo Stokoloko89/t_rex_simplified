@@ -23,7 +23,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/vehicles")
-@CrossOrigin(origins = "*")
 public class VehicleController {
     
     private static final Logger logger = LoggerFactory.getLogger(VehicleController.class);
@@ -150,6 +149,7 @@ public class VehicleController {
         }
     }
     
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     @GetMapping("/filters")
     public ResponseEntity<Map<String, Object>> getSearchFilters() {
         logger.info("Get search filters request");
