@@ -4,7 +4,7 @@ import { CheckCircle, Person, Email, Phone, DirectionsCar, LocalGasStation, Spee
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { formatCurrency, formatFuelConsumption, formatDistance } from '@t-rex/shared-ui';
+import { formatCurrency, formatFuelConsumption, formatDistance, getVehicleMainImage } from '@t-rex/shared-ui';
 
 interface BuyingConfirmationProps {
   initialData?: any;
@@ -94,7 +94,7 @@ const BuyingConfirmation: React.FC<BuyingConfirmationProps> = ({
                   <CardMedia
                     component="img"
                     height="200"
-                    image={vehicle.imageUrl || 'https://images.unsplash.com/photo-1591293836027-e05b48473b67?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}
+                    image={getVehicleMainImage(vehicle)}
                     alt={`${vehicle.makeName} ${vehicle.modelName}`}
                     sx={{ 
                       objectFit: 'cover',

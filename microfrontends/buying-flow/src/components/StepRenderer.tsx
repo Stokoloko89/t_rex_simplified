@@ -289,6 +289,7 @@ const StepRenderer: React.FC = () => {
                   onSubmit={navigate}
                   onBack={goBack}
                   isLoading={isLoading}
+                  showIntro={currentStepConfig.data?.showIntro}
                 />
               </Suspense>
             </Box>

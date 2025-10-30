@@ -316,4 +316,346 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
         @Param("fuelType") String fuelType,
         @Param("province") String province
     );
+    
+    // Count methods for filter counts functionality
+    @Query("SELECT COUNT(v) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:yearMin IS NULL OR v.year >= :yearMin) AND " +
+           "(:yearMax IS NULL OR v.year <= :yearMax) AND " +
+           "(:priceMin IS NULL OR v.price >= :priceMin) AND " +
+           "(:priceMax IS NULL OR v.price <= :priceMax) AND " +
+           "(:mileageMin IS NULL OR v.mileage >= :mileageMin) AND " +
+           "(:mileageMax IS NULL OR v.mileage <= :mileageMax) AND " +
+           "(:bodyTypes IS NULL OR v.bodyType IN :bodyTypes) AND " +
+           "(:fuelTypes IS NULL OR v.fuelType IN :fuelTypes) AND " +
+           "(:transmission IS NULL OR LOWER(v.transmission) = LOWER(:transmission)) AND " +
+           "(:condition IS NULL OR LOWER(v.condition) = LOWER(:condition)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "(:colours IS NULL OR v.colour IN :colours) AND " +
+           "v.soldDate IS NULL")
+    long countVehiclesWithFilters(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("yearMin") Integer yearMin,
+        @Param("yearMax") Integer yearMax,
+        @Param("priceMin") BigDecimal priceMin,
+        @Param("priceMax") BigDecimal priceMax,
+        @Param("mileageMin") Integer mileageMin,
+        @Param("mileageMax") Integer mileageMax,
+        @Param("bodyTypes") List<String> bodyTypes,
+        @Param("fuelTypes") List<String> fuelTypes,
+        @Param("transmission") String transmission,
+        @Param("condition") String condition,
+        @Param("province") String province,
+        @Param("city") String city,
+        @Param("colours") List<String> colours
+    );
+    
+    @Query("SELECT v.makeName, COUNT(v) FROM Vehicle v WHERE " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:yearMin IS NULL OR v.year >= :yearMin) AND " +
+           "(:yearMax IS NULL OR v.year <= :yearMax) AND " +
+           "(:priceMin IS NULL OR v.price >= :priceMin) AND " +
+           "(:priceMax IS NULL OR v.price <= :priceMax) AND " +
+           "(:mileageMin IS NULL OR v.mileage >= :mileageMin) AND " +
+           "(:mileageMax IS NULL OR v.mileage <= :mileageMax) AND " +
+           "(:bodyTypes IS NULL OR v.bodyType IN :bodyTypes) AND " +
+           "(:fuelTypes IS NULL OR v.fuelType IN :fuelTypes) AND " +
+           "(:transmission IS NULL OR LOWER(v.transmission) = LOWER(:transmission)) AND " +
+           "(:condition IS NULL OR LOWER(v.condition) = LOWER(:condition)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "(:colours IS NULL OR v.colour IN :colours) AND " +
+           "v.soldDate IS NULL " +
+           "GROUP BY v.makeName")
+    List<Object[]> countByMakeWithFiltersRaw(
+        @Param("model") String model,
+        @Param("yearMin") Integer yearMin,
+        @Param("yearMax") Integer yearMax,
+        @Param("priceMin") BigDecimal priceMin,
+        @Param("priceMax") BigDecimal priceMax,
+        @Param("mileageMin") Integer mileageMin,
+        @Param("mileageMax") Integer mileageMax,
+        @Param("bodyTypes") List<String> bodyTypes,
+        @Param("fuelTypes") List<String> fuelTypes,
+        @Param("transmission") String transmission,
+        @Param("condition") String condition,
+        @Param("province") String province,
+        @Param("city") String city,
+        @Param("colours") List<String> colours
+    );
+    
+    @Query("SELECT v.modelName, COUNT(v) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:yearMin IS NULL OR v.year >= :yearMin) AND " +
+           "(:yearMax IS NULL OR v.year <= :yearMax) AND " +
+           "(:priceMin IS NULL OR v.price >= :priceMin) AND " +
+           "(:priceMax IS NULL OR v.price <= :priceMax) AND " +
+           "(:mileageMin IS NULL OR v.mileage >= :mileageMin) AND " +
+           "(:mileageMax IS NULL OR v.mileage <= :mileageMax) AND " +
+           "(:bodyTypes IS NULL OR v.bodyType IN :bodyTypes) AND " +
+           "(:fuelTypes IS NULL OR v.fuelType IN :fuelTypes) AND " +
+           "(:transmission IS NULL OR LOWER(v.transmission) = LOWER(:transmission)) AND " +
+           "(:condition IS NULL OR LOWER(v.condition) = LOWER(:condition)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "(:colours IS NULL OR v.colour IN :colours) AND " +
+           "v.soldDate IS NULL " +
+           "GROUP BY v.modelName")
+    List<Object[]> countByModelWithFiltersRaw(
+        @Param("make") String make,
+        @Param("yearMin") Integer yearMin,
+        @Param("yearMax") Integer yearMax,
+        @Param("priceMin") BigDecimal priceMin,
+        @Param("priceMax") BigDecimal priceMax,
+        @Param("mileageMin") Integer mileageMin,
+        @Param("mileageMax") Integer mileageMax,
+        @Param("bodyTypes") List<String> bodyTypes,
+        @Param("fuelTypes") List<String> fuelTypes,
+        @Param("transmission") String transmission,
+        @Param("condition") String condition,
+        @Param("province") String province,
+        @Param("city") String city,
+        @Param("colours") List<String> colours
+    );
+    
+    @Query("SELECT v.bodyType, COUNT(v) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:yearMin IS NULL OR v.year >= :yearMin) AND " +
+           "(:yearMax IS NULL OR v.year <= :yearMax) AND " +
+           "(:priceMin IS NULL OR v.price >= :priceMin) AND " +
+           "(:priceMax IS NULL OR v.price <= :priceMax) AND " +
+           "(:mileageMin IS NULL OR v.mileage >= :mileageMin) AND " +
+           "(:mileageMax IS NULL OR v.mileage <= :mileageMax) AND " +
+           "(:fuelTypes IS NULL OR v.fuelType IN :fuelTypes) AND " +
+           "(:transmission IS NULL OR LOWER(v.transmission) = LOWER(:transmission)) AND " +
+           "(:condition IS NULL OR LOWER(v.condition) = LOWER(:condition)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "(:colours IS NULL OR v.colour IN :colours) AND " +
+           "v.bodyType IS NOT NULL AND v.soldDate IS NULL " +
+           "GROUP BY v.bodyType")
+    List<Object[]> countByBodyTypeWithFiltersRaw(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("yearMin") Integer yearMin,
+        @Param("yearMax") Integer yearMax,
+        @Param("priceMin") BigDecimal priceMin,
+        @Param("priceMax") BigDecimal priceMax,
+        @Param("mileageMin") Integer mileageMin,
+        @Param("mileageMax") Integer mileageMax,
+        @Param("fuelTypes") List<String> fuelTypes,
+        @Param("transmission") String transmission,
+        @Param("condition") String condition,
+        @Param("province") String province,
+        @Param("city") String city,
+        @Param("colours") List<String> colours
+    );
+    
+    @Query("SELECT v.fuelType, COUNT(v) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:yearMin IS NULL OR v.year >= :yearMin) AND " +
+           "(:yearMax IS NULL OR v.year <= :yearMax) AND " +
+           "(:priceMin IS NULL OR v.price >= :priceMin) AND " +
+           "(:priceMax IS NULL OR v.price <= :priceMax) AND " +
+           "(:mileageMin IS NULL OR v.mileage >= :mileageMin) AND " +
+           "(:mileageMax IS NULL OR v.mileage <= :mileageMax) AND " +
+           "(:bodyTypes IS NULL OR v.bodyType IN :bodyTypes) AND " +
+           "(:transmission IS NULL OR LOWER(v.transmission) = LOWER(:transmission)) AND " +
+           "(:condition IS NULL OR LOWER(v.condition) = LOWER(:condition)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "(:colours IS NULL OR v.colour IN :colours) AND " +
+           "v.fuelType IS NOT NULL AND v.soldDate IS NULL " +
+           "GROUP BY v.fuelType")
+    List<Object[]> countByFuelTypeWithFiltersRaw(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("yearMin") Integer yearMin,
+        @Param("yearMax") Integer yearMax,
+        @Param("priceMin") BigDecimal priceMin,
+        @Param("priceMax") BigDecimal priceMax,
+        @Param("mileageMin") Integer mileageMin,
+        @Param("mileageMax") Integer mileageMax,
+        @Param("bodyTypes") List<String> bodyTypes,
+        @Param("transmission") String transmission,
+        @Param("condition") String condition,
+        @Param("province") String province,
+        @Param("city") String city,
+        @Param("colours") List<String> colours
+    );
+    
+    @Query("SELECT v.transmission, COUNT(v) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:yearMin IS NULL OR v.year >= :yearMin) AND " +
+           "(:yearMax IS NULL OR v.year <= :yearMax) AND " +
+           "(:priceMin IS NULL OR v.price >= :priceMin) AND " +
+           "(:priceMax IS NULL OR v.price <= :priceMax) AND " +
+           "(:mileageMin IS NULL OR v.mileage >= :mileageMin) AND " +
+           "(:mileageMax IS NULL OR v.mileage <= :mileageMax) AND " +
+           "(:bodyTypes IS NULL OR v.bodyType IN :bodyTypes) AND " +
+           "(:fuelTypes IS NULL OR v.fuelType IN :fuelTypes) AND " +
+           "(:condition IS NULL OR LOWER(v.condition) = LOWER(:condition)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "(:colours IS NULL OR v.colour IN :colours) AND " +
+           "v.transmission IS NOT NULL AND v.soldDate IS NULL " +
+           "GROUP BY v.transmission")
+    List<Object[]> countByTransmissionWithFiltersRaw(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("yearMin") Integer yearMin,
+        @Param("yearMax") Integer yearMax,
+        @Param("priceMin") BigDecimal priceMin,
+        @Param("priceMax") BigDecimal priceMax,
+        @Param("mileageMin") Integer mileageMin,
+        @Param("mileageMax") Integer mileageMax,
+        @Param("bodyTypes") List<String> bodyTypes,
+        @Param("fuelTypes") List<String> fuelTypes,
+        @Param("condition") String condition,
+        @Param("province") String province,
+        @Param("city") String city,
+        @Param("colours") List<String> colours
+    );
+    
+    @Query("SELECT v.condition, COUNT(v) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:yearMin IS NULL OR v.year >= :yearMin) AND " +
+           "(:yearMax IS NULL OR v.year <= :yearMax) AND " +
+           "(:priceMin IS NULL OR v.price >= :priceMin) AND " +
+           "(:priceMax IS NULL OR v.price <= :priceMax) AND " +
+           "(:mileageMin IS NULL OR v.mileage >= :mileageMin) AND " +
+           "(:mileageMax IS NULL OR v.mileage <= :mileageMax) AND " +
+           "(:bodyTypes IS NULL OR v.bodyType IN :bodyTypes) AND " +
+           "(:fuelTypes IS NULL OR v.fuelType IN :fuelTypes) AND " +
+           "(:transmission IS NULL OR LOWER(v.transmission) = LOWER(:transmission)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "(:colours IS NULL OR v.colour IN :colours) AND " +
+           "v.condition IS NOT NULL AND v.soldDate IS NULL " +
+           "GROUP BY v.condition")
+    List<Object[]> countByConditionWithFiltersRaw(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("yearMin") Integer yearMin,
+        @Param("yearMax") Integer yearMax,
+        @Param("priceMin") BigDecimal priceMin,
+        @Param("priceMax") BigDecimal priceMax,
+        @Param("mileageMin") Integer mileageMin,
+        @Param("mileageMax") Integer mileageMax,
+        @Param("bodyTypes") List<String> bodyTypes,
+        @Param("fuelTypes") List<String> fuelTypes,
+        @Param("transmission") String transmission,
+        @Param("province") String province,
+        @Param("city") String city,
+        @Param("colours") List<String> colours
+    );
+    
+    @Query("SELECT v.provinceName, COUNT(v) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:yearMin IS NULL OR v.year >= :yearMin) AND " +
+           "(:yearMax IS NULL OR v.year <= :yearMax) AND " +
+           "(:priceMin IS NULL OR v.price >= :priceMin) AND " +
+           "(:priceMax IS NULL OR v.price <= :priceMax) AND " +
+           "(:mileageMin IS NULL OR v.mileage >= :mileageMin) AND " +
+           "(:mileageMax IS NULL OR v.mileage <= :mileageMax) AND " +
+           "(:bodyTypes IS NULL OR v.bodyType IN :bodyTypes) AND " +
+           "(:fuelTypes IS NULL OR v.fuelType IN :fuelTypes) AND " +
+           "(:transmission IS NULL OR LOWER(v.transmission) = LOWER(:transmission)) AND " +
+           "(:condition IS NULL OR LOWER(v.condition) = LOWER(:condition)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "(:colours IS NULL OR v.colour IN :colours) AND " +
+           "v.soldDate IS NULL " +
+           "GROUP BY v.provinceName")
+    List<Object[]> countByProvinceWithFiltersRaw(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("yearMin") Integer yearMin,
+        @Param("yearMax") Integer yearMax,
+        @Param("priceMin") BigDecimal priceMin,
+        @Param("priceMax") BigDecimal priceMax,
+        @Param("mileageMin") Integer mileageMin,
+        @Param("mileageMax") Integer mileageMax,
+        @Param("bodyTypes") List<String> bodyTypes,
+        @Param("fuelTypes") List<String> fuelTypes,
+        @Param("transmission") String transmission,
+        @Param("condition") String condition,
+        @Param("city") String city,
+        @Param("colours") List<String> colours
+    );
+    
+    @Query("SELECT v.cityName, COUNT(v) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:yearMin IS NULL OR v.year >= :yearMin) AND " +
+           "(:yearMax IS NULL OR v.year <= :yearMax) AND " +
+           "(:priceMin IS NULL OR v.price >= :priceMin) AND " +
+           "(:priceMax IS NULL OR v.price <= :priceMax) AND " +
+           "(:mileageMin IS NULL OR v.mileage >= :mileageMin) AND " +
+           "(:mileageMax IS NULL OR v.mileage <= :mileageMax) AND " +
+           "(:bodyTypes IS NULL OR v.bodyType IN :bodyTypes) AND " +
+           "(:fuelTypes IS NULL OR v.fuelType IN :fuelTypes) AND " +
+           "(:transmission IS NULL OR LOWER(v.transmission) = LOWER(:transmission)) AND " +
+           "(:condition IS NULL OR LOWER(v.condition) = LOWER(:condition)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:colours IS NULL OR v.colour IN :colours) AND " +
+           "v.cityName IS NOT NULL AND v.soldDate IS NULL " +
+           "GROUP BY v.cityName")
+    List<Object[]> countByCityWithFiltersRaw(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("yearMin") Integer yearMin,
+        @Param("yearMax") Integer yearMax,
+        @Param("priceMin") BigDecimal priceMin,
+        @Param("priceMax") BigDecimal priceMax,
+        @Param("mileageMin") Integer mileageMin,
+        @Param("mileageMax") Integer mileageMax,
+        @Param("bodyTypes") List<String> bodyTypes,
+        @Param("fuelTypes") List<String> fuelTypes,
+        @Param("transmission") String transmission,
+        @Param("condition") String condition,
+        @Param("province") String province,
+        @Param("colours") List<String> colours
+    );
+    
+    @Query("SELECT v.colour, COUNT(v) FROM Vehicle v WHERE " +
+           "(:make IS NULL OR LOWER(v.makeName) = LOWER(:make)) AND " +
+           "(:model IS NULL OR LOWER(v.modelName) = LOWER(:model)) AND " +
+           "(:yearMin IS NULL OR v.year >= :yearMin) AND " +
+           "(:yearMax IS NULL OR v.year <= :yearMax) AND " +
+           "(:priceMin IS NULL OR v.price >= :priceMin) AND " +
+           "(:priceMax IS NULL OR v.price <= :priceMax) AND " +
+           "(:mileageMin IS NULL OR v.mileage >= :mileageMin) AND " +
+           "(:mileageMax IS NULL OR v.mileage <= :mileageMax) AND " +
+           "(:bodyTypes IS NULL OR v.bodyType IN :bodyTypes) AND " +
+           "(:fuelTypes IS NULL OR v.fuelType IN :fuelTypes) AND " +
+           "(:transmission IS NULL OR LOWER(v.transmission) = LOWER(:transmission)) AND " +
+           "(:condition IS NULL OR LOWER(v.condition) = LOWER(:condition)) AND " +
+           "(:province IS NULL OR LOWER(v.provinceName) = LOWER(:province)) AND " +
+           "(:city IS NULL OR LOWER(v.cityName) = LOWER(:city)) AND " +
+           "v.colour IS NOT NULL AND v.soldDate IS NULL " +
+           "GROUP BY v.colour")
+    List<Object[]> countByColourWithFiltersRaw(
+        @Param("make") String make,
+        @Param("model") String model,
+        @Param("yearMin") Integer yearMin,
+        @Param("yearMax") Integer yearMax,
+        @Param("priceMin") BigDecimal priceMin,
+        @Param("priceMax") BigDecimal priceMax,
+        @Param("mileageMin") Integer mileageMin,
+        @Param("mileageMax") Integer mileageMax,
+        @Param("bodyTypes") List<String> bodyTypes,
+        @Param("fuelTypes") List<String> fuelTypes,
+        @Param("transmission") String transmission,
+        @Param("condition") String condition,
+        @Param("province") String province,
+        @Param("city") String city
+    );
 }

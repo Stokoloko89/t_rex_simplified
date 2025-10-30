@@ -267,38 +267,261 @@ public class VehicleService {
     
     // Get filtered ranges based on current selections
     public Map<String, Object> getFilteredRanges(String make, String model, String bodyType, String fuelType, String province) {
-        logger.info("Getting filtered ranges for make: {}, model: {}, bodyType: {}, fuelType: {}, province: {}", 
+        logger.info("🚀 START: Getting filtered ranges for make: {}, model: {}, bodyType: {}, fuelType: {}, province: {}", 
                    make, model, bodyType, fuelType, province);
         
         Map<String, Object> ranges = new HashMap<>();
         
-        // Get filtered price range
-        Object[] priceRange = vehicleRepository.findPriceRangeByFilters(make, model, bodyType, fuelType, province);
-        if (priceRange != null && priceRange.length == 2 && priceRange[0] != null && priceRange[1] != null) {
-            Map<String, BigDecimal> priceRangeMap = new HashMap<>();
-            priceRangeMap.put("min", (BigDecimal) priceRange[0]);
-            priceRangeMap.put("max", (BigDecimal) priceRange[1]);
-            ranges.put("priceRange", priceRangeMap);
+        try {
+            // Get filtered price range
+            logger.info("📍 Calling findPriceRangeByFilters...");
+            Object[] priceRange = vehicleRepository.findPriceRangeByFilters(make, model, bodyType, fuelType, province);
+            logger.info("🔍 DEBUG: priceRange result = {}, isNull = {}, length = {}", 
+                       priceRange, priceRange == null, priceRange != null ? priceRange.length : "N/A");
+            
+            if (priceRange != null) {
+                logger.info("   priceRange array contents:");
+                for (int i = 0; i < priceRange.length; i++) {
+                    Object val = priceRange[i];
+                    logger.info("   [{}] = {} (type: {})", i, val, val != null ? val.getClass().getSimpleName() : "null");
+                }
+            }
+            
+            if (priceRange != null && priceRange.length >= 2 && priceRange[0] != null && priceRange[1] != null) {
+                Map<String, BigDecimal> priceRangeMap = new HashMap<>();
+                // Safely cast to BigDecimal, handling both BigDecimal and numeric types
+                BigDecimal minPrice = convertToBigDecimal(priceRange[0]);
+                BigDecimal maxPrice = convertToBigDecimal(priceRange[1]);
+                priceRangeMap.put("min", minPrice);
+                priceRangeMap.put("max", maxPrice);
+                ranges.put("priceRange", priceRangeMap);
+                logger.info("✅ Price range added: {} - {}", minPrice, maxPrice);
+            } else {
+                logger.warn("⚠️ Price range is null or incomplete. priceRange = {}, length = {}", 
+                           priceRange, priceRange != null ? priceRange.length : "null");
+            }
+        } catch (Exception e) {
+            logger.error("❌ Error processing price range", e);
+            e.printStackTrace();
         }
         
-        // Get filtered year range
-        Object[] yearRange = vehicleRepository.findYearRangeByFilters(make, model, bodyType, fuelType, province);
-        if (yearRange != null && yearRange.length == 2 && yearRange[0] != null && yearRange[1] != null) {
-            Map<String, Integer> yearRangeMap = new HashMap<>();
-            yearRangeMap.put("min", (Integer) yearRange[0]);
-            yearRangeMap.put("max", (Integer) yearRange[1]);
-            ranges.put("yearRange", yearRangeMap);
+        try {
+            // Get filtered year range
+            logger.info("📍 Calling findYearRangeByFilters...");
+            Object[] yearRange = vehicleRepository.findYearRangeByFilters(make, model, bodyType, fuelType, province);
+            logger.info("🔍 DEBUG: yearRange result = {}, isNull = {}, length = {}", 
+                       yearRange, yearRange == null, yearRange != null ? yearRange.length : "N/A");
+            
+            if (yearRange != null) {
+                logger.info("   yearRange array contents:");
+                for (int i = 0; i < yearRange.length; i++) {
+                    Object val = yearRange[i];
+                    logger.info("   [{}] = {} (type: {})", i, val, val != null ? val.getClass().getSimpleName() : "null");
+                }
+            }
+            
+            if (yearRange != null && yearRange.length >= 2 && yearRange[0] != null && yearRange[1] != null) {
+                Map<String, Integer> yearRangeMap = new HashMap<>();
+                // Safely cast to Integer, handling both Integer and numeric types (Long, BigDecimal)
+                Integer minYear = convertToInteger(yearRange[0]);
+                Integer maxYear = convertToInteger(yearRange[1]);
+                yearRangeMap.put("min", minYear);
+                yearRangeMap.put("max", maxYear);
+                ranges.put("yearRange", yearRangeMap);
+                logger.info("✅ Year range added: {} - {}", minYear, maxYear);
+            } else {
+                logger.warn("⚠️ Year range is null or incomplete. yearRange = {}, length = {}", 
+                           yearRange, yearRange != null ? yearRange.length : "null");
+            }
+        } catch (Exception e) {
+            logger.error("❌ Error processing year range", e);
+            e.printStackTrace();
         }
         
-        // Get filtered mileage range
-        Object[] mileageRange = vehicleRepository.findMileageRangeByFilters(make, model, bodyType, fuelType, province);
-        if (mileageRange != null && mileageRange.length == 2 && mileageRange[0] != null && mileageRange[1] != null) {
-            Map<String, Integer> mileageRangeMap = new HashMap<>();
-            mileageRangeMap.put("min", (Integer) mileageRange[0]);
-            mileageRangeMap.put("max", (Integer) mileageRange[1]);
-            ranges.put("mileageRange", mileageRangeMap);
+        try {
+            // Get filtered mileage range
+            logger.info("📍 Calling findMileageRangeByFilters...");
+            Object[] mileageRange = vehicleRepository.findMileageRangeByFilters(make, model, bodyType, fuelType, province);
+            logger.info("🔍 DEBUG: mileageRange result = {}, isNull = {}, length = {}", 
+                       mileageRange, mileageRange == null, mileageRange != null ? mileageRange.length : "N/A");
+            
+            if (mileageRange != null) {
+                logger.info("   mileageRange array contents:");
+                for (int i = 0; i < mileageRange.length; i++) {
+                    Object val = mileageRange[i];
+                    logger.info("   [{}] = {} (type: {})", i, val, val != null ? val.getClass().getSimpleName() : "null");
+                }
+            }
+            
+            if (mileageRange != null && mileageRange.length >= 2 && mileageRange[0] != null && mileageRange[1] != null) {
+                Map<String, Integer> mileageRangeMap = new HashMap<>();
+                // Safely cast to Integer, handling both Integer and numeric types (Long, BigDecimal)
+                Integer minMileage = convertToInteger(mileageRange[0]);
+                Integer maxMileage = convertToInteger(mileageRange[1]);
+                mileageRangeMap.put("min", minMileage);
+                mileageRangeMap.put("max", maxMileage);
+                ranges.put("mileageRange", mileageRangeMap);
+                logger.info("✅ Mileage range added: {} - {}", minMileage, maxMileage);
+            } else {
+                logger.warn("⚠️ Mileage range is null or incomplete. mileageRange = {}, length = {}", 
+                           mileageRange, mileageRange != null ? mileageRange.length : "null");
+            }
+        } catch (Exception e) {
+            logger.error("❌ Error processing mileage range", e);
+            e.printStackTrace();
         }
         
+        logger.info("📊 FINAL: Returning {} ranges: {}", ranges.size(), ranges.keySet());
         return ranges;
+    }
+    
+    /**
+     * Safely convert an object to BigDecimal, handling various numeric types
+     */
+    private BigDecimal convertToBigDecimal(Object value) {
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        if (value instanceof BigDecimal) {
+            return (BigDecimal) value;
+        }
+        if (value instanceof Long) {
+            return BigDecimal.valueOf((Long) value);
+        }
+        if (value instanceof Integer) {
+            return BigDecimal.valueOf((Integer) value);
+        }
+        if (value instanceof Double) {
+            return BigDecimal.valueOf((Double) value);
+        }
+        if (value instanceof Float) {
+            return BigDecimal.valueOf(((Float) value).doubleValue());
+        }
+        if (value instanceof String) {
+            try {
+                return new BigDecimal((String) value);
+            } catch (NumberFormatException e) {
+                logger.warn("Cannot convert string '{}' to BigDecimal", value);
+                return BigDecimal.ZERO;
+            }
+        }
+        logger.warn("Unexpected type for BigDecimal conversion: {}", value.getClass().getName());
+        return BigDecimal.ZERO;
+    }
+    
+    /**
+     * Safely convert an object to Integer, handling various numeric types
+     */
+    private Integer convertToInteger(Object value) {
+        if (value == null) {
+            return 0;
+        }
+        if (value instanceof Integer) {
+            return (Integer) value;
+        }
+        if (value instanceof Long) {
+            return ((Long) value).intValue();
+        }
+        if (value instanceof BigDecimal) {
+            return ((BigDecimal) value).intValue();
+        }
+        if (value instanceof Double) {
+            return ((Double) value).intValue();
+        }
+        if (value instanceof Float) {
+            return ((Float) value).intValue();
+        }
+        if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                logger.warn("Cannot convert string '{}' to Integer", value);
+                return 0;
+            }
+        }
+        logger.warn("Unexpected type for Integer conversion: {}", value.getClass().getName());
+        return 0;
+    }
+    
+    public Map<String, Object> getFilterCounts(
+            String make, String model, Integer yearMin, Integer yearMax,
+            BigDecimal priceMin, BigDecimal priceMax, Integer mileageMin, Integer mileageMax,
+            List<String> bodyTypes, List<String> fuelTypes, String transmission, String condition,
+            String province, String city, List<String> colours) {
+        
+        logger.info("Getting filter counts with filters");
+        
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Map<String, Long>> counts = new HashMap<>();
+        
+        // Get total count with current filters
+        long totalCount = vehicleRepository.countVehiclesWithFilters(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, province, city, colours
+        );
+        
+        // Get counts for each filter category and convert to Map
+        counts.put("makes", convertToCountMap(vehicleRepository.countByMakeWithFiltersRaw(
+            model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, province, city, colours
+        )));
+        
+        counts.put("models", convertToCountMap(vehicleRepository.countByModelWithFiltersRaw(
+            make, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, province, city, colours
+        )));
+        
+        counts.put("bodyTypes", convertToCountMap(vehicleRepository.countByBodyTypeWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            fuelTypes, transmission, condition, province, city, colours
+        )));
+        
+        counts.put("fuelTypes", convertToCountMap(vehicleRepository.countByFuelTypeWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, transmission, condition, province, city, colours
+        )));
+        
+        counts.put("transmissions", convertToCountMap(vehicleRepository.countByTransmissionWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, condition, province, city, colours
+        )));
+        
+        counts.put("conditions", convertToCountMap(vehicleRepository.countByConditionWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, province, city, colours
+        )));
+        
+        counts.put("provinces", convertToCountMap(vehicleRepository.countByProvinceWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, city, colours
+        )));
+        
+        counts.put("cities", convertToCountMap(vehicleRepository.countByCityWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, province, colours
+        )));
+        
+        counts.put("colours", convertToCountMap(vehicleRepository.countByColourWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, province, city
+        )));
+        
+        response.put("total", totalCount);
+        response.put("counts", counts);
+        
+        return response;
+    }
+    
+    // Helper method to convert List<Object[]> to Map<String, Long>
+    private Map<String, Long> convertToCountMap(List<Object[]> rawResults) {
+        Map<String, Long> countMap = new HashMap<>();
+        for (Object[] row : rawResults) {
+            if (row.length == 2 && row[0] != null && row[1] != null) {
+                String key = row[0].toString();
+                Long count = ((Number) row[1]).longValue();
+                countMap.put(key, count);
+            }
+        }
+        return countMap;
     }
 }

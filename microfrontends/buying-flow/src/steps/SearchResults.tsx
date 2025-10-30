@@ -18,7 +18,7 @@ import {
   MenuItem
 } from '@mui/material';
 import { LocalGasStation, Speed, LocationOn, DirectionsCar, Settings } from '@mui/icons-material';
-import { formatCurrency, formatFuelConsumption, formatDistance } from '@t-rex/shared-ui';
+import { formatCurrency, formatFuelConsumption, formatDistance, getVehicleImages, getVehicleMainImage, enrichVehicleWithImages } from '@t-rex/shared-ui';
 
 interface Vehicle {
   id: number;
@@ -38,6 +38,8 @@ interface Vehicle {
   engineSize: string;
   condition: string;
   imageUrl?: string;
+  selectedImage?: string;
+  imageGallery?: string[];
 }
 
 interface SearchResultsProps {
@@ -175,12 +177,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             mileage: 45000,
             colour: 'Alpine White',
             provinceName: 'Gauteng',
+            cityName: 'Johannesburg',
             bodyType: 'SUV',
             transmission: 'Automatic',
             fuelType: 'Petrol',
             engineSize: '2.0L',
             condition: 'Excellent',
-            imageUrl: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+            imageUrl: ''
           },
           {
             id: 2,
@@ -193,12 +196,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             mileage: 32000,
             colour: 'Obsidian Black',
             provinceName: 'Western Cape',
+            cityName: 'Cape Town',
             bodyType: 'Sedan',
             transmission: 'Automatic',
             fuelType: 'Petrol',
             engineSize: '2.0L',
             condition: 'Excellent',
-            imageUrl: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+            imageUrl: ''
           },
           {
             id: 3,
@@ -211,12 +215,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             mileage: 28000,
             colour: 'Glacier White',
             provinceName: 'KwaZulu-Natal',
+            cityName: 'Durban',
             bodyType: 'Sedan',
             transmission: 'Automatic',
             fuelType: 'Petrol',
             engineSize: '2.0L',
             condition: 'Excellent',
-            imageUrl: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+            imageUrl: ''
           }
         ];
         
@@ -253,7 +258,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       if (isAlreadySelected) {
         return prev;
       }
-      return [...prev, vehicle];
+      
+      // Add vehicle with consistent image information
+      const vehicleWithImage = enrichVehicleWithImages(vehicle) as Vehicle;
+      
+      return [...prev, vehicleWithImage];
     });
     setIsModalOpen(false);
   };
@@ -290,22 +299,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     }
   };
 
-  const getVehicleImages = (vehicle: Vehicle): string[] => {
-    // For now, return the single image or fallback
-    // In production, this would return an array of multiple images
-    const images = [];
-    if (vehicle.imageUrl) {
-      images.push(vehicle.imageUrl);
-    }
-    // Add fallback image
-    images.push('https://images.unsplash.com/photo-1591293836027-e05b48473b67?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-    
-    // Add more mock images for demonstration
-    images.push('https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070&auto=format&fit=crop');
-    images.push('https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=2070&auto=format&fit=crop');
-    
-    return images;
-  };
+  // Using shared vehicle image utilities for consistent image selection
 
   const handleSubmit = () => {
     if (selectedVehicles.length === 0) {
@@ -313,11 +307,14 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       return;
     }
     
-    console.log('SearchResults - Submitting with selected vehicles:', selectedVehicles);
+    // Ensure each selected vehicle has its consistent image attached
+    const vehiclesWithImages = selectedVehicles.map(vehicle => enrichVehicleWithImages(vehicle) as Vehicle);
+    
+    console.log('SearchResults - Submitting with selected vehicles and images:', vehiclesWithImages);
     
     onSubmit({
       ...initialData,
-      selectedVehicles: selectedVehicles,
+      selectedVehicles: vehiclesWithImages,
       nextStep: 'BuyingConfirmation', // Define next step
       action: 'vehicle-selected',
       intent: 'buying'
@@ -334,6 +331,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     const newSize = parseInt(event.target.value);
     setPageSize(newSize);
     setPagination(prev => ({ ...prev, currentPage: 0, pageSize: newSize }));
+    searchVehicles(0);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -394,7 +392,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     }}>
       {/* Header Section */}
       <Box sx={{ mb: 6 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} mb={3} gap={3}>
           <Box>
             <Typography 
               variant="h4" 
@@ -403,7 +401,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                 fontWeight: 600,
                 color: '#1a1a1a',
                 mb: 1.5,
-                letterSpacing: '-0.02em'
+                letterSpacing: '-0.02em',
+                fontSize: { xs: '1.75rem', md: '2.125rem' }
               }}
             >
               Vehicle Search Results
@@ -414,7 +413,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               color="text.secondary" 
               sx={{ 
                 mb: 3,
-                fontSize: '1rem',
+                fontSize: { xs: '0.875rem', md: '1rem' },
                 lineHeight: 1.6
               }}
             >
@@ -422,8 +421,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             </Typography>
           </Box>
           
-          <Box display="flex" gap={2}>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
+          <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={2} sx={{ width: { xs: '100%', md: 'auto' } }}>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 120 } }}>
               <InputLabel>Sort by</InputLabel>
               <Select
                 value={sortBy}
@@ -437,7 +436,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               </Select>
             </FormControl>
             
-            <FormControl size="small" sx={{ minWidth: 100 }}>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 100 } }}>
               <InputLabel>Order</InputLabel>
               <Select
                 value={sortDir}
@@ -449,7 +448,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               </Select>
             </FormControl>
 
-            <FormControl size="small" sx={{ minWidth: 100 }}>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 100 } }}>
               <InputLabel>Per Page</InputLabel>
               <Select
                 value={pageSize}
@@ -505,15 +504,15 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               },
             },
           }}>
-            <Grid container spacing={4}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {vehicles.map((vehicle) => (
-              <Grid item xs={12} md={6} lg={6} key={vehicle.id}>
+              <Box key={vehicle.id} sx={{ display: 'flex', width: '100%' }}>
                 <Card 
                   sx={{ 
                     cursor: 'pointer',
-                    height: '100%',
+                    height: { xs: 'auto', md: 280 },
                     display: 'flex',
-                    flexDirection: 'column',
+                    flexDirection: { xs: 'column', md: 'row' },
                     transition: 'all 0.2s ease-in-out',
                     border: isVehicleSelected(vehicle.id) 
                       ? '2px solid #1e3a8a' 
@@ -524,20 +523,21 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     '&:hover': {
                       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
                       transform: 'translateY(-4px)',
-                    }
+                    },
+                    width: '100%'
                   }}
                   onClick={() => handleVehicleSelect(vehicle)}
                 >
                   {/* Vehicle Image */}
                   <Box sx={{
-                    height: 200,
-                    backgroundImage: vehicle.imageUrl
-                      ? `url(${vehicle.imageUrl})`
-                      : `url(https://images.unsplash.com/photo-1591293836027-e05b48473b67?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)`,
+                    width: { xs: '100%', md: '320px' },
+                    height: { xs: 200, md: 280 },
+                    backgroundImage: `url(${getVehicleMainImage(vehicle)})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
                     position: 'relative',
+                    flexShrink: 0,
                     '&::after': {
                       content: '""',
                       position: 'absolute',
@@ -658,9 +658,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     </Box>
                   </CardContent>
                 </Card>
-              </Grid>
+              </Box>
             ))}
-            </Grid>
+            </Box>
           </Box>
 
           {pagination.totalPages > 1 && (
@@ -838,9 +838,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             <Box 
               sx={{
                 height: 300,
-                backgroundImage: modalVehicle.imageUrl
-                  ? `url(${modalVehicle.imageUrl})`
-                  : `url(https://images.unsplash.com/photo-1591293836027-e05b48473b67?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)`,
+                backgroundImage: `url(${getVehicleMainImage(modalVehicle)})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 position: 'relative',
@@ -903,8 +901,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               </Box>
 
               {/* Vehicle Details Grid */}
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} md={6}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', md: 'row' },
+                gap: 3,
+                mb: 4 
+              }}>
+                <Box sx={{ flex: 1 }}>
                   <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                     Vehicle Information
                   </Typography>
@@ -934,9 +937,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                       </Typography>
                     </Box>
                   </Box>
-                </Grid>
+                </Box>
 
-                <Grid item xs={12} md={6}>
+                <Box sx={{ flex: 1 }}>
                   <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                     Specifications
                   </Typography>
@@ -954,8 +957,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                       <strong>Stock ID:</strong> #{modalVehicle.usedVehicleStockId}
                     </Typography>
                   </Box>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
 
               {/* Description/Features */}
               <Box sx={{ mb: 4, p: 3, backgroundColor: '#f8f9fa', borderRadius: 2 }}>
@@ -1022,7 +1025,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                         }
                       }}
                     >
-                      Select this vehicle
+                      I'm interested
                     </Button>
                   )}
                 </Box>

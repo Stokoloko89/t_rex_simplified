@@ -9,6 +9,7 @@ import {
   Container
 } from '@mui/material';
 import { Search, HelpOutline, CheckCircle } from '@mui/icons-material';
+import VehicleSearch from './VehicleSearch';
 
 interface VehicleHelpQuestionProps {
   initialData: {
@@ -89,8 +90,15 @@ const VehicleHelpQuestion: React.FC<VehicleHelpQuestionProps> = ({
             We'll help you find vehicles that match your preferences and budget. Our advanced search tools will guide you to the perfect match.
           </Typography>
 
+          <VehicleSearch 
+            initialData={initialData} 
+            onSubmit={onSubmit}
+            isLoading={isLoading}
+          />
+          
+
           {/* Action Button */}
-          {initialData.showButton && (
+          {/* {initialData.showButton && (
             <Box sx={{ mt: 3 }}>  
               <Button
                 variant="contained"
@@ -117,24 +125,7 @@ const VehicleHelpQuestion: React.FC<VehicleHelpQuestionProps> = ({
                 {initialData.buttonText}
               </Button>
             </Box>
-          )}
-
-          {/* Additional Info */}
-          {/* <Box sx={{ mt: 3 }}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                fontSize: '0.85rem',
-                maxWidth: 400,
-                mx: 'auto',
-                lineHeight: 1.5
-              }}
-            >
-              We'll help you find vehicles that match your preferences and budget.
-              Our advanced search tools will guide you to the perfect match.
-            </Typography>
-          </Box> */}
+          )} */}
         </CardContent>
       </Card>
     </Container>

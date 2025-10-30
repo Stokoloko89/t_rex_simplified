@@ -14080,10 +14080,86 @@ var localization = {
     formatPhoneNumber: formatPhoneNumber,
 };
 
+// Vehicle Image Utilities - Provides consistent image selection across components
+var FALLBACK_VEHICLE_IMAGES = [
+    'https://images.unsplash.com/photo-1591293836027-e05b48473b67?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1283',
+    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170',
+    'https://images.unsplash.com/photo-1542362567-b07e54358753?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170',
+    'https://images.unsplash.com/photo-1553440569-bcc63803a83d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1125',
+    'https://images.unsplash.com/photo-1526726538690-5cbf956ae2fd?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170',
+    'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170',
+    'https://images.unsplash.com/photo-1603386329225-868f9b1ee6c9?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1169',
+    'https://images.unsplash.com/photo-1580273916550-e323be2ae537?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=764',
+    'https://images.unsplash.com/photo-1588258219511-64eb629cb833?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170',
+    'https://images.unsplash.com/photo-1532581140115-3e355d1ed1de?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170',
+    'https://images.unsplash.com/photo-1593544340816-93d84a106415?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1195',
+    'https://images.unsplash.com/photo-1494905998402-395d579af36f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170',
+    'https://images.unsplash.com/photo-1626668893632-6f3a4466d22f?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1172',
+];
+// Simple seeded random function to ensure consistent image selection
+var seededRandom = function (seed) {
+    var x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+};
+/**
+ * Get a consistent array of images for a vehicle based on its ID
+ * @param vehicle - Vehicle object with id or usedVehicleStockId
+ * @param count - Number of images to return (default: 5)
+ * @returns Array of image URLs
+ */
+var getVehicleImages = function (vehicle, count) {
+    if (count === void 0) { count = 5; }
+    // Use vehicle ID as seed to ensure consistent image selection
+    var seed = vehicle.id || vehicle.usedVehicleStockId || 1;
+    // Create a deterministic shuffle based on vehicle ID
+    var shuffledImages = __spreadArray([], FALLBACK_VEHICLE_IMAGES, true).map(function (img, index) { return ({ img: img, sort: seededRandom(seed + index) }); })
+        .sort(function (a, b) { return a.sort - b.sort; })
+        .map(function (_a) {
+        var img = _a.img;
+        return img;
+    })
+        .slice(0, count);
+    return shuffledImages;
+};
+/**
+ * Get the main/primary image for a vehicle
+ * @param vehicle - Vehicle object
+ * @returns Primary image URL
+ */
+var getVehicleMainImage = function (vehicle) {
+    // Priority: selectedImage > imageUrl > first from consistent gallery > fallback
+    if (vehicle.selectedImage)
+        return vehicle.selectedImage;
+    if (vehicle.imageUrl)
+        return vehicle.imageUrl;
+    var images = getVehicleImages(vehicle, 1);
+    return images.length > 0 ? images[0] : FALLBACK_VEHICLE_IMAGES[0];
+};
+/**
+ * Enrich a vehicle object with consistent image information
+ * @param vehicle - Vehicle object to enrich
+ * @returns Vehicle object with selectedImage and imageGallery properties
+ */
+var enrichVehicleWithImages = function (vehicle) {
+    return __assign(__assign({}, vehicle), { selectedImage: getVehicleMainImage(vehicle), imageGallery: getVehicleImages(vehicle) });
+};
+/**
+ * Enrich an array of vehicles with consistent image information
+ * @param vehicles - Array of vehicle objects
+ * @returns Array of vehicles with image information
+ */
+var enrichVehiclesWithImages = function (vehicles) {
+    return vehicles.map(enrichVehicleWithImages);
+};
+
 exports.Button = Button;
 exports.ErrorBoundary = ErrorBoundary;
+exports.FALLBACK_VEHICLE_IMAGES = FALLBACK_VEHICLE_IMAGES;
 exports.LoadingSpinner = LoadingSpinner;
 exports.StepperComponent = StepperComponent;
+exports.enrichVehicleWithImages = enrichVehicleWithImages;
+exports.enrichVehiclesWithImages = enrichVehiclesWithImages;
 exports.formatCurrency = formatCurrency;
 exports.formatCurrencyDetailed = formatCurrencyDetailed;
 exports.formatDate = formatDate;
@@ -14098,6 +14174,8 @@ exports.formatPower = formatPower;
 exports.formatSpeed = formatSpeed;
 exports.formatTorque = formatTorque;
 exports.formatWeight = formatWeight;
+exports.getVehicleImages = getVehicleImages;
+exports.getVehicleMainImage = getVehicleMainImage;
 exports.hpToKw = hpToKw;
 exports.kmToMiles = kmToMiles;
 exports.kwToHp = kwToHp;
