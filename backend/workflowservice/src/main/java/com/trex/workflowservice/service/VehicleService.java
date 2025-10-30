@@ -301,4 +301,86 @@ public class VehicleService {
         
         return ranges;
     }
+    
+    public Map<String, Object> getFilterCounts(
+            String make, String model, Integer yearMin, Integer yearMax,
+            BigDecimal priceMin, BigDecimal priceMax, Integer mileageMin, Integer mileageMax,
+            List<String> bodyTypes, List<String> fuelTypes, String transmission, String condition,
+            String province, String city, List<String> colours) {
+        
+        logger.info("Getting filter counts with filters");
+        
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Map<String, Long>> counts = new HashMap<>();
+        
+        // Get total count with current filters
+        long totalCount = vehicleRepository.countVehiclesWithFilters(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, province, city, colours
+        );
+        
+        // Get counts for each filter category and convert to Map
+        counts.put("makes", convertToCountMap(vehicleRepository.countByMakeWithFiltersRaw(
+            model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, province, city, colours
+        )));
+        
+        counts.put("models", convertToCountMap(vehicleRepository.countByModelWithFiltersRaw(
+            make, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, province, city, colours
+        )));
+        
+        counts.put("bodyTypes", convertToCountMap(vehicleRepository.countByBodyTypeWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            fuelTypes, transmission, condition, province, city, colours
+        )));
+        
+        counts.put("fuelTypes", convertToCountMap(vehicleRepository.countByFuelTypeWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, transmission, condition, province, city, colours
+        )));
+        
+        counts.put("transmissions", convertToCountMap(vehicleRepository.countByTransmissionWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, condition, province, city, colours
+        )));
+        
+        counts.put("conditions", convertToCountMap(vehicleRepository.countByConditionWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, province, city, colours
+        )));
+        
+        counts.put("provinces", convertToCountMap(vehicleRepository.countByProvinceWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, city, colours
+        )));
+        
+        counts.put("cities", convertToCountMap(vehicleRepository.countByCityWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, province, colours
+        )));
+        
+        counts.put("colours", convertToCountMap(vehicleRepository.countByColourWithFiltersRaw(
+            make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+            bodyTypes, fuelTypes, transmission, condition, province, city
+        )));
+        
+        response.put("total", totalCount);
+        response.put("counts", counts);
+        
+        return response;
+    }
+    
+    // Helper method to convert List<Object[]> to Map<String, Long>
+    private Map<String, Long> convertToCountMap(List<Object[]> rawResults) {
+        Map<String, Long> countMap = new HashMap<>();
+        for (Object[] row : rawResults) {
+            if (row.length == 2 && row[0] != null && row[1] != null) {
+                String key = row[0].toString();
+                Long count = ((Number) row[1]).longValue();
+                countMap.put(key, count);
+            }
+        }
+        return countMap;
+    }
 }

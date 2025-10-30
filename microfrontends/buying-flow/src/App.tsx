@@ -60,18 +60,17 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
       setIsLoading(true);
       setError(null);
 
-      // Start with vehicle help question instead of form completion confirmation
+      // Start directly with vehicle search with intro message
       const config = {
-        stepId: 'vehicle-help-question',
-        componentName: 'VehicleHelpQuestion',
+        stepId: 'vehicle-search',
+        componentName: 'VehicleSearch',
         data: {
-          message: 'Can we help you find a vehicle?',
-          subMessage: 'Click the button below to start searching for a vehicle.',
-          showButton: true,
-          buttonText: 'Yes, help me find a vehicle'
+          message: 'Search for your desired vehicle',
+          subMessage: 'Let\'s find the right vehicle for you!',
+          showIntro: true // Show the intro message with confirmation
         },
         stepNumber: 1,
-        totalSteps: 3
+        totalSteps: 2
       };
 
       setCurrentStepConfig(config);
@@ -140,21 +139,6 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     let nextStep: WorkflowStep | null = null;
 
     switch (currentStep) {
-      case 'vehicle-help-question':
-        // Handle navigation from vehicle help question
-        if (formData.action === 'start_vehicle_search') {
-          nextStep = {
-            stepId: 'vehicle-search',
-            componentName: 'VehicleSearch',
-            data: {
-              message: 'Search for your desired vehicle',
-              subMessage: 'Let\'s find the right vehicle for you!'
-            },
-            stepNumber: 2,
-            totalSteps: 3
-          };
-        }
-        break;
       case 'intent-selection':
         if (formData.intent === 'buying') {
           nextStep = {
@@ -179,7 +163,7 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
           nextStep = {
             stepId: 'vehicle-search',
             componentName: 'VehicleSearch',
-            data: { ...formData, message: 'Search for your desired vehicle' },
+            data: { ...formData, message: 'Search for your desired vehicle', showIntro: true },
             stepNumber: 3,
             totalSteps: 6
           };
@@ -203,8 +187,8 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
             message: 'Here are vehicles matching your criteria',
             vehicleSearch: formData.vehicleSearch // Ensure vehicleSearch data is preserved
           },
-          stepNumber: 4,
-          totalSteps: 6
+          stepNumber: 2,
+          totalSteps: 2
         };
         break;
       case 'search-results':
@@ -430,30 +414,17 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     let previousStep: WorkflowStep | null = null;
 
     switch (currentStep) {
-      case 'vehicle-search':
-        previousStep = {
-          stepId: 'vehicle-help-question',
-          componentName: 'VehicleHelpQuestion',
-          data: {
-            message: 'Can we help you find a vehicle?',
-            subMessage: 'Click the button below to start searching for a vehicle.',
-            showButton: true,
-            buttonText: 'Yes, help me find a vehicle'
-          },
-          stepNumber: 1,
-          totalSteps: 5
-        };
-        break;
       case 'search-results':
         previousStep = {
           stepId: 'vehicle-search',
           componentName: 'VehicleSearch',
           data: {
             message: 'Search for your perfect vehicle',
+            showIntro: true, // Keep showing intro when going back
             ...currentData // Preserve search criteria
           },
-          stepNumber: 2,
-          totalSteps: 5
+          stepNumber: 1,
+          totalSteps: 2
         };
         break;
       case 'vehicle-purchase-confirmation':
