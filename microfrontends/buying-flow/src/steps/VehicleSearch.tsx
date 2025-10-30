@@ -1027,32 +1027,6 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
           </Box>
         )}
 
-        {/* Dynamic Range Update Notification */}
-        {rangesUpdated && dynamicRangeMessage && (
-          <Box sx={{ mb: 3 }}>
-            <Alert 
-              severity="info" 
-              onClose={() => {
-                setRangesUpdated(false);
-                setDynamicRangeMessage('');
-              }}
-              sx={{
-                borderRadius: 2,
-                backgroundColor: '#e3f2fd',
-                borderLeft: '4px solid #1976d2',
-                color: '#0d47a1',
-                '& .MuiAlert-icon': {
-                  color: '#1976d2',
-                },
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                {dynamicRangeMessage}
-              </Typography>
-            </Alert>
-          </Box>
-        )}
-
         <Box textAlign="center" mb={4}>
           {/* <Search sx={{ fontSize: 48, color: '#1e3a8a', mb: 1 }} /> */}
           <Typography variant="h4" gutterBottom>
@@ -1231,20 +1205,6 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
             }}
           >
             {/* Debug: Show current ranges */}
-            <Box sx={{ mb: 3, p: 2, backgroundColor: '#fff3cd', borderRadius: 1, border: '1px solid #ffc107' }}>
-              <Typography variant="caption" sx={{ fontWeight: 600, color: '#856404' }}>
-                🔧 DEBUG - Current Filter Ranges:
-              </Typography>
-              <Typography variant="caption" sx={{ display: 'block', color: '#856404', fontSize: '0.7rem' }}>
-                Price: R{filters.priceRange.min.toLocaleString()} - R{filters.priceRange.max.toLocaleString()}
-              </Typography>
-              <Typography variant="caption" sx={{ display: 'block', color: '#856404', fontSize: '0.7rem' }}>
-                Year: {filters.yearRange.min} - {filters.yearRange.max}
-              </Typography>
-              <Typography variant="caption" sx={{ display: 'block', color: '#856404', fontSize: '0.7rem' }}>
-                Mileage: {filters.mileageRange.min.toLocaleString()} - {filters.mileageRange.max.toLocaleString()} km
-              </Typography>
-            </Box>
 
             <Typography variant="h6" sx={{ mb: 3, color: '#1e3a8a', fontWeight: 600 }}>
               Advanced Filters

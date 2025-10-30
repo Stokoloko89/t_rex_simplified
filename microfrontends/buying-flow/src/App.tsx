@@ -1,11 +1,11 @@
-// React is available globally from the host app
-declare const React: typeof import('react');
-const { useEffect, useState, createContext, useContext } = React;
+// Import React directly for standalone mode
+import React, { useEffect, useState, createContext, useContext } from 'react';
 
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Container, Box } from '@mui/material';
-import { theme, ErrorBoundary, LoadingSpinner } from '@t-rex/shared-ui';
+import { ErrorBoundary, LoadingSpinner } from '@t-rex/shared-ui';
+import theme from '../../../packages/shared-ui/src/theme/theme';
 import axios from 'axios';
 import StepRenderer from './components/StepRenderer';
 
@@ -549,13 +549,21 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <ErrorBoundary>
-        <Container maxWidth="md">
-          <Box sx={{ py: 4 }}>
-            <WorkflowProvider>
-              <StepRenderer />
-            </WorkflowProvider>
-          </Box>
-        </Container>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh',
+          py: 4
+        }}>
+          <Container maxWidth="md">
+            <Box sx={{ py: 4 }}>
+              <WorkflowProvider>
+                <StepRenderer />
+              </WorkflowProvider>
+            </Box>
+          </Container>
+        </Box>
       </ErrorBoundary>
     </ThemeProvider>
   );

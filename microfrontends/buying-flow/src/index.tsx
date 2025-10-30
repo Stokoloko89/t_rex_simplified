@@ -1,8 +1,6 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import App from './App';
-import ReactDOMClient from './ReactDOMClient';
-
-// React is available globally from the host app
-declare const React: typeof import('react');
 
 let root: any = null;
 
@@ -16,8 +14,8 @@ export function mount(props: any) {
     const domElement = props.domElement || document.getElementById('microfrontend-container');
     if (domElement) {
       try {
-        // Use the custom ReactDOMClient wrapper to avoid bare specifier issues
-        root = ReactDOMClient.createRoot(domElement);
+        // Use ReactDOM directly
+        root = ReactDOM.createRoot(domElement);
         root.render(React.createElement(App, props));
         resolve();
       } catch (error) {
@@ -45,21 +43,17 @@ export function unmount() {
   });
 }
 
-// For standalone development
-if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && window.location.port === '3001') {
+// For standalone operation (both development and production)
+// Check if running standalone (no Single-SPA host) by looking for root element
+if (typeof window !== 'undefined' && document.getElementById('root')) {
   const rootElement = document.getElementById('root');
-  if (rootElement) {
-    // For standalone mode, use dynamic imports to avoid bundling issues
-    Promise.all([
-      import('react'),
-      import('react-dom/client')
-    ]).then(([ReactModule, ReactDOMClientModule]) => {
-      // Make React available globally for standalone mode
-      (window as any).React = ReactModule.default || ReactModule;
-      (window as any).ReactDOM = ReactDOMClientModule;
-      
-      const root = ReactDOMClient.createRoot(rootElement);
+  if (rootElement && !rootElement.hasChildNodes()) {
+    try {
+      const root = ReactDOM.createRoot(rootElement);
       root.render(React.createElement(App));
-    }).catch(console.error);
+      console.log('T-Rex Buying Flow: Running in standalone mode');
+    } catch (error) {
+      console.error('Error initializing standalone mode:', error);
+    }
   }
 }

@@ -16,10 +16,10 @@ const tRexTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#ffc107', // AA Inform yellow/gold
-      light: '#ffeb3b',
-      dark: '#ffb300',
-      contrastText: '#333333',
+      main: '#1976d2', // Material Design blue - professional and modern
+      light: '#42a5f5',
+      dark: '#1565c0',
+      contrastText: '#ffffff',
     },
     secondary: {
       main: '#333333', // Professional dark gray
@@ -52,7 +52,7 @@ const tRexTheme = createTheme({
       paper: '#ffffff',
     },
     text: {
-      primary: '#333333', // AA Inform text color
+      primary: '#333333', // Professional dark gray text
       secondary: '#666666', // Lighter gray
       disabled: '#cccccc',
     },
@@ -78,51 +78,51 @@ const tRexTheme = createTheme({
       fontWeight: 600,
       lineHeight: 1.2,
       letterSpacing: '-0.02em',
-      color: '#1D1D1F',
+      color: '#212121',
     },
     h2: {
       fontSize: '1.75rem', // 28px
       fontWeight: 600,
       lineHeight: 1.3,
       letterSpacing: '-0.01em',
-      color: '#1D1D1F',
+      color: '#212121',
     },
     h3: {
       fontSize: '1.5rem', // 24px
       fontWeight: 600,
       lineHeight: 1.4,
       letterSpacing: '0em',
-      color: '#1D1D1F',
+      color: '#212121',
     },
     h4: {
       fontSize: '1.25rem', // 20px
       fontWeight: 600,
       lineHeight: 1.4,
-      color: '#1D1D1F',
+      color: '#212121',
     },
     h5: {
       fontSize: '1.125rem', // 18px
       fontWeight: 600,
       lineHeight: 1.5,
-      color: '#1D1D1F',
+      color: '#212121',
     },
     h6: {
       fontSize: '1rem', // 16px
       fontWeight: 600,
       lineHeight: 1.5,
-      color: '#1D1D1F',
+      color: '#212121',
     },
     body1: {
       fontSize: '1rem', // 16px
       fontWeight: 400,
       lineHeight: 1.5,
-      color: '#1D1D1F',
+      color: '#212121',
     },
     body2: {
       fontSize: '0.875rem', // 14px
       fontWeight: 400,
       lineHeight: 1.5,
-      color: '#86868B',
+      color: '#757575',
     },
     button: {
       fontSize: '1rem', // 16px
@@ -135,7 +135,7 @@ const tRexTheme = createTheme({
       fontSize: '0.75rem', // 12px
       fontWeight: 400,
       lineHeight: 1.66,
-      color: '#86868B',
+      color: '#757575',
     },
     overline: {
       fontSize: '0.625rem', // 10px
@@ -143,7 +143,7 @@ const tRexTheme = createTheme({
       lineHeight: 2.66,
       letterSpacing: '0.08em',
       textTransform: 'uppercase',
-      color: '#86868B',
+      color: '#757575',
     },
   },
 
@@ -204,39 +204,39 @@ const tRexTheme = createTheme({
         contained: {
           boxShadow: 'none',
           '&:hover': {
-            boxShadow: '0 4px 12px rgba(0, 122, 255, 0.3)',
+            boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
           },
         },
         containedPrimary: {
-          background: '#ffc107',
-          color: '#333333',
-          boxShadow: '0 2px 8px rgba(255, 193, 7, 0.3)',
+          background: '#1976d2',
+          color: '#ffffff',
+          boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',
           fontWeight: 600,
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
           '&:hover': {
-            background: '#ffb300',
-            boxShadow: '0 4px 12px rgba(255, 193, 7, 0.4)',
+            background: '#1565c0',
+            boxShadow: '0 4px 12px rgba(25, 118, 210, 0.4)',
             transform: 'translateY(-1px)',
           },
           '&:active': {
             transform: 'scale(0.98)',
           },
           '&:disabled': {
-            background: 'rgba(255, 193, 7, 0.3)',
-            color: 'rgba(51, 51, 51, 0.6)',
+            background: 'rgba(25, 118, 210, 0.3)',
+            color: 'rgba(255, 255, 255, 0.6)',
           },
         },
         outlined: {
           borderWidth: '1.5px',
           '&:hover': {
             borderWidth: '1.5px',
-            backgroundColor: 'rgba(255, 193, 7, 0.04)',
+            backgroundColor: 'rgba(25, 118, 210, 0.04)',
           },
         },
         text: {
           '&:hover': {
-            backgroundColor: 'rgba(255, 193, 7, 0.04)',
+            backgroundColor: 'rgba(25, 118, 210, 0.04)',
           },
         },
         sizeLarge: {
@@ -279,7 +279,7 @@ const tRexTheme = createTheme({
         root: {
           transition: 'all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
           '&:hover': {
-            backgroundColor: 'rgba(0, 122, 255, 0.08)',
+            backgroundColor: 'rgba(25, 118, 210, 0.08)',
             transform: 'translateY(-1px)',
           },
           '&:active': {
@@ -294,10 +294,10 @@ const tRexTheme = createTheme({
         root: {
           transition: 'all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
           '&:hover': {
-            backgroundColor: 'rgba(0, 122, 255, 0.04)',
+            backgroundColor: 'rgba(25, 118, 210, 0.04)',
           },
           '&.MuiListItem-button:hover': {
-            backgroundColor: 'rgba(0, 122, 255, 0.08)',
+            backgroundColor: 'rgba(25, 118, 210, 0.08)',
             transform: 'translateX(4px)',
           },
           '&:active': {
@@ -312,7 +312,7 @@ const tRexTheme = createTheme({
         root: {
           transition: 'all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
           '&:hover': {
-            backgroundColor: 'rgba(0, 122, 255, 0.08)',
+            backgroundColor: 'rgba(25, 118, 210, 0.08)',
             transform: 'translateX(4px)',
           },
           '&:active': {
@@ -330,16 +330,16 @@ const tRexTheme = createTheme({
             backgroundColor: '#FFFFFF',
             transition: 'all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)',
             '& fieldset': {
-              borderColor: '#D1D1D6',
+              borderColor: '#e0e0e0',
               borderWidth: '1.5px',
             },
             '&:hover fieldset': {
-              borderColor: '#007AFF',
+              borderColor: '#1976d2',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#007AFF',
+              borderColor: '#1976d2',
               borderWidth: '2px',
-              boxShadow: '0 0 0 4px rgba(0, 122, 255, 0.1)',
+              boxShadow: '0 0 0 4px rgba(25, 118, 210, 0.1)',
             },
           },
           '& .MuiInputBase-input': {
@@ -373,7 +373,7 @@ const tRexTheme = createTheme({
         },
         clickable: {
           '&:hover': {
-            backgroundColor: 'rgba(0, 122, 255, 0.08)',
+            backgroundColor: 'rgba(25, 118, 210, 0.08)',
           },
         },
       },
@@ -403,11 +403,11 @@ const tRexTheme = createTheme({
         root: {
           borderRadius: 4,
           height: 6,
-          backgroundColor: 'rgba(0, 122, 255, 0.1)',
+          backgroundColor: 'rgba(25, 118, 210, 0.1)',
         },
         bar: {
           borderRadius: 4,
-          backgroundColor: '#007AFF',
+          backgroundColor: '#1976d2',
         },
       },
     },
@@ -428,7 +428,7 @@ const tRexTheme = createTheme({
             fontWeight: 500,
             marginTop: 8,
             '&.Mui-active': {
-              color: '#007AFF',
+              color: '#1976d2',
               fontWeight: 600,
             },
             '&.Mui-completed': {
@@ -444,7 +444,7 @@ const tRexTheme = createTheme({
         root: {
           fontSize: '2rem',
           '&.Mui-active': {
-            color: '#007AFF',
+            color: '#1976d2',
           },
           '&.Mui-completed': {
             color: '#34C759',
@@ -518,10 +518,10 @@ const tRexTheme = createTheme({
           },
         },
         standardInfo: {
-          backgroundColor: 'rgba(0, 122, 255, 0.1)',
+          backgroundColor: 'rgba(25, 118, 210, 0.1)',
           color: '#0051D5',
           '& .MuiAlert-icon': {
-            color: '#007AFF',
+            color: '#1976d2',
           },
         },
       },
@@ -530,7 +530,7 @@ const tRexTheme = createTheme({
     MuiTooltip: {
       styleOverrides: {
         tooltip: {
-          backgroundColor: 'rgba(29, 29, 31, 0.92)',
+          backgroundColor: 'rgba(97, 97, 97, 0.92)',
           backdropFilter: 'blur(20px)',
           borderRadius: 8,
           padding: '8px 12px',
@@ -538,7 +538,7 @@ const tRexTheme = createTheme({
           fontWeight: 400,
         },
         arrow: {
-          color: 'rgba(29, 29, 31, 0.92)',
+          color: 'rgba(97, 97, 97, 0.92)',
         },
       },
     },
@@ -567,7 +567,7 @@ const tRexTheme = createTheme({
         },
         track: {
           borderRadius: 16,
-          backgroundColor: '#D1D1D6',
+          backgroundColor: '#e0e0e0',
           opacity: 1,
         },
       },
