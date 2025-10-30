@@ -1,15 +1,24 @@
 // Custom ReactDOMClient wrapper to resolve bare specifier issues with React 19.2.0
-// This wrapper accesses the global ReactDOMClient without any imports
+// This wrapper handles both standalone and host app modes
+
+import * as ReactDOMClientModule from 'react-dom/client';
 
 function getGlobalReactDOM() {
-  // Try multiple ways to access the global ReactDOM
+  // First check if we have ReactDOM globally (host app mode)
   const globalReactDOM = (window as any).ReactDOMClient || (window as any).ReactDOM;
   
-  if (!globalReactDOM) {
-    throw new Error('ReactDOM not found globally. Make sure React is loaded from the host app.');
+  if (globalReactDOM) {
+    return globalReactDOM;
   }
   
-  return globalReactDOM;
+  // If not global, use the imported module (standalone mode)
+  if (ReactDOMClientModule) {
+    // Make it available globally for consistency
+    (window as any).ReactDOM = ReactDOMClientModule;
+    return ReactDOMClientModule;
+  }
+  
+  throw new Error('ReactDOM not found. Unable to initialize React rendering.');
 }
 
 function createRoot(container: Element | DocumentFragment, options?: any) {

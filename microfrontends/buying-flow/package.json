@@ -8,7 +8,7 @@
     "@hookform/resolvers": "5.2.2",
     "@mui/icons-material": "7.3.4",
     "@mui/material": "7.3.4",
-    "@t-rex/shared-ui": "*",
+    "@t-rex/shared-ui": "workspace:*",
     "axios": "1.12.2",
     "react": "19.2.0",
     "react-dom": "19.2.0",
@@ -35,9 +35,5 @@
     "clean": "rm -rf dist",
     "lint": "eslint src --ext .ts,.tsx",
     "serve:standalone": "webpack serve --mode development --env standalone"
-  },
-  "overrides": {
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
   }
 }

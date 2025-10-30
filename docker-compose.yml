@@ -40,26 +40,19 @@ services:
       retries: 3
     restart: unless-stopped
 
-  # Frontend Host Application
-  host-app:
-    build:
-      context: ./host-app
-      dockerfile: Dockerfile
-    ports:
-      - "3000:80"
-    depends_on:
-      - workflowservice
-    restart: unless-stopped
-
-  # Buying Flow Microfrontend
+  # T-Rex Buying Flow Application (Standalone)
   buying-flow:
     build:
       context: ./microfrontends/buying-flow
       dockerfile: Dockerfile
     ports:
-      - "3001:80"
+      - "3000:80"  # Main frontend now on port 3000
+      - "3001:80"  # Keep 3001 for backward compatibility
     environment:
-      REACT_APP_BACKEND_API_URL: http://localhost:8080/api
+      REACT_APP_BACKEND_API_URL: /api  # Use relative path for nginx proxy
+    depends_on:
+      workflowservice:
+        condition: service_healthy
     restart: unless-stopped
 
   # Nginx Reverse Proxy (Optional - for production)
@@ -69,10 +62,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
       - ./nginx/ssl:/etc/nginx/ssl
     depends_on:
-      - host-app
       - buying-flow
       - workflowservice
     restart: unless-stopped

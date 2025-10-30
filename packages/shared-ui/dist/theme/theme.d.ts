@@ -9,5 +9,5 @@
  * - Apple-inspired color palette
  * - System fonts for optimal readability
  */
-declare const tRexTheme: import("@mui/material/styles").Theme;
+declare const tRexTheme: any;
 export default tRexTheme;

@@ -2,10 +2,14 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 const path = require('path');
 
-module.exports = (env) => ({
-  mode: 'development',
-  entry: './src/index.tsx',
-  devtool: 'source-map',
+module.exports = (env, argv) => {
+  const isProduction = argv.mode === 'production' || process.env.NODE_ENV === 'production';
+  const isStandalone = env?.standalone !== false; // Default to standalone mode
+  
+  return {
+    mode: isProduction ? 'production' : 'development',
+    entry: './src/index.tsx',
+    devtool: isProduction ? 'source-map' : 'eval-source-map',
   module: {
     rules: [
       {
@@ -27,14 +31,16 @@ module.exports = (env) => ({
     extensions: ['.tsx', '.ts', '.js'],
   },
   output: {
-    filename: 'buying-flow.js',
+    filename: isProduction ? '[name].[contenthash].js' : 'buying-flow.js',
     path: path.resolve(__dirname, 'dist'),
-    libraryTarget: env?.standalone ? 'var' : 'module',
-    library: env?.standalone ? 'buyingFlow' : undefined,
-    module: !env?.standalone,
+    publicPath: '/',
+    clean: true,
+    libraryTarget: isStandalone ? 'var' : 'module',
+    library: isStandalone ? 'buyingFlow' : undefined,
+    module: !isStandalone,
   },
   experiments: {
-    outputModule: !env?.standalone,
+    outputModule: !isStandalone,
   },
   devServer: {
     port: 3001,
@@ -42,8 +48,16 @@ module.exports = (env) => ({
     headers: {
       'Access-Control-Allow-Origin': '*',
     },
+    proxy: [
+      {
+        context: ['/api'],
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+    ],
   },
-  externals: env?.standalone ? {} : [
+  externals: isStandalone ? {} : [
     'react',
     'react-dom',
     'react-dom/client',
@@ -54,11 +68,28 @@ module.exports = (env) => ({
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',
-      inject: env?.standalone ? true : false,
+      inject: isStandalone ? true : false,
+      minify: isProduction,
     }),
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process.env.REACT_APP_BACKEND_API_URL': JSON.stringify(process.env.REACT_APP_BACKEND_API_URL || 'http://localhost:8080/api'),
+      'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+      'process.env.REACT_APP_BACKEND_API_URL': JSON.stringify(
+        process.env.REACT_APP_BACKEND_API_URL || 
+        (isProduction ? '/api' : 'http://localhost:8080/api')
+      ),
     }),
+    // Make React available globally in standalone mode
+    ...(isStandalone ? [
+      new webpack.ProvidePlugin({
+        React: 'react',
+      })
+    ] : []),
   ],
-});
+  optimization: isProduction ? {
+    splitChunks: {
+      chunks: 'all',
+    },
+    minimize: true,
+  } : {},
+  };
+};
