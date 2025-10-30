@@ -16,6 +16,7 @@ import {
   Autocomplete,
   Chip,
   Divider,
+  Alert,
 } from '@mui/material';
 import { Search, FilterList, ExpandMore, CheckCircle } from '@mui/icons-material';
 
@@ -99,6 +100,8 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
   });
   const [totalVehicles, setTotalVehicles] = useState<number>(0);
   const [isLoadingCounts, setIsLoadingCounts] = useState(false);
+  const [rangesUpdated, setRangesUpdated] = useState(false);
+  const [dynamicRangeMessage, setDynamicRangeMessage] = useState<string>('');
 
   // Cache for API responses to avoid duplicate calls
   const apiCache = useRef<Map<string, any>>(new Map());
@@ -245,6 +248,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         }
         
         console.log('Initial load - models array length:', modelsArray.length);
+        console.log('Sample models:', modelsArray.slice(0, 10));
         
         // Cache all initial filter lists for reset functionality
         apiCache.current.set('models-all', modelsArray);
@@ -500,11 +504,8 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
   }, [searchData.make, searchData.model, searchData.bodyType, searchData.fuelType, searchData.province, searchData.city]);
 
   // Load dynamic ranges when any filter changes (with debouncing)
-  // DISABLED: Backend ranges endpoint has issues with data type casting
-  // TODO: Fix backend VehicleRepository findPriceRangeByFilters, findYearRangeByFilters, findMileageRangeByFilters
+  // FIXED: Backend range methods now have proper type casting for BigDecimal/Integer/Long conversion
   useEffect(() => {
-    // Temporarily disabled - backend ranges endpoint returning empty data
-    return;
     
     // Clear existing timer
     if (rangesDebounceTimer.current) {
@@ -530,9 +531,12 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         const paramsString = params.toString();
         const cacheKey = `ranges-${paramsString}`;
         
+        console.log('🔍 FETCHING RANGES with params:', paramsString);
+        
         // Check cache first
         if (apiCache.current.has(cacheKey)) {
           const cachedRanges = apiCache.current.get(cacheKey);
+          console.log('📦 Using cached ranges:', cachedRanges);
           setFilters(prev => ({
             ...prev,
             priceRange: cachedRanges.priceRange || prev.priceRange,
@@ -549,12 +553,15 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
           },
         });
 
+        console.log('📡 Response status:', response.status);
+
         if (!response.ok) {
-          console.warn('Failed to fetch dynamic ranges:', response.status, response.statusText);
+          console.warn('❌ Failed to fetch dynamic ranges:', response.status, response.statusText);
           return;
         }
 
         const ranges = await response.json();
+        console.log('✅ Ranges from backend:', ranges);
         
         // Check if ranges are empty and use filter-counts as fallback
         let hasValidRanges = ranges && (ranges.priceRange || ranges.yearRange || ranges.mileageRange);
@@ -592,18 +599,30 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         // Cache the result
         apiCache.current.set(cacheKey, ranges);
 
-        // Update filter ranges
+        // Log for debugging
+        console.log('Ranges fetched and cached:', ranges);
+
+        // Update filter ranges - THIS IS CRITICAL
         setFilters(prev => {
           const newFilters = { ...prev };
           
           if (ranges.priceRange) {
             newFilters.priceRange = ranges.priceRange;
+            console.log('💰 Updated price range from', prev.priceRange, 'to:', newFilters.priceRange);
+          } else {
+            console.warn('⚠️ No priceRange in response');
           }
           if (ranges.yearRange) {
             newFilters.yearRange = ranges.yearRange;
+            console.log('📅 Updated year range from', prev.yearRange, 'to:', newFilters.yearRange);
+          } else {
+            console.warn('⚠️ No yearRange in response');
           }
           if (ranges.mileageRange) {
             newFilters.mileageRange = ranges.mileageRange;
+            console.log('🏎️ Updated mileage range from', prev.mileageRange, 'to:', newFilters.mileageRange);
+          } else {
+            console.warn('⚠️ No mileageRange in response');
           }
           
           return newFilters;
@@ -612,23 +631,43 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         // Adjust search data to fit within new ranges
         setSearchData(prev => {
           const newData = { ...prev };
+          let adjustments: string[] = [];
           
           if (ranges.priceRange) {
-            newData.priceRange = [
-              Math.max(prev.priceRange[0], ranges.priceRange.min),
-              Math.min(prev.priceRange[1], ranges.priceRange.max)
-            ];
+            const newMin = Math.max(prev.priceRange[0], ranges.priceRange.min);
+            const newMax = Math.min(prev.priceRange[1], ranges.priceRange.max);
+            if (newMin !== prev.priceRange[0] || newMax !== prev.priceRange[1]) {
+              adjustments.push(`price (R${newMin.toLocaleString()} - R${newMax.toLocaleString()})`);
+              newData.priceRange = [newMin, newMax];
+            }
           }
           
           if (ranges.yearRange) {
-            newData.yearRange = [
-              Math.max(prev.yearRange[0], ranges.yearRange.min),
-              Math.min(prev.yearRange[1], ranges.yearRange.max)
-            ];
+            const newMin = Math.max(prev.yearRange[0], ranges.yearRange.min);
+            const newMax = Math.min(prev.yearRange[1], ranges.yearRange.max);
+            if (newMin !== prev.yearRange[0] || newMax !== prev.yearRange[1]) {
+              adjustments.push(`year (${newMin} - ${newMax})`);
+              newData.yearRange = [newMin, newMax];
+            }
           }
           
           if (ranges.mileageRange) {
-            newData.mileageMax = Math.min(prev.mileageMax, ranges.mileageRange.max);
+            const newMax = Math.min(prev.mileageMax, ranges.mileageRange.max);
+            if (newMax !== prev.mileageMax) {
+              adjustments.push(`mileage (up to ${newMax.toLocaleString()} km)`);
+              newData.mileageMax = newMax;
+            }
+          }
+          
+          // Show message if any adjustments were made
+          if (adjustments.length > 0) {
+            setDynamicRangeMessage(`Ranges updated based on selected filters: ${adjustments.join(', ')}`);
+            setRangesUpdated(true);
+            // Auto-hide message after 4 seconds
+            setTimeout(() => {
+              setRangesUpdated(false);
+              setDynamicRangeMessage('');
+            }, 4000);
           }
           
           return newData;
@@ -820,15 +859,14 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
       const availableMakes = filters.makes || [];
       const availableModels = filters.models || [];
       
-      // Helper function to check if string contains all characters in order
+      console.log('Search query:', upperCaseQuery);
+      console.log('Available makes count:', availableMakes.length);
+      console.log('Available models count:', availableModels.length);
+      console.log('Sample models:', availableModels.slice(0, 5));
+      
+      // Helper function to check if string contains the query as a substring
       const matchesQuery = (text: string) => {
-        let queryIndex = 0;
-        for (let i = 0; i < text.length && queryIndex < upperCaseQuery.length; i++) {
-          if (text[i] === upperCaseQuery[queryIndex]) {
-            queryIndex++;
-          }
-        }
-        return queryIndex === upperCaseQuery.length;
+        return text.toUpperCase().includes(upperCaseQuery);
       };
 
       // Filter makes that match the query
@@ -989,6 +1027,32 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
           </Box>
         )}
 
+        {/* Dynamic Range Update Notification */}
+        {rangesUpdated && dynamicRangeMessage && (
+          <Box sx={{ mb: 3 }}>
+            <Alert 
+              severity="info" 
+              onClose={() => {
+                setRangesUpdated(false);
+                setDynamicRangeMessage('');
+              }}
+              sx={{
+                borderRadius: 2,
+                backgroundColor: '#e3f2fd',
+                borderLeft: '4px solid #1976d2',
+                color: '#0d47a1',
+                '& .MuiAlert-icon': {
+                  color: '#1976d2',
+                },
+              }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                {dynamicRangeMessage}
+              </Typography>
+            </Alert>
+          </Box>
+        )}
+
         <Box textAlign="center" mb={4}>
           {/* <Search sx={{ fontSize: 48, color: '#1e3a8a', mb: 1 }} /> */}
           <Typography variant="h4" gutterBottom>
@@ -1041,6 +1105,18 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       backgroundColor: '#ffffff',
+                      '& input': {
+                        cursor: 'text !important',
+                      },
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      cursor: 'text !important',
+                    },
+                    '& .MuiAutocomplete-input': {
+                      cursor: 'text !important',
+                    },
+                    '& input': {
+                      cursor: 'text !important',
                     },
                   }}
                 />
@@ -1154,6 +1230,22 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
               border: '1px solid #e2e8f0',
             }}
           >
+            {/* Debug: Show current ranges */}
+            <Box sx={{ mb: 3, p: 2, backgroundColor: '#fff3cd', borderRadius: 1, border: '1px solid #ffc107' }}>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: '#856404' }}>
+                🔧 DEBUG - Current Filter Ranges:
+              </Typography>
+              <Typography variant="caption" sx={{ display: 'block', color: '#856404', fontSize: '0.7rem' }}>
+                Price: R{filters.priceRange.min.toLocaleString()} - R{filters.priceRange.max.toLocaleString()}
+              </Typography>
+              <Typography variant="caption" sx={{ display: 'block', color: '#856404', fontSize: '0.7rem' }}>
+                Year: {filters.yearRange.min} - {filters.yearRange.max}
+              </Typography>
+              <Typography variant="caption" sx={{ display: 'block', color: '#856404', fontSize: '0.7rem' }}>
+                Mileage: {filters.mileageRange.min.toLocaleString()} - {filters.mileageRange.max.toLocaleString()} km
+              </Typography>
+            </Box>
+
             <Typography variant="h6" sx={{ mb: 3, color: '#1e3a8a', fontWeight: 600 }}>
               Advanced Filters
             </Typography>
@@ -1371,6 +1463,9 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                       ))}
                   </Select>
                 </FormControl>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  Available: {filters.yearRange.min} - {filters.yearRange.max}
+                </Typography>
               </Box>
 
               <Box>
@@ -1392,6 +1487,9 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                       ))}
                   </Select>
                 </FormControl>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  Available: {filters.yearRange.min} - {filters.yearRange.max}
+                </Typography>
               </Box>
 
               <Box>
@@ -1413,6 +1511,9 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                     ))}
                   </Select>
                 </FormControl>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  Available: R{formatPrice(filters.priceRange.min)} - R{formatPrice(filters.priceRange.max)}+
+                </Typography>
               </Box>
 
               <Box>
@@ -1436,6 +1537,9 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                       ))}
                   </Select>
                 </FormControl>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  Available: R{formatPrice(filters.priceRange.min)} - R{formatPrice(filters.priceRange.max)}+
+                </Typography>
               </Box>
 
               <Box>
@@ -1457,6 +1561,9 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                     ))}
                   </Select>
                 </FormControl>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  Available: {formatPrice(filters.mileageRange.min)} - {formatPrice(filters.mileageRange.max)}+ km
+                </Typography>
               </Box>
             </Box>
           </Box>
