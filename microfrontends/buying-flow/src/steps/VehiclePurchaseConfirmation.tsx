@@ -399,371 +399,453 @@ const VehiclePurchaseConfirmation: React.FC<
 
   // Main Form
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", py: 4, px: 3 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{
-            fontWeight: 700,
-            color: "#333333",
-            mb: 2,
-            letterSpacing: "-0.02em",
-          }}
-        >
-          Vehicle Purchase Request
-        </Typography>
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          sx={{ mb: 3, fontSize: "1.1rem", lineHeight: 1.6 }}
-        >
-          Complete your purchase request and select the assistance you need
-        </Typography>
-        <Divider />
-      </Box>
-
-      <Grid container spacing={4}>
-        {/* Vehicle Summary */}
-        <Grid columns={{ xs: 12, md: 5 }}>
-          <Card
+    <Box sx={{ minHeight: "100vh", background: "linear-gradient(135deg, #f8f9fa 0%, #e8ecf1 100%)", py: 4, px: 2 }}>
+      <Box sx={{ maxWidth: 1400, mx: "auto" }}>
+        {/* Header Section */}
+        <Box sx={{ mb: 5, textAlign: "center" }}>
+          <Typography
+            variant="h4"
+            component="h1"
             sx={{
-              border: "2px solid #1e3a8a",
-              boxShadow: "0 4px 12px rgba(30, 58, 138, 0.1)",
+              fontWeight: 800,
+              color: "#1e3a8a",
+              mb: 1.5,
+              letterSpacing: "-0.03em",
+              fontSize: { xs: "1.8rem", md: "2.2rem" },
             }}
           >
-            <Box
-              component="img"
-              src="https://news-site-za.s3.af-south-1.amazonaws.com/images/2021/02/2012-Chevrolet-Sonic-Sedan.jpg"
-              alt={`${vehicleData.make} ${vehicleData.model}`}
-              sx={{
-                width: "100%",
-                height: "200px",
-                objectFit: "cover",
-                borderBottom: "1px solid #e0e0e0",
-              }}
-            />
-            <CardContent sx={{ p: 3, width: "100%" }}>
-              <Typography
-                variant="h6"
-                sx={{
-                  mb: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  fontWeight: 700,
-                  color: "#333333",
-                }}
-              >
-                <DirectionsCar sx={{ mr: 1.5, color: "#1e3a8a" }} />
-                Selected Vehicle
-              </Typography>
+            Complete Contact Request
+          </Typography>
+          <Box
+            sx={{
+              width: "60px",
+              height: "4px",
+              background: "linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%)",
+              mx: "auto",
+              mb: 2,
+              borderRadius: "2px",
+            }}
+          />
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ fontSize: "1rem", fontWeight: 500, maxWidth: "600px", mx: "auto" }}
+          >
+            Review your vehicle selection and provide your contact information
+          </Typography>
+        </Box>
 
-              <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1.4fr" }, gap: 3 }}>
+          {/* Vehicle Summary Card - Left Side */}
+          <Box>
+            <Card
+              sx={{
+                height: "100%",
+                border: "none",
+                boxShadow: "0 2px 20px rgba(30, 58, 138, 0.08)",
+                borderRadius: "12px",
+                overflow: "hidden",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                "&:hover": {
+                  boxShadow: "0 8px 28px rgba(30, 58, 138, 0.12)",
+                  transform: "translateY(-2px)",
+                },
+              }}
+            >
+              {/* Vehicle Image */}
+              <Box
+                component="img"
+                src="https://news-site-za.s3.af-south-1.amazonaws.com/images/2021/02/2012-Chevrolet-Sonic-Sedan.jpg"
+                alt={`${vehicleData.make} ${vehicleData.model}`}
+                sx={{
+                  width: "100%",
+                  height: "240px",
+                  objectFit: "cover",
+                  backgroundColor: "#f0f0f0",
+                }}
+              />
+              
+              {/* Vehicle Details */}
+              <CardContent sx={{ p: 3.5 }}>
+                {/* Selected Vehicle Badge */}
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2.5 }}>
+                  <Box
+                    sx={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      mr: 1.5,
+                    }}
+                  >
+                    <DirectionsCar sx={{ color: "white", fontSize: "20px" }} />
+                  </Box>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ fontWeight: 700, color: "#1e3a8a", textTransform: "uppercase", letterSpacing: "0.5px" }}
+                  >
+                    Your Selection
+                  </Typography>
+                </Box>
+
+                {/* Vehicle Title & Price */}
                 <Typography
                   variant="h5"
-                  sx={{ fontWeight: 700, mb: 1, color: "#333333" }}
+                  sx={{
+                    fontWeight: 800,
+                    mb: 0.5,
+                    color: "#1a1a1a",
+                    lineHeight: 1.2,
+                    fontSize: "1.4rem",
+                  }}
                 >
-                  {displayData.year} {displayData.make} {displayData.model}
+                  {displayData.year} {displayData.make}
                 </Typography>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 600,
+                    color: "#666",
+                    mb: 2,
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  {displayData.model}
+                </Typography>
+
                 {displayData.variant && (
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ mb: 1 }}
+                    sx={{ mb: 2.5, fontSize: "0.85rem", lineHeight: 1.4 }}
                   >
                     {displayData.variant}
                   </Typography>
                 )}
-                <Typography
-                  variant="h4"
-                  sx={{ fontWeight: 700, color: "#1e3a8a" }}
-                >
-                  {displayData.currency}
-                  {displayData.price?.toLocaleString()}
-                </Typography>
-              </Box>
 
-              <Stack spacing={2} sx={{ pt: 2, borderTop: "1px solid #f0f0f0" }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Department:
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {displayData.department}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Mileage:
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {displayData.mileage}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Color:
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {displayData.color}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Body Type:
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {displayData.bodyType}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Transmission:
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {displayData.transmission}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Fuel Type:
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {displayData.fuelType}
-                  </Typography>
-                </Box>
-                {displayData.engineSize && (
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
+                {/* Price Badge */}
+                <Box
+                  sx={{
+                    background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+                    borderRadius: "8px",
+                    p: 1.5,
+                    mb: 3,
+                    textAlign: "center",
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "rgba(255,255,255,0.8)", fontSize: "0.8rem", mb: 0.25 }}
                   >
-                    <Typography variant="body2" color="text.secondary">
-                      Engine Size:
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {displayData.engineSize}
-                    </Typography>
-                  </Box>
-                )}
-                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Condition:
+                    Asking Price
                   </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {displayData.condition}
+                  <Typography
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: "1.5rem",
+                      color: "white",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {displayData.currency}
+                    {displayData.price?.toLocaleString()}
                   </Typography>
                 </Box>
-                {displayData.stockCode && (
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Stock Code:
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {displayData.stockCode}
-                    </Typography>
-                  </Box>
-                )}
-                {displayData.registration && (
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Registration:
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {displayData.registration}
-                    </Typography>
-                  </Box>
-                )}
-                {displayData.vin && (
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      VIN:
-                    </Typography>
+
+                {/* Vehicle Details Grid */}
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, mb: 3 }}>
+                  {/* Department */}
+                  <Box sx={{ background: "#f8f9fa", p: 1.5, borderRadius: "8px" }}>
                     <Typography
-                      variant="body1"
-                      sx={{ fontWeight: 600, fontSize: "0.9rem" }}
+                      variant="caption"
+                      sx={{ display: "block", color: "text.secondary", mb: 0.5, fontWeight: 600 }}
                     >
-                      {displayData.vin}
+                      DEPT
                     </Typography>
-                  </Box>
-                )}
-                {displayData.engineNo && (
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Engine No:
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {displayData.engineNo}
-                    </Typography>
-                  </Box>
-                )}
-                {displayData.province && (
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Province:
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      {displayData.province}
-                    </Typography>
-                  </Box>
-                )}
-                {displayData.firstPrice !== displayData.price && (
-                  <Box
-                    sx={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Original Price:
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontWeight: 600,
-                        textDecoration: "line-through",
-                        color: "text.secondary",
-                      }}
-                    >
-                      {displayData.currency}
-                      {displayData.firstPrice?.toLocaleString()}
-                    </Typography>
-                  </Box>
-                )}
-                {displayData.comments && (
-                  <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #f0f0f0" }}>
                     <Typography
                       variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 1 }}
+                      sx={{ fontWeight: 700, color: "#1a1a1a" }}
                     >
-                      Comments:
-                    </Typography>
-                    <Typography variant="body1" sx={{ lineHeight: 1.4 }}>
-                      {displayData.comments}
+                      {displayData.department}
                     </Typography>
                   </Box>
-                )}
-                {displayData.loadDate && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mt: 1,
-                    }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Added to Inventory:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {displayData.loadDate}
-                    </Typography>
-                  </Box>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
 
-        {/* Contact Form & Assistance Selection */}
-        <Grid item xs={12} md={7}>
-          <form onSubmit={handleSubmit(onFormSubmit)}>
-            <Stack spacing={4}>
-              {/* Contact Information Card */}
-              <Card sx={{ border: "1px solid #e0e0e0" }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 3,
-                    }}
-                  >
+                  {/* Mileage */}
+                  <Box sx={{ background: "#f8f9fa", p: 1.5, borderRadius: "8px" }}>
                     <Typography
-                      variant="h6"
+                      variant="caption"
+                      sx={{ display: "block", color: "text.secondary", mb: 0.5, fontWeight: 600 }}
+                    >
+                      MILEAGE
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 700, color: "#1a1a1a" }}
+                    >
+                      {displayData.mileage}
+                    </Typography>
+                  </Box>
+
+                  {/* Color */}
+                  <Box sx={{ background: "#f8f9fa", p: 1.5, borderRadius: "8px" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", color: "text.secondary", mb: 0.5, fontWeight: 600 }}
+                    >
+                      COLOR
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 700, color: "#1a1a1a" }}
+                    >
+                      {displayData.color}
+                    </Typography>
+                  </Box>
+
+                  {/* Body Type */}
+                  <Box sx={{ background: "#f8f9fa", p: 1.5, borderRadius: "8px" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", color: "text.secondary", mb: 0.5, fontWeight: 600 }}
+                    >
+                      BODY TYPE
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 700, color: "#1a1a1a" }}
+                    >
+                      {displayData.bodyType}
+                    </Typography>
+                  </Box>
+
+                  {/* Transmission */}
+                  <Box sx={{ background: "#f8f9fa", p: 1.5, borderRadius: "8px" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", color: "text.secondary", mb: 0.5, fontWeight: 600 }}
+                    >
+                      TRANSMISSION
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 700, color: "#1a1a1a" }}
+                    >
+                      {displayData.transmission}
+                    </Typography>
+                  </Box>
+
+                  {/* Fuel Type */}
+                  <Box sx={{ background: "#f8f9fa", p: 1.5, borderRadius: "8px" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", color: "text.secondary", mb: 0.5, fontWeight: 600 }}
+                    >
+                      FUEL TYPE
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 700, color: "#1a1a1a" }}
+                    >
+                      {displayData.fuelType}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Additional Details - Collapsible Section */}
+                {(displayData.engineSize ||
+                  displayData.stockCode ||
+                  displayData.registration ||
+                  displayData.vin ||
+                  displayData.engineNo ||
+                  displayData.province) && (
+                  <Box sx={{ pt: 2, borderTop: "1px solid #e8e8e8" }}>
+                    <Typography
+                      variant="caption"
                       sx={{
-                        display: "flex",
-                        alignItems: "center",
+                        display: "block",
                         fontWeight: 700,
-                        color: "#333333",
+                        color: "#1e3a8a",
+                        mb: 1.5,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
                       }}
                     >
-                      <Person sx={{ mr: 1.5, color: "#1e3a8a" }} />
-                      Contact Information
+                      Additional Info
                     </Typography>
-                    {(personData.name ||
-                      personData.email ||
-                      personData.phone) && (
-                      <Chip
-                        label="Pre-filled"
-                        size="small"
-                        color="success"
-                        variant="outlined"
-                        sx={{ fontSize: "0.75rem" }}
-                      />
-                    )}
+                    <Stack spacing={1}>
+                      {displayData.engineSize && (
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Engine:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 600, color: "#1a1a1a" }}
+                          >
+                            {displayData.engineSize}
+                          </Typography>
+                        </Box>
+                      )}
+                      {displayData.stockCode && (
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Stock:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 600, color: "#1a1a1a" }}
+                          >
+                            {displayData.stockCode}
+                          </Typography>
+                        </Box>
+                      )}
+                      {displayData.registration && (
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Reg:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 600, color: "#1a1a1a" }}
+                          >
+                            {displayData.registration}
+                          </Typography>
+                        </Box>
+                      )}
+                      {displayData.province && (
+                        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Location:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 600, color: "#1a1a1a" }}
+                          >
+                            {displayData.province}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Stack>
                   </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Box>
 
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}>
-                      <Controller
-                        name="name"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Full Name"
-                            placeholder="Enter your full name as it appears on your ID"
-                            fullWidth
-                            error={!!errors.name}
-                            helperText={
-                              errors.name?.message ||
-                              "Required for identity verification"
-                            }
-                            InputProps={{
-                              sx: {
-                                backgroundColor: field.value
-                                  ? "#f8f9fa"
-                                  : "white",
-                              },
-                            }}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Controller
-                        name="phone"
-                        control={control}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Phone Number"
-                            placeholder="+27 XX XXX XXXX"
-                            fullWidth
-                            error={!!errors.phone}
-                            helperText={
-                              errors.phone?.message ||
-                              "Include country code for international numbers"
-                            }
-                            InputProps={{
-                              sx: {
-                                backgroundColor: field.value
-                                  ? "#f8f9fa"
-                                  : "white",
-                              },
-                            }}
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
+          {/* Contact Form - Right Side */}
+          <Box>
+            <form onSubmit={handleSubmit(onFormSubmit)}>
+              <Stack spacing={3}>
+                {/* Contact Information Card */}
+                <Card
+                  sx={{
+                    border: "none",
+                    boxShadow: "0 2px 20px rgba(30, 58, 138, 0.08)",
+                    borderRadius: "12px",
+                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
+                >
+                  <CardContent sx={{ p: 3.5 }}>
+                    {/* Card Header */}
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                      <Box
+                        sx={{
+                          width: "36px",
+                          height: "36px",
+                          borderRadius: "50%",
+                          background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          mr: 1.5,
+                        }}
+                      >
+                        <Person sx={{ color: "white", fontSize: "20px" }} />
+                      </Box>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          fontWeight: 700,
+                          color: "#1a1a1a",
+                          fontSize: "1.05rem",
+                        }}
+                      >
+                        Your Contact Information
+                      </Typography>
+                    </Box>
+
+                    {/* Name & Phone Row */}
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2, mb: 2.5 }}>
+                      <Box>
+                        <Controller
+                          name="name"
+                          control={control}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              label="Full Name"
+                              placeholder="John Doe"
+                              fullWidth
+                              size="small"
+                              error={!!errors.name}
+                              helperText={
+                                errors.name?.message ||
+                                "As per your ID document"
+                              }
+                              sx={{
+                                "& .MuiOutlinedInput-root": {
+                                  borderRadius: "8px",
+                                  backgroundColor: "#f8f9fa",
+                                  transition: "all 0.2s",
+                                  "&:hover": {
+                                    backgroundColor: "#f0f0f0",
+                                  },
+                                  "&.Mui-focused": {
+                                    backgroundColor: "white",
+                                  },
+                                },
+                              }}
+                            />
+                          )}
+                        />
+                      </Box><Box>
+                        <Controller
+                          name="phone"
+                          control={control}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              label="Phone Number"
+                              placeholder="+27 83 456 7890"
+                              fullWidth
+                              size="small"
+                              error={!!errors.phone}
+                              helperText={
+                                errors.phone?.message || "Include country code"
+                              }
+                              sx={{
+                                "& .MuiOutlinedInput-root": {
+                                  borderRadius: "8px",
+                                  backgroundColor: "#f8f9fa",
+                                  transition: "all 0.2s",
+                                  "&:hover": {
+                                    backgroundColor: "#f0f0f0",
+                                  },
+                                  "&.Mui-focused": {
+                                    backgroundColor: "white",
+                                  },
+                                },
+                              }}
+                            />
+                          )}
+                        />
+                      </Box></Box>
+
+                    {/* Email */}
+                    <Box sx={{ mb: 2.5 }}>
                       <Controller
                         name="email"
                         control={control}
@@ -774,138 +856,148 @@ const VehiclePurchaseConfirmation: React.FC<
                             type="email"
                             placeholder="your.email@example.com"
                             fullWidth
+                            size="small"
                             error={!!errors.email}
                             helperText={
                               errors.email?.message ||
-                              "We'll send vehicle documents and updates here"
+                              "We'll send documents here"
                             }
-                            InputProps={{
-                              sx: {
-                                backgroundColor: field.value
-                                  ? "#f8f9fa"
-                                  : "white",
+                            sx={{
+                              "& .MuiOutlinedInput-root": {
+                                borderRadius: "8px",
+                                backgroundColor: "#f8f9fa",
+                                transition: "all 0.2s",
+                                "&:hover": {
+                                  backgroundColor: "#f0f0f0",
+                                },
+                                "&.Mui-focused": {
+                                  backgroundColor: "white",
+                                },
                               },
                             }}
                           />
                         )}
                       />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Controller
-                        name="location"
-                        control={control}
-                        render={({ field }) => (
-                          <FormControl fullWidth error={!!errors.location}>
-                            <InputLabel id="location-label">
-                              Location (Province) *
-                            </InputLabel>
-                            <Select
-                              {...field}
-                              labelId="location-label"
-                              label="Location (Province) *"
-                              sx={{
-                                backgroundColor: field.value
-                                  ? "#f8f9fa"
-                                  : "white",
-                              }}
-                            >
-                              <MenuItem value="Eastern Cape">
-                                Eastern Cape
-                              </MenuItem>
-                              <MenuItem value="Free State">Free State</MenuItem>
-                              <MenuItem value="Gauteng">Gauteng</MenuItem>
-                              <MenuItem value="KwaZulu-Natal">
-                                KwaZulu-Natal
-                              </MenuItem>
-                              <MenuItem value="Limpopo">Limpopo</MenuItem>
-                              <MenuItem value="Mpumalanga">Mpumalanga</MenuItem>
-                              <MenuItem value="Northern Cape">
-                                Northern Cape
-                              </MenuItem>
-                              <MenuItem value="North West">North West</MenuItem>
-                              <MenuItem value="Western Cape">
-                                Western Cape
-                              </MenuItem>
-                            </Select>
-                            {errors.location && (
-                              <Typography
-                                variant="caption"
-                                color="error"
-                                sx={{ mt: 0.5, ml: 1.5 }}
+                    </Box>
+
+                    {/* Province & City Row */}
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2, mb: 2.5 }}>
+                      <Box>
+                        <Controller
+                          name="location"
+                          control={control}
+                          render={({ field }) => (
+                            <FormControl fullWidth size="small" error={!!errors.location}>
+                              <InputLabel id="location-label" sx={{ fontSize: "0.9rem" }}>
+                                Province
+                              </InputLabel>
+                              <Select
+                                {...field}
+                                labelId="location-label"
+                                label="Province"
+                                sx={{
+                                  borderRadius: "8px",
+                                  backgroundColor: "#f8f9fa",
+                                  transition: "all 0.2s",
+                                  "&:hover": {
+                                    backgroundColor: "#f0f0f0",
+                                  },
+                                  "&.Mui-focused": {
+                                    backgroundColor: "white",
+                                  },
+                                }}
                               >
-                                {errors.location.message}
-                              </Typography>
-                            )}
-                            {!errors.location && (
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{ mt: 0.5, ml: 1.5 }}
-                              >
-                                Required - Select your province for local dealer
-                                matching
-                              </Typography>
-                            )}
-                          </FormControl>
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Controller
-                        name="city"
-                        control={control}
-                        render={({ field }) => (
-                          <FormControl fullWidth error={!!errors.city}>
-                            <InputLabel id="city-label">City *</InputLabel>
-                            <Select
-                              {...field}
-                              labelId="city-label"
-                              label="City *"
-                              disabled={!selectedProvince || loadingCities}
-                              sx={{
-                                backgroundColor: field.value
-                                  ? "#f8f9fa"
-                                  : "white",
-                              }}
-                            >
-                              <MenuItem value="">
-                                <em>
-                                  {loadingCities
-                                    ? "Loading cities..."
-                                    : "Select a city"}
-                                </em>
-                              </MenuItem>
-                              {(cities || []).map((city) => (
-                                <MenuItem key={city} value={city}>
-                                  {city}
+                                <MenuItem value="Eastern Cape">
+                                  Eastern Cape
                                 </MenuItem>
-                              ))}
-                            </Select>
-                            {errors.city && (
-                              <Typography
-                                variant="caption"
-                                color="error"
-                                sx={{ mt: 0.5, ml: 1.5 }}
+                                <MenuItem value="Free State">Free State</MenuItem>
+                                <MenuItem value="Gauteng">Gauteng</MenuItem>
+                                <MenuItem value="KwaZulu-Natal">
+                                  KwaZulu-Natal
+                                </MenuItem>
+                                <MenuItem value="Limpopo">Limpopo</MenuItem>
+                                <MenuItem value="Mpumalanga">Mpumalanga</MenuItem>
+                                <MenuItem value="Northern Cape">
+                                  Northern Cape
+                                </MenuItem>
+                                <MenuItem value="North West">
+                                  North West
+                                </MenuItem>
+                                <MenuItem value="Western Cape">
+                                  Western Cape
+                                </MenuItem>
+                              </Select>
+                              {errors.location && (
+                                <Typography
+                                  variant="caption"
+                                  color="error"
+                                  sx={{ mt: 0.5, ml: 1.5 }}
+                                >
+                                  {errors.location.message}
+                                </Typography>
+                              )}
+                            </FormControl>
+                          )}
+                        />
+                      </Box><Box>
+                        <Controller
+                          name="city"
+                          control={control}
+                          render={({ field }) => (
+                            <FormControl
+                              fullWidth
+                              size="small"
+                              error={!!errors.city}
+                            >
+                              <InputLabel id="city-label" sx={{ fontSize: "0.9rem" }}>
+                                City
+                              </InputLabel>
+                              <Select
+                                {...field}
+                                labelId="city-label"
+                                label="City"
+                                disabled={!selectedProvince || loadingCities}
+                                sx={{
+                                  borderRadius: "8px",
+                                  backgroundColor: "#f8f9fa",
+                                  transition: "all 0.2s",
+                                  "&:hover": {
+                                    backgroundColor: "#f0f0f0",
+                                  },
+                                  "&.Mui-focused": {
+                                    backgroundColor: "white",
+                                  },
+                                }}
                               >
-                                {errors.city.message}
-                              </Typography>
-                            )}
-                            {!errors.city && (
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{ mt: 0.5, ml: 1.5 }}
-                              >
-                                {selectedProvince
-                                  ? "Select your city for nearest dealer matching"
-                                  : "Select a province first"}
-                              </Typography>
-                            )}
-                          </FormControl>
-                        )}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
+                                <MenuItem value="">
+                                  <em>
+                                    {loadingCities
+                                      ? "Loading cities..."
+                                      : "Select a city"}
+                                  </em>
+                                </MenuItem>
+                                {(cities || []).map((city) => (
+                                  <MenuItem key={city} value={city}>
+                                    {city}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                              {errors.city && (
+                                <Typography
+                                  variant="caption"
+                                  color="error"
+                                  sx={{ mt: 0.5, ml: 1.5 }}
+                                >
+                                  {errors.city.message}
+                                </Typography>
+                              )}
+                            </FormControl>
+                          )}
+                        />
+                      </Box></Box>
+
+                    {/* Preferred Contact */}
+                    <Box>
                       <Controller
                         name="preferredContact"
                         control={control}
@@ -915,17 +1007,23 @@ const VehiclePurchaseConfirmation: React.FC<
                             select
                             label="Preferred Contact Method"
                             fullWidth
+                            size="small"
                             error={!!errors.preferredContact}
                             helperText={
-                              errors.preferredContact?.message ||
-                              "How would you like us to contact you?"
+                              errors.preferredContact?.message || "How should we reach you?"
                             }
                             SelectProps={{ native: true }}
-                            InputProps={{
-                              sx: {
-                                backgroundColor: field.value
-                                  ? "#f8f9fa"
-                                  : "white",
+                            sx={{
+                              "& .MuiOutlinedInput-root": {
+                                borderRadius: "8px",
+                                backgroundColor: "#f8f9fa",
+                                transition: "all 0.2s",
+                                "&:hover": {
+                                  backgroundColor: "#f0f0f0",
+                                },
+                                "&.Mui-focused": {
+                                  backgroundColor: "white",
+                                },
                               },
                             }}
                           >
@@ -935,195 +1033,209 @@ const VehiclePurchaseConfirmation: React.FC<
                           </TextField>
                         )}
                       />
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
+                    </Box>
+                  </CardContent>
+                </Card>
 
-              {/* Assistance Selection Card */}
-              {/* <Card sx={{ border: '1px solid #e0e0e0' }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      mb: 3, 
-                      display: 'flex', 
-                      alignItems: 'center',
-                      fontWeight: 700,
-                      color: '#333333'
-                    }}
-                  >
-                    <Assignment sx={{ mr: 1.5, color: '#1e3a8a' }} />
-                    Select Assistance Needed
-                  </Typography>
+                {/* Additional Comments Card */}
+                <Card
+                  sx={{
+                    border: "none",
+                    boxShadow: "0 2px 20px rgba(30, 58, 138, 0.08)",
+                    borderRadius: "12px",
+                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
+                >
+                  <CardContent sx={{ p: 3.5 }}>
+                    <Box sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}>
+                      <Box
+                        sx={{
+                          width: "36px",
+                          height: "36px",
+                          borderRadius: "50%",
+                          background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          mr: 1.5,
+                          flexShrink: 0,
+                          mt: 0.25,
+                        }}
+                      >
+                        <Typography sx={{ color: "white", fontWeight: 700 }}>
+                          ?
+                        </Typography>
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            fontWeight: 700,
+                            color: "#1a1a1a",
+                            fontSize: "1.05rem",
+                          }}
+                        >
+                          Additional Comments
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: "block", mt: 0.5 }}
+                        >
+                          Optional - Any specific requirements or questions
+                        </Typography>
+                      </Box>
+                    </Box>
 
-                  <Controller
-                    name="assistanceTypes"
-                    control={control}
-                    render={({ field }) => (
-                      <FormControl component="fieldset" error={!!errors.assistanceTypes}>
-                        <FormGroup>
-                          <FormControlLabel 
-                            sx={{ alignItems: 'flex-start', mb: 2 }}
-                            control={
-                              <Checkbox 
-                                checked={field.value?.includes('financing')}
-                                onChange={(e) => {
-                                  const currentValue = field.value || [];
-                                  if (e.target.checked) {
-                                    field.onChange([...currentValue, 'financing']);
-                                  } else {
-                                    field.onChange(currentValue.filter((v: string | undefined) => v !== 'financing'));
-                                  }
-                                }}
-                                sx={{ pt: 0.5 }}
-                              />
-                            }
-                            label={
-                              <Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  <AccountBalance sx={{ mr: 1, color: '#1e3a8a' }} />
-                                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                                    Finance Assistance
-                                  </Typography>
-                                </Box>
-                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                  Help with vehicle financing, bank applications, and loan approvals
-                                </Typography>
-                              </Box>
-                            }
-                          />
-                          
-                          <FormControlLabel 
-                            control={
-                              <Checkbox 
-                                checked={field.value?.includes('compliance')}
-                                onChange={(e) => {
-                                  const currentValue = field.value || [];
-                                  if (e.target.checked) {
-                                    field.onChange([...currentValue, 'compliance']);
-                                  } else {
-                                    field.onChange(currentValue.filter((v: string) => v !== 'compliance'));
-                                  }
-                                }}
-                              />
-                            }
-                            label={
-                              <Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  <Security sx={{ mr: 1, color: '#ffc107' }} />
-                                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                                    Compliance Assistance
-                                  </Typography>
-                                </Box>
-                                <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
-                                  FICA documentation, vehicle registration, and legal compliance support
-                                </Typography>
-                              </Box>
-                            }
-                          />
-                        </FormGroup>
-                        {errors.assistanceTypes && (
-                          <Typography variant="caption" color="error" sx={{ mt: 1 }}>
-                            {errors.assistanceTypes.message}
-                          </Typography>
-                        )}
-                      </FormControl>
-                    )}
-                  />
-                </CardContent>
-              </Card> */}
+                    <Controller
+                      name="comments"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          multiline
+                          rows={3}
+                          fullWidth
+                          placeholder="Share any specific requirements, timeline concerns, or questions about this vehicle..."
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              borderRadius: "8px",
+                              backgroundColor: "#f8f9fa",
+                              transition: "all 0.2s",
+                              "&:hover": {
+                                backgroundColor: "#f0f0f0",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "white",
+                              },
+                            },
+                          }}
+                        />
+                      )}
+                    />
+                  </CardContent>
+                </Card>
 
-              {/* Additional Comments */}
-              <Card sx={{ border: "1px solid #e0e0e0" }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Controller
-                    name="comments"
-                    control={control}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="Additional Comments or Questions (Optional)"
-                        multiline
-                        rows={4}
-                        fullWidth
-                        placeholder="Any specific requirements, timeline, or questions about the vehicle or process..."
-                      />
-                    )}
-                  />
-                </CardContent>
-              </Card>
+                {/* Disclaimer Card */}
+                <Card
+                  sx={{
+                    border: "none",
+                    background: "linear-gradient(135deg, #f0f4ff 0%, #e8ecf1 100%)",
+                    boxShadow: "0 1px 12px rgba(30, 58, 138, 0.06)",
+                    borderRadius: "12px",
+                  }}
+                >
+                  <CardContent sx={{ p: 2.5 }}>
+                    <Box sx={{ display: "flex", gap: 1.5 }}>
+                      <Box
+                        sx={{
+                          width: "28px",
+                          height: "28px",
+                          borderRadius: "50%",
+                          background: "#1e3a8a",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          mt: 0.25,
+                        }}
+                      >
+                        <Typography sx={{ color: "white", fontSize: "0.9rem", fontWeight: 700 }}>
+                          i
+                        </Typography>
+                      </Box>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "#1a1a1a", lineHeight: 1.6, fontSize: "0.9rem" }}
+                      >
+                        By submitting this request, you agree to be contacted
+                        regarding your vehicle purchase. Your information will
+                        be handled per our privacy policy.
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
 
-              {/* Disclaimer & Actions */}
-              <Alert severity="info" sx={{ mb: 3 }}>
-                <Typography variant="body2">
-                  By submitting this request, you agree to be contacted by our
-                  team and partner network regarding this vehicle purchase
-                  inquiry. Your personal information will be used in accordance
-                  with our privacy policy.
-                </Typography>
-              </Alert>
+                {/* Action Buttons */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 2,
+                    pt: 2,
+                  }}
+                >
+                  {onBack && (
+                    <Button
+                      variant="outlined"
+                      onClick={onBack}
+                      disabled={isLoading}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        px: 3.5,
+                        py: 1.25,
+                        borderRadius: "8px",
+                        borderColor: "#d0d0d0",
+                        color: "#666",
+                        fontSize: "0.95rem",
+                        transition: "all 0.2s",
+                        "&:hover": {
+                          borderColor: "#1e3a8a",
+                          backgroundColor: "transparent",
+                          color: "#1e3a8a",
+                        },
+                        "&:disabled": {
+                          borderColor: "#e0e0e0",
+                          color: "#999",
+                        },
+                      }}
+                    >
+                      Back
+                    </Button>
+                  )}
 
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                {onBack && (
                   <Button
-                    variant="outlined"
-                    onClick={onBack}
-                    disabled={isLoading}
+                    type="submit"
+                    variant="contained"
+                    disabled={isLoading || !isValid}
                     sx={{
+                      ml: "auto",
                       textTransform: "none",
-                      fontWeight: 600,
-                      px: 4,
+                      fontWeight: 700,
+                      px: 5,
                       py: 1.5,
-                      borderColor: "#ddd",
-                      color: "#666",
+                      fontSize: "1rem",
+                      borderRadius: "8px",
+                      background: "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)",
+                      color: "#ffffff",
+                      boxShadow: "0 4px 14px rgba(30, 58, 138, 0.25)",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       "&:hover": {
-                        borderColor: "#999",
-                        backgroundColor: "#f5f5f5",
+                        background: "linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)",
+                        boxShadow: "0 6px 20px rgba(30, 58, 138, 0.35)",
+                        transform: "translateY(-1px)",
+                      },
+                      "&:active": {
+                        transform: "translateY(0px)",
+                      },
+                      "&:disabled": {
+                        background: "#f0f0f0",
+                        color: "#999",
+                        boxShadow: "none",
+                        transform: "none",
                       },
                     }}
                   >
-                    Back
+                    {isLoading ? "Submitting..." : "Submit"}
                   </Button>
-                )}
-
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={isLoading || !isValid}
-                  sx={{
-                    ml: "auto",
-                    textTransform: "none",
-                    fontWeight: 700,
-                    px: 6,
-                    py: 2,
-                    fontSize: "1.1rem",
-                    backgroundColor: "#1e3a8a",
-                    color: "#ffffff",
-                    boxShadow: "none",
-                    "&:hover": {
-                      backgroundColor: "#1e40af",
-                      boxShadow: "0 4px 12px rgba(30, 58, 138, 0.25)",
-                    },
-                    "&:disabled": {
-                      backgroundColor: "#f0f0f0",
-                      color: "#999",
-                    },
-                  }}
-                >
-                  Submit
-                </Button>
-              </Box>
-            </Stack>
-          </form>
-        </Grid>
-      </Grid>
+                </Box>
+              </Stack>
+            </form>
+          </Box>
+        </Box>
+      </Box>
     </Box>
   );
 };

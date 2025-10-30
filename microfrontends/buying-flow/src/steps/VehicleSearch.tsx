@@ -56,6 +56,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     transmissions: string[];
     priceRange: { min: number; max: number };
     yearRange: { min: number; max: number };
+    mileageRange: { min: number; max: number };
   }>({
     makes: [],
     models: [],
@@ -65,7 +66,8 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     bodyTypes: [],
     transmissions: [],
     priceRange: { min: 0, max: 2000000 },
-    yearRange: { min: 2000, max: 2025 }
+    yearRange: { min: 2000, max: 2025 },
+    mileageRange: { min: 0, max: 250000 }
   });
 
   const [isLoadingFilters, setIsLoadingFilters] = useState(false);
@@ -73,6 +75,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
   const [isLoadingBodyTypes, setIsLoadingBodyTypes] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [makeSuggestions, setMakeSuggestions] = useState<string[]>([]);
   const [filterCounts, setFilterCounts] = useState<{
     makes: Record<string, number>;
     models: Record<string, number>;
@@ -261,7 +264,8 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
           bodyTypes: filtersData.bodyTypes || [],
           transmissions: filtersData.transmissions || [],
           priceRange: filtersData.priceRange || { min: 0, max: 2000000 },
-          yearRange: filtersData.yearRange || { min: 2000, max: 2025 }
+          yearRange: filtersData.yearRange || { min: 2000, max: 2025 },
+          mileageRange: filtersData.mileageRange || { min: 0, max: 250000 }
         });
         
         // Update search data with actual ranges
@@ -496,7 +500,12 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
   }, [searchData.make, searchData.model, searchData.bodyType, searchData.fuelType, searchData.province, searchData.city]);
 
   // Load dynamic ranges when any filter changes (with debouncing)
+  // DISABLED: Backend ranges endpoint has issues with data type casting
+  // TODO: Fix backend VehicleRepository findPriceRangeByFilters, findYearRangeByFilters, findMileageRangeByFilters
   useEffect(() => {
+    // Temporarily disabled - backend ranges endpoint returning empty data
+    return;
+    
     // Clear existing timer
     if (rangesDebounceTimer.current) {
       clearTimeout(rangesDebounceTimer.current);
@@ -511,12 +520,12 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     rangesDebounceTimer.current = setTimeout(async () => {
       try {
         const params = new URLSearchParams();
+        // The ranges endpoint only accepts these basic filter parameters
         if (searchData.make) params.append('make', searchData.make);
         if (searchData.model) params.append('model', searchData.model);
         if (searchData.bodyType) params.append('bodyType', searchData.bodyType);
         if (searchData.fuelType) params.append('fuelType', searchData.fuelType);
         if (searchData.province) params.append('province', searchData.province);
-        if (searchData.city) params.append('city', searchData.city);
         
         const paramsString = params.toString();
         const cacheKey = `ranges-${paramsString}`;
@@ -527,7 +536,8 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
           setFilters(prev => ({
             ...prev,
             priceRange: cachedRanges.priceRange || prev.priceRange,
-            yearRange: cachedRanges.yearRange || prev.yearRange
+            yearRange: cachedRanges.yearRange || prev.yearRange,
+            mileageRange: cachedRanges.mileageRange || prev.mileageRange
           }));
           return;
         }
@@ -546,6 +556,39 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
 
         const ranges = await response.json();
         
+        // Check if ranges are empty and use filter-counts as fallback
+        let hasValidRanges = ranges && (ranges.priceRange || ranges.yearRange || ranges.mileageRange);
+        
+        if (!hasValidRanges) {
+          console.log('Ranges endpoint returned empty, trying to get basic filtered counts');
+          try {
+            // Try to get filter counts for the same filters to see if vehicles exist
+            const countsParams = new URLSearchParams();
+            if (searchData.make) countsParams.append('make', searchData.make);
+            if (searchData.model) countsParams.append('model', searchData.model);
+            
+            const countsResponse = await fetch(`http://localhost:8080/api/vehicles/filter-counts?${countsParams}`);
+            const countsData = await countsResponse.json();
+            
+            if (countsData && countsData.total > 0) {
+              console.log(`Found ${countsData.total} vehicles for current filters, using adjusted ranges`);
+              // If vehicles exist but ranges endpoint returned empty, use slightly narrower ranges
+              const fallbackRanges = {
+                priceRange: { min: 100000, max: 1200000 }, // Slightly narrower for filtered results
+                yearRange: { min: 2015, max: 2025 }, // More recent years for filtered results
+                mileageRange: { min: 0, max: 150000 } // Lower max mileage for quality vehicles
+              };
+              Object.assign(ranges, fallbackRanges);
+            } else {
+              console.log('No vehicles found for current filters, keeping original ranges');
+              return; // Don't update ranges if no vehicles match
+            }
+          } catch (countsError) {
+            console.warn('Failed to get fallback counts, keeping original ranges');
+            return;
+          }
+        }
+        
         // Cache the result
         apiCache.current.set(cacheKey, ranges);
 
@@ -559,34 +602,37 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
           if (ranges.yearRange) {
             newFilters.yearRange = ranges.yearRange;
           }
+          if (ranges.mileageRange) {
+            newFilters.mileageRange = ranges.mileageRange;
+          }
           
           return newFilters;
         });
 
-          // Adjust search data to fit within new ranges
-          setSearchData(prev => {
-            const newData = { ...prev };
-            
-            if (ranges.priceRange) {
-              newData.priceRange = [
-                Math.max(prev.priceRange[0], ranges.priceRange.min),
-                Math.min(prev.priceRange[1], ranges.priceRange.max)
-              ];
-            }
-            
-            if (ranges.yearRange) {
-              newData.yearRange = [
-                Math.max(prev.yearRange[0], ranges.yearRange.min),
-                Math.min(prev.yearRange[1], ranges.yearRange.max)
-              ];
-            }
-            
-            if (ranges.mileageRange) {
-              newData.mileageMax = Math.min(prev.mileageMax, ranges.mileageRange.max);
-            }
-            
-            return newData;
-          });
+        // Adjust search data to fit within new ranges
+        setSearchData(prev => {
+          const newData = { ...prev };
+          
+          if (ranges.priceRange) {
+            newData.priceRange = [
+              Math.max(prev.priceRange[0], ranges.priceRange.min),
+              Math.min(prev.priceRange[1], ranges.priceRange.max)
+            ];
+          }
+          
+          if (ranges.yearRange) {
+            newData.yearRange = [
+              Math.max(prev.yearRange[0], ranges.yearRange.min),
+              Math.min(prev.yearRange[1], ranges.yearRange.max)
+            ];
+          }
+          
+          if (ranges.mileageRange) {
+            newData.mileageMax = Math.min(prev.mileageMax, ranges.mileageRange.max);
+          }
+          
+          return newData;
+        });
 
       } catch (error) {
         console.error('Error loading dynamic ranges:', error);
@@ -601,7 +647,42 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     };
   }, [searchData.make, searchData.model, searchData.bodyType, searchData.fuelType, searchData.province, searchData.city]);
 
+  const handleClear = () => {
+    // Reset all search and filter state to initial values
+    setSearchQuery('');
+    setSearchData({
+      make: '',
+      model: '',
+      yearRange: [2015, 2025],
+      priceRange: [100000, 2000000],
+      mileageMax: 200000,
+      bodyType: '',
+      fuelType: '',
+      province: '',
+      city: '',
+    });
+    setMakeSuggestions([]);
+    setShowFilters(false);
+    
+    // Reset filter counts and total vehicles
+    setFilterCounts({
+      makes: {},
+      models: {},
+      bodyTypes: {},
+      fuelTypes: {},
+      transmissions: {},
+      conditions: {},
+      provinces: {},
+      cities: {},
+      colours: {},
+    });
+    setTotalVehicles(0);
+  };
+
   const handleSubmit = () => {
+    // Parse any remaining search query before submitting
+    parseFullSearchQuery();
+    
     console.log('VehicleSearch handleSubmit called with searchData:', searchData);
     const submissionData = {
       nextStep: 'SearchResults',
@@ -631,10 +712,46 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
             make: makeData.make,
             model: value,
           }));
+          // Update search bar to show the make when auto-populated
+          setSearchQuery(makeData.make + (value ? ` ${value}` : ''));
           return;
         }
       } catch (error) {
         console.error('Error fetching make for model:', error);
+      }
+    }
+    
+    // If make is being changed, update the search bar
+    if (field === 'make') {
+      if (value) {
+        // Update search bar to show the selected make
+        const currentModel = searchData.model;
+        const newSearchQuery = value + (currentModel ? ` ${currentModel}` : '');
+        if (searchQuery !== newSearchQuery) {
+          setSearchQuery(newSearchQuery);
+        }
+      } else {
+        // If make is cleared, clear search bar or keep only model
+        const currentModel = searchData.model;
+        const newSearchQuery = currentModel || '';
+        if (searchQuery !== newSearchQuery) {
+          setSearchQuery(newSearchQuery);
+        }
+      }
+    }
+    
+    // If model is being changed and we have a make, update search bar
+    if (field === 'model') {
+      const currentMake = searchData.make;
+      let newSearchQuery = '';
+      if (currentMake) {
+        newSearchQuery = currentMake + (value ? ` ${value}` : '');
+      } else if (value) {
+        newSearchQuery = value;
+      }
+      
+      if (searchQuery !== newSearchQuery) {
+        setSearchQuery(newSearchQuery);
       }
     }
     
@@ -649,21 +766,172 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
     return price.toLocaleString('en-ZA').replace(/,/g, ' ');
   };
 
+  // Helper function to format mileage numbers
+  const formatMileage = (mileage: number): string => {
+    return mileage.toLocaleString('en-ZA').replace(/,/g, ' ');
+  };
+
+  // Generate dynamic price options based on current price range
+  const generatePriceOptions = (min: number, max: number) => {
+    const options = [];
+    const ranges = [50000, 100000, 150000, 200000, 250000, 300000, 400000, 500000, 750000, 1000000, 1500000, 2000000];
+    
+    // Filter ranges to only include those within the dynamic range
+    const validRanges = ranges.filter(price => price >= min && price <= max);
+    
+    // Always include the actual min and max from the data
+    if (min > 0 && !validRanges.includes(min)) {
+      validRanges.unshift(min);
+    }
+    if (max < 2000000 && !validRanges.includes(max)) {
+      validRanges.push(max);
+    }
+    
+    return validRanges.sort((a, b) => a - b);
+  };
+
+  // Generate dynamic mileage options based on available data
+  const generateMileageOptions = (maxMileage: number) => {
+    const options = [];
+    const ranges = [20000, 30000, 50000, 75000, 100000, 150000, 200000, 250000];
+    
+    // Filter ranges to only include those within the dynamic range
+    const validRanges = ranges.filter(mileage => mileage <= maxMileage);
+    
+    // Always include the actual max from the data
+    if (!validRanges.includes(maxMileage)) {
+      validRanges.push(maxMileage);
+    }
+    
+    return validRanges.sort((a, b) => a - b);
+  };
+
   // Handle search query change
   const handleSearchQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
+    // Keep the original query for display (case-sensitive for user experience)
     setSearchQuery(query);
-    
-    // Parse the search query to extract make, model, and variant
-    if (query.trim()) {
-      const parts = query.trim().split(/\s+/);
-      if (parts.length >= 1) {
-        // First part is likely the make
-        handleInputChange('make', parts[0]);
+
+    // Convert to uppercase for filtering
+    const upperCaseQuery = query.toUpperCase();
+
+    // Filter both makes AND models based on the input
+    if (upperCaseQuery.trim()) {
+      const availableMakes = filters.makes || [];
+      const availableModels = filters.models || [];
+      
+      // Helper function to check if string contains all characters in order
+      const matchesQuery = (text: string) => {
+        let queryIndex = 0;
+        for (let i = 0; i < text.length && queryIndex < upperCaseQuery.length; i++) {
+          if (text[i] === upperCaseQuery[queryIndex]) {
+            queryIndex++;
+          }
+        }
+        return queryIndex === upperCaseQuery.length;
+      };
+
+      // Filter makes that match the query
+      const filteredMakes = availableMakes.filter(matchesQuery);
+      
+      // Filter models that match the query
+      const filteredModels = availableModels.filter(matchesQuery);
+
+      // Combine and deduplicate results
+      const allSuggestions = [...filteredMakes, ...filteredModels];
+      const uniqueSuggestions = Array.from(new Set(allSuggestions));
+
+      // Sort by relevance: exact matches first, then starts-with, then contains
+      const sortedSuggestions = uniqueSuggestions.sort((a, b) => {
+        const aExact = a === upperCaseQuery;
+        const bExact = b === upperCaseQuery;
+        if (aExact && !bExact) return -1;
+        if (!aExact && bExact) return 1;
         
-        // Rest is the model
-        if (parts.length >= 2) {
-          handleInputChange('model', parts.slice(1).join(' '));
+        const aStartsWith = a.startsWith(upperCaseQuery);
+        const bStartsWith = b.startsWith(upperCaseQuery);
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+        
+        // Prioritize makes over models when relevance is equal
+        const aIsMake = availableMakes.includes(a);
+        const bIsMake = availableMakes.includes(b);
+        if (aIsMake && !bIsMake) return -1;
+        if (!aIsMake && bIsMake) return 1;
+        
+        // If both or neither start with query, sort by length (shorter first)
+        return a.length - b.length;
+      });
+
+      setMakeSuggestions(sortedSuggestions.slice(0, 10)); // Limit to 10 suggestions
+    } else {
+      setMakeSuggestions([]);
+    }
+  };
+
+  // Handle make/model selection from autocomplete
+  const handleMakeSelection = (selectedValue: string | null) => {
+    if (selectedValue) {
+      const availableMakes = filters.makes || [];
+      const availableModels = filters.models || [];
+      
+      if (availableMakes.includes(selectedValue)) {
+        // It's a make, set it directly
+        handleInputChange('make', selectedValue);
+      } else if (availableModels.includes(selectedValue)) {
+        // It's a model, set the model and try to auto-populate the make
+        handleInputChange('model', selectedValue);
+        // Fetch the make for this model
+        fetchMakeForModel(selectedValue);
+      } else {
+        // It might be a search query like "BMW 1 SERIES", parse it
+        parseFullSearchQuery();
+      }
+      
+      // Clear suggestions when a selection is made
+      setMakeSuggestions([]);
+    }
+  };
+
+  // Fetch make for a given model
+  const fetchMakeForModel = async (model: string) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/vehicles/models/${model}/make`);
+      const makeData = await response.json();
+      if (makeData && makeData.make) {
+        handleInputChange('make', makeData.make);
+      }
+    } catch (error) {
+      console.error('Error fetching make for model:', error);
+    }
+  };
+
+  // Handle parsing full search query (when user presses enter or clicks search)
+  const parseFullSearchQuery = () => {
+    const upperCaseQuery = searchQuery.toUpperCase();
+    
+    if (upperCaseQuery.trim()) {
+      const parts = upperCaseQuery.trim().split(/\s+/);
+      if (parts.length >= 1) {
+        const potentialMake = parts[0];
+        
+        // Try to find exact or best matching make
+        const availableMakes = filters.makes || [];
+        const exactMatch = availableMakes.find(make => make === potentialMake);
+        const startsWithMatch = availableMakes.find(make => make.startsWith(potentialMake));
+        
+        const bestMakeMatch = exactMatch || startsWithMatch;
+        
+        if (bestMakeMatch) {
+          handleInputChange('make', bestMakeMatch);
+          // Rest is the model
+          if (parts.length >= 2) {
+            handleInputChange('model', parts.slice(1).join(' '));
+          }
+        } else {
+          // If no make match found, treat entire query as model search
+          handleInputChange('make', '');
+          handleInputChange('model', upperCaseQuery);
         }
       }
     }
@@ -717,20 +985,6 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
             >
               While you await the report, can we help you find a vehicle?
             </Typography>
-
-            {/* <Typography
-              variant="body1"
-              sx={{
-                color: '#424242',
-                mb: 3,
-                fontWeight: 400,
-                maxWidth: 600,
-                mx: 'auto',
-                textAlign: 'center'
-              }}
-            >
-              We'll help you find vehicles that match your preferences and budget. Our advanced search tools will guide you to the perfect match.
-            </Typography> */}
               <Divider />
           </Box>
         )}
@@ -748,20 +1002,77 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
         {/* Dynamic Search Bar */}
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <TextField
+            <Autocomplete
               fullWidth
-              placeholder="Enter Make, Model and Variant"
-              value={searchQuery}
-              onChange={handleSearchQueryChange}
-              InputProps={{
-                startAdornment: (
-                  <Search sx={{ color: 'text.secondary', mr: 1 }} />
-                ),
+              freeSolo
+              options={makeSuggestions}
+              value={null}
+              inputValue={searchQuery}
+              onInputChange={(event, newInputValue) => {
+                // If the input value is empty and there was a previous value, user clicked clear button
+                if (newInputValue === '' && searchQuery !== '') {
+                  handleClear();
+                } else if (event && event.type === 'change') {
+                  handleSearchQueryChange(event as React.ChangeEvent<HTMLInputElement>);
+                }
               }}
+              onChange={(event, newValue) => {
+                if (typeof newValue === 'string') {
+                  handleMakeSelection(newValue);
+                }
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="Enter Make, Model and Variant"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <Search sx={{ color: 'text.secondary', mr: 1 }} />
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      backgroundColor: '#ffffff',
+                    },
+                  }}
+                />
+              )}
+              renderOption={(props, option) => {
+                const availableMakes = filters.makes || [];
+                const isMake = availableMakes.includes(option);
+                
+                return (
+                  <Box component="li" {...props} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
+                    <Typography variant="body2" sx={{ flex: 1 }}>
+                      {option}
+                    </Typography>
+                    <Chip
+                      label={isMake ? 'Make' : 'Model'}
+                      size="small"
+                      sx={{
+                        height: 20,
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                        backgroundColor: isMake ? '#1e3a8a' : '#f0f0f0',
+                        color: isMake ? 'white' : '#666',
+                        ml: 2,
+                      }}
+                    />
+                  </Box>
+                );
+              }}
+              noOptionsText="No makes or models found"
               sx={{
-                '& .MuiOutlinedInput-root': {
+                '& .MuiAutocomplete-popup': {
                   borderRadius: 2,
-                  backgroundColor: '#ffffff',
                 },
               }}
             />
@@ -1053,9 +1364,11 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                     disabled={isLoadingFilters}
                   >
                     <MenuItem value={filters.yearRange.min}>Any</MenuItem>
-                    {Array.from({ length: filters.yearRange.max - filters.yearRange.min + 1 }, (_, i) => filters.yearRange.max - i).map((year) => (
-                      <MenuItem key={year} value={year}>{year}</MenuItem>
-                    ))}
+                    {Array.from({ length: filters.yearRange.max - filters.yearRange.min + 1 }, (_, i) => filters.yearRange.max - i)
+                      .filter(year => year <= searchData.yearRange[1]) // Only show years <= max year
+                      .map((year) => (
+                        <MenuItem key={year} value={year}>{year}</MenuItem>
+                      ))}
                   </Select>
                 </FormControl>
               </Box>
@@ -1072,9 +1385,11 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                     disabled={isLoadingFilters}
                   >
                     <MenuItem value={filters.yearRange.max}>Any</MenuItem>
-                    {Array.from({ length: filters.yearRange.max - filters.yearRange.min + 1 }, (_, i) => filters.yearRange.max - i).map((year) => (
-                      <MenuItem key={year} value={year}>{year}</MenuItem>
-                    ))}
+                    {Array.from({ length: filters.yearRange.max - filters.yearRange.min + 1 }, (_, i) => filters.yearRange.max - i)
+                      .filter(year => year >= searchData.yearRange[0]) // Only show years >= min year
+                      .map((year) => (
+                        <MenuItem key={year} value={year}>{year}</MenuItem>
+                      ))}
                   </Select>
                 </FormControl>
               </Box>
@@ -1090,18 +1405,12 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                     onChange={(e) => handleInputChange('priceRange', [e.target.value, searchData.priceRange[1]])}
                     disabled={isLoadingFilters}
                   >
-                    <MenuItem value={0}>Any</MenuItem>
-                    <MenuItem value={50000}>R50,000</MenuItem>
-                    <MenuItem value={100000}>R100,000</MenuItem>
-                    <MenuItem value={150000}>R150,000</MenuItem>
-                    <MenuItem value={200000}>R200,000</MenuItem>
-                    <MenuItem value={250000}>R250,000</MenuItem>
-                    <MenuItem value={300000}>R300,000</MenuItem>
-                    <MenuItem value={400000}>R400,000</MenuItem>
-                    <MenuItem value={500000}>R500,000</MenuItem>
-                    <MenuItem value={750000}>R750,000</MenuItem>
-                    <MenuItem value={1000000}>R1,000,000</MenuItem>
-                    <MenuItem value={1500000}>R1,500,000</MenuItem>
+                    <MenuItem value={filters.priceRange.min}>Any</MenuItem>
+                    {generatePriceOptions(filters.priceRange.min, filters.priceRange.max).map((price) => (
+                      <MenuItem key={price} value={price}>
+                        R{formatPrice(price)}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Box>
@@ -1117,18 +1426,14 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                     onChange={(e) => handleInputChange('priceRange', [searchData.priceRange[0], e.target.value])}
                     disabled={isLoadingFilters}
                   >
-                    <MenuItem value={2000000}>Any</MenuItem>
-                    <MenuItem value={100000}>R100,000</MenuItem>
-                    <MenuItem value={150000}>R150,000</MenuItem>
-                    <MenuItem value={200000}>R200,000</MenuItem>
-                    <MenuItem value={250000}>R250,000</MenuItem>
-                    <MenuItem value={300000}>R300,000</MenuItem>
-                    <MenuItem value={400000}>R400,000</MenuItem>
-                    <MenuItem value={500000}>R500,000</MenuItem>
-                    <MenuItem value={750000}>R750,000</MenuItem>
-                    <MenuItem value={1000000}>R1,000,000</MenuItem>
-                    <MenuItem value={1500000}>R1,500,000</MenuItem>
-                    <MenuItem value={2000000}>R2,000,000+</MenuItem>
+                    <MenuItem value={filters.priceRange.max}>Any</MenuItem>
+                    {generatePriceOptions(filters.priceRange.min, filters.priceRange.max)
+                      .filter(price => price >= searchData.priceRange[0]) // Only show prices >= min price
+                      .map((price) => (
+                        <MenuItem key={price} value={price}>
+                          R{formatPrice(price)}{price === filters.priceRange.max ? '+' : ''}
+                        </MenuItem>
+                      ))}
                   </Select>
                 </FormControl>
               </Box>
@@ -1144,17 +1449,12 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({
                     onChange={(e) => handleInputChange('mileageMax', e.target.value)}
                     disabled={isLoadingFilters}
                   >
-                    <MenuItem value={250000}>Any</MenuItem>
-                    <MenuItem value={20000}>20,000 km</MenuItem>
-                    <MenuItem value={30000}>30,000 km</MenuItem>
-                    <MenuItem value={50000}>50,000 km</MenuItem>
-                    <MenuItem value={75000}>75,000 km</MenuItem>
-                    <MenuItem value={100000}>100,000 km</MenuItem>
-                    <MenuItem value={125000}>125,000 km</MenuItem>
-                    <MenuItem value={150000}>150,000 km</MenuItem>
-                    <MenuItem value={175000}>175,000 km</MenuItem>
-                    <MenuItem value={200000}>200,000 km</MenuItem>
-                    <MenuItem value={250000}>250,000 km+</MenuItem>
+                    <MenuItem value={filters.mileageRange.max}>Any</MenuItem>
+                    {generateMileageOptions(filters.mileageRange.max).map((mileage) => (
+                      <MenuItem key={mileage} value={mileage}>
+                        {formatPrice(mileage)} km{mileage === filters.mileageRange.max ? '+' : ''}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Box>

@@ -163,7 +163,7 @@ const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children })
           nextStep = {
             stepId: 'vehicle-search',
             componentName: 'VehicleSearch',
-            data: { ...formData, message: 'Search for your desired vehicle' },
+            data: { ...formData, message: 'Search for your desired vehicle', showIntro: true },
             stepNumber: 3,
             totalSteps: 6
           };

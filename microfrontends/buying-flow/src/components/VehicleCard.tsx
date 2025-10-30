@@ -57,11 +57,11 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onClick }) => {
     >
       <CardContent sx={{ p: 0 }}>
         {/* Horizontal Layout */}
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, position: 'relative' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'row', position: 'relative', minHeight: 220 }}>
           {/* Left: Image Section with Carousel */}
           <Box sx={{ 
             position: 'relative',
-            width: { xs: '100%', md: '280px' },
+            width: { xs: '200px', sm: '240px', md: '300px' },
             flexShrink: 0,
             backgroundColor: '#f5f5f5'
           }}>
@@ -88,11 +88,11 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onClick }) => {
             {/* Car Image */}
             <Box
               component="img"
-              src={vehicle.image || 'https://via.placeholder.com/280x200?text=Vehicle'}
+              src={vehicle.image || 'https://via.placeholder.com/300x220?text=Vehicle'}
               alt={`${vehicle.make} ${vehicle.model}`}
               sx={{
                 width: '100%',
-                height: { xs: 200, md: '100%' },
+                height: '100%',
                 objectFit: 'cover',
                 display: 'block'
               }}
@@ -163,64 +163,64 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onClick }) => {
           </Box>
 
           {/* Right: Content Section */}
-          <Box sx={{ flex: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ flex: 1, p: 2.5, display: 'flex', flexDirection: 'column' }}>
             {/* Top Row: Title and Price */}
             <Box sx={{ mb: 2 }}>
-              <Typography variant="h6" component="h3" sx={{ 
-                fontWeight: 600,
-                color: 'text.primary',
-                mb: 1
-              }}>
-                {vehicle.make} {vehicle.model}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 2 }}>
-                <Typography variant="h5" sx={{ 
-                  fontWeight: 700,
-                  color: 'text.primary'
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                <Typography variant="h6" component="h3" sx={{ 
+                  fontWeight: 600,
+                  color: 'text.primary',
+                  fontSize: { xs: '1rem', md: '1.25rem' }
                 }}>
-                  {formatCurrency(vehicle.price)}
+                  {vehicle.make} {vehicle.model}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Price
-                </Typography>
-                <Box
-                  component="span"
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 16,
-                    height: 16,
-                    borderRadius: '50%',
-                    backgroundColor: 'info.main',
-                    color: 'white',
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    cursor: 'help'
-                  }}
-                  title="Price information"
-                >
-                  i
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+                  <Typography variant="h6" sx={{ 
+                    fontWeight: 700,
+                    color: 'text.primary',
+                    fontSize: { xs: '1.1rem', md: '1.3rem' }
+                  }}>
+                    {formatCurrency(vehicle.price)}
+                  </Typography>
+                  <Box
+                    component="span"
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 16,
+                      height: 16,
+                      borderRadius: '50%',
+                      backgroundColor: 'info.main',
+                      color: 'white',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      cursor: 'help'
+                    }}
+                    title="Price information"
+                  >
+                    i
+                  </Box>
                 </Box>
               </Box>
 
               {/* Specs Row */}
-              <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Engineering sx={{ fontSize: 20, color: 'text.secondary' }} />
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {formatPower(vehicle.power)}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <DirectionsCar sx={{ fontSize: 20, color: 'text.secondary' }} />
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              <Box sx={{ display: 'flex', gap: { xs: 2, md: 3 }, flexWrap: 'wrap', mb: 1.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <DirectionsCar sx={{ fontSize: 18, color: 'text.secondary' }} />
+                  <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
                     {vehicle.year}
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LocalGasStation sx={{ fontSize: 20, color: 'text.secondary' }} />
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <Engineering sx={{ fontSize: 18, color: 'text.secondary' }} />
+                  <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
+                    {formatPower(vehicle.power)}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <LocalGasStation sx={{ fontSize: 18, color: 'text.secondary' }} />
+                  <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
                     {formatFuelConsumption(vehicle.fuelConsumption)}
                   </Typography>
                 </Box>
