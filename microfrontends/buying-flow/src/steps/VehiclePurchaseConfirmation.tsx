@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Card, 
-  CardContent, 
-  Button, 
-  Stack, 
-  TextField, 
-  Grid, 
-  Divider, 
-  Alert, 
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  Stack,
+  TextField,
+  Grid,
+  Divider,
+  Alert,
   CardMedia,
   FormControl,
   FormLabel,
@@ -19,31 +19,31 @@ import {
   Chip,
   Select,
   MenuItem,
-  InputLabel
-} from '@mui/material';
-import { 
-  CheckCircle, 
-  Person, 
-  Email, 
-  Phone, 
-  DirectionsCar, 
-  LocalGasStation, 
+  InputLabel,
+} from "@mui/material";
+import {
+  CheckCircle,
+  Person,
+  Email,
+  Phone,
+  DirectionsCar,
+  LocalGasStation,
   Speed,
   AccountBalance,
   Security,
   TrendingUp,
   Assignment,
-  LocationOn
-} from '@mui/icons-material';
-import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
+  LocationOn,
+} from "@mui/icons-material";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 
 interface PersonData {
   name?: string;
   email?: string;
   phone?: string;
-  preferredContact?: 'email' | 'phone' | 'whatsapp';
+  preferredContact?: "email" | "phone" | "whatsapp";
   location?: string;
   city?: string;
 }
@@ -115,90 +115,118 @@ interface VehiclePurchaseConfirmationProps {
 const schema = yup.object({
   name: yup
     .string()
-    .required('Full name is required')
-    .min(2, 'Name must be at least 2 characters')
-    .max(100, 'Name must be less than 100 characters')
-    .matches(/^[a-zA-Z\s'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes'),
+    .required("Full name is required")
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be less than 100 characters")
+    .matches(
+      /^[a-zA-Z\s'-]+$/,
+      "Name can only contain letters, spaces, hyphens, and apostrophes"
+    ),
   email: yup
     .string()
-    .required('Email is required')
-    .email('Please enter a valid email address')
-    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter a valid email format'),
+    .required("Email is required")
+    .email("Please enter a valid email address")
+    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email format"),
   phone: yup
     .string()
-    .required('Phone number is required')
-    .matches(/^[\+]?[0-9\s\-\(\)]{10,15}$/, 'Please enter a valid phone number (10-15 digits)')
-    .test('phone-format', 'Phone number must contain at least 10 digits', (value) => {
-      if (!value) return false;
-      const digitsOnly = value.replace(/\D/g, '');
-      return digitsOnly.length >= 10 && digitsOnly.length <= 15;
-    }),
+    .required("Phone number is required")
+    .matches(
+      /^[\+]?[0-9\s\-\(\)]{10,15}$/,
+      "Please enter a valid phone number (10-15 digits)"
+    )
+    .test(
+      "phone-format",
+      "Phone number must contain at least 10 digits",
+      (value) => {
+        if (!value) return false;
+        const digitsOnly = value.replace(/\D/g, "");
+        return digitsOnly.length >= 10 && digitsOnly.length <= 15;
+      }
+    ),
   preferredContact: yup
     .string()
-    .required('Preferred contact method is required')
-    .oneOf(['email', 'phone', 'whatsapp'], 'Please select a valid contact method'),
+    .required("Preferred contact method is required")
+    .oneOf(
+      ["email", "phone", "whatsapp"],
+      "Please select a valid contact method"
+    ),
   location: yup
     .string()
-    .required('Location is required')
-    .oneOf([
-      'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 
-      'Limpopo', 'Mpumalanga', 'Northern Cape', 'North West', 'Western Cape'
-    ], 'Please select a valid South African province'),
+    .required("Location is required")
+    .oneOf(
+      [
+        "Eastern Cape",
+        "Free State",
+        "Gauteng",
+        "KwaZulu-Natal",
+        "Limpopo",
+        "Mpumalanga",
+        "Northern Cape",
+        "North West",
+        "Western Cape",
+      ],
+      "Please select a valid South African province"
+    ),
   city: yup
     .string()
-    .required('City is required')
-    .min(2, 'City name must be at least 2 characters'),
+    .required("City is required")
+    .min(2, "City name must be at least 2 characters"),
   comments: yup
     .string()
-    .max(1000, 'Comments must be less than 1000 characters'),
+    .max(1000, "Comments must be less than 1000 characters"),
   assistanceTypes: yup
     .array()
-    .of(yup.string().oneOf(['financing', 'compliance'], 'Invalid assistance type'))
-    .min(1, 'Please select at least one assistance type')
-    .required('Assistance selection is required'),
+    .of(
+      yup.string().oneOf(["financing", "compliance"], "Invalid assistance type")
+    )
+    .min(1, "Please select at least one assistance type")
+    .required("Assistance selection is required"),
 });
 
-const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = ({
-  initialData,
-  onSubmit,
-  onBack,
-  isLoading = false,
-}) => {
+const VehiclePurchaseConfirmation: React.FC<
+  VehiclePurchaseConfirmationProps
+> = ({ initialData, onSubmit, onBack, isLoading = false }) => {
   // Extract person data and search filters from initialData
   const personData = initialData?.personData || {};
   const searchFilters = initialData?.searchFilters || {};
-  
+
   // Mock user data for prepopulation (in real app, this would come from user session/profile)
   const mockUserData = {
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@gmail.com',
-    phone: '+27 83 456 7890',
-    location: 'Western Cape',
-    city: 'Cape Town',
-    preferredContact: 'whatsapp' as const
+    name: "Sarah Johnson",
+    email: "sarah.johnson@gmail.com",
+    phone: "+27 83 456 7890",
+    location: "Western Cape",
+    city: "Cape Town",
+    preferredContact: "whatsapp" as const,
   };
-  
+
   // State for cities dropdown
   const [cities, setCities] = useState<string[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
-  
-  const { control, handleSubmit, formState: { errors, isValid }, watch } = useForm({
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isValid },
+    watch,
+  } = useForm({
     resolver: yupResolver(schema),
-    mode: 'onChange',
+    mode: "onChange",
     defaultValues: {
       name: personData.name || mockUserData.name,
       email: personData.email || mockUserData.email,
       phone: personData.phone || mockUserData.phone,
       location: personData.location || mockUserData.location,
       city: personData.city || mockUserData.city,
-      preferredContact: personData.preferredContact || mockUserData.preferredContact,
-      comments: '',
-      assistanceTypes: ['financing'], // Default to financing assistance
-    }
+      preferredContact:
+        personData.preferredContact || mockUserData.preferredContact,
+      comments: "",
+      assistanceTypes: ["financing"], // Default to financing assistance
+    },
   });
-  
-  const selectedProvince = watch('location');
-  
+
+  const selectedProvince = watch("location");
+
   // Load cities dynamically based on province AND search filters
   useEffect(() => {
     const loadCities = async () => {
@@ -206,165 +234,189 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
       try {
         // Build query parameters based on available filters
         const params = new URLSearchParams();
-        
+
         // Add search filters from vehicle search
-        if (searchFilters.make) params.append('make', searchFilters.make);
-        if (searchFilters.model) params.append('model', searchFilters.model);
-        if (searchFilters.bodyType) params.append('bodyType', searchFilters.bodyType);
-        if (searchFilters.fuelType) params.append('fuelType', searchFilters.fuelType);
-        
+        if (searchFilters.make) params.append("make", searchFilters.make);
+        if (searchFilters.model) params.append("model", searchFilters.model);
+        if (searchFilters.bodyType)
+          params.append("bodyType", searchFilters.bodyType);
+        if (searchFilters.fuelType)
+          params.append("fuelType", searchFilters.fuelType);
+
         // Add selected province from form
-        if (selectedProvince) params.append('province', selectedProvince);
-        
+        if (selectedProvince) params.append("province", selectedProvince);
+
         // Use filtered cities endpoint if we have any filters
-        const hasFilters = searchFilters.make || searchFilters.model || searchFilters.bodyType || searchFilters.fuelType || selectedProvince;
-        
+        const hasFilters =
+          searchFilters.make ||
+          searchFilters.model ||
+          searchFilters.bodyType ||
+          searchFilters.fuelType ||
+          selectedProvince;
+
         if (hasFilters) {
-          const response = await fetch(`http://localhost:8080/api/vehicles/filtered/cities?${params}`);
+          const response = await fetch(
+            `http://localhost:8080/api/vehicles/filtered/cities?${params}`
+          );
           const citiesData = await response.json();
           setCities(citiesData || []);
         } else {
           // No filters, load all cities
-          const response = await fetch('http://localhost:8080/api/vehicles/cities');
+          const response = await fetch(
+            "http://localhost:8080/api/vehicles/cities"
+          );
           const citiesData = await response.json();
           setCities(citiesData || []);
         }
       } catch (error) {
-        console.error('Error loading cities:', error);
+        console.error("Error loading cities:", error);
         setCities([]);
       } finally {
         setLoadingCities(false);
       }
     };
-    
+
     loadCities();
-  }, [selectedProvince, searchFilters.make, searchFilters.model, searchFilters.bodyType, searchFilters.fuelType]);
+  }, [
+    selectedProvince,
+    searchFilters.make,
+    searchFilters.model,
+    searchFilters.bodyType,
+    searchFilters.fuelType,
+  ]);
 
   // Get vehicle data from initialData with proper structure
-  const vehicleData: VehicleData = initialData?.vehicleData || initialData?.valuationData || {
-    // New data structure fields
-    MKT: "MCV",
-    Id: 2324711,
-    usedVehicleStockID: 8570067,
-    year: 2023,
-    makeName: "Toyota",
-    modelName: "Quantum Bus",
-    variantName: "2.8 SLWB bus 14-seater GL",
-    vin: "JTFEB9CP106040993",
-    registration: "LC03YCGP",
-    mmCode: null,
-    engineNo: "1GD9078319",
-    milage: 118640,
-    colour: "White 058",
-    provinceName: "Gauteng",
-    trim: null,
-    condition: null,
-    stockCode: "0173USP040993",
-    department: "Used",
-    loadDate: "2025-07-11 08:42:00.850000000",
-    lastTouchDate: "2025-07-15 18:08:14.300000000",
-    lastChangedDate: "2025-07-12 08:43:58.733000000",
-    soldDate: "1900-01-01 00:00:00",
-    isProgram: -1,
-    currencySymbol: "R",
-    price: 679900.0,
-    firstPrice: 679900.0,
-    franchise: "Toyota,Toyota Commercial",
-    extras: null,
-    comments: "TOYOTA QUANTUM 2.8 GL SLWB 14 SEAT",
-    // Legacy fields for backward compatibility
-    make: "Toyota",
-    model: "Quantum Bus",
-    marketValue: 679900,
-    currency: "R",
-    mileage: "118,640 km",
-    bodyType: "Bus",
-    color: "White",
-    transmission: "Manual",
-    fuelType: "Diesel",
-    engineSize: "2.8L"
-  };
+  const vehicleData: VehicleData = initialData?.vehicleData ||
+    initialData?.valuationData || {
+      // New data structure fields
+      MKT: "MCV",
+      Id: 2324711,
+      usedVehicleStockID: 8570067,
+      year: 2023,
+      makeName: "Toyota",
+      modelName: "Quantum Bus",
+      variantName: "2.8 SLWB bus 14-seater GL",
+      vin: "JTFEB9CP106040993",
+      registration: "LC03YCGP",
+      mmCode: null,
+      engineNo: "1GD9078319",
+      milage: 118640,
+      colour: "White 058",
+      provinceName: "Gauteng",
+      trim: null,
+      condition: null,
+      stockCode: "0173USP040993",
+      department: "Used",
+      loadDate: "2025-07-11 08:42:00.850000000",
+      lastTouchDate: "2025-07-15 18:08:14.300000000",
+      lastChangedDate: "2025-07-12 08:43:58.733000000",
+      soldDate: "1900-01-01 00:00:00",
+      isProgram: -1,
+      currencySymbol: "R",
+      price: 679900.0,
+      firstPrice: 679900.0,
+      franchise: "Toyota,Toyota Commercial",
+      extras: null,
+      comments: "TOYOTA QUANTUM 2.8 GL SLWB 14 SEAT",
+      // Legacy fields for backward compatibility
+      make: "Toyota",
+      model: "Quantum Bus",
+      marketValue: 679900,
+      currency: "R",
+      mileage: "118,640 km",
+      bodyType: "Bus",
+      color: "White",
+      transmission: "Manual",
+      fuelType: "Diesel",
+      engineSize: "2.8L",
+    };
 
   // Helper function to get display values with fallbacks
   const getVehicleDisplayData = () => {
     return {
-      make: vehicleData.makeName || vehicleData.make || 'Unknown Make',
-      model: vehicleData.modelName || vehicleData.model || 'Unknown Model',
+      make: vehicleData.makeName || vehicleData.make || "Unknown Make",
+      model: vehicleData.modelName || vehicleData.model || "Unknown Model",
       year: vehicleData.year || new Date().getFullYear(),
-      variant: vehicleData.variantName || '',
+      variant: vehicleData.variantName || "",
       price: vehicleData.price || vehicleData.marketValue || 0,
-      currency: vehicleData.currencySymbol || vehicleData.currency || 'R',
-      mileage: vehicleData.milage ? `${vehicleData.milage.toLocaleString()} km` : (vehicleData.mileage || 'Unknown'),
-      color: vehicleData.colour || vehicleData.color || 'Unknown',
-      condition: vehicleData.condition || 'Good',
-      department: vehicleData.department || 'Used',
-      stockCode: vehicleData.stockCode || '',
-      vin: vehicleData.vin || '',
-      registration: vehicleData.registration || '',
-      province: vehicleData.provinceName || '',
-      franchise: vehicleData.franchise || '',
-      engineNo: vehicleData.engineNo || '',
-      bodyType: vehicleData.bodyType || 'Unknown',
-      transmission: vehicleData.transmission || 'Unknown',
-      fuelType: vehicleData.fuelType || 'Unknown',
-      engineSize: vehicleData.engineSize || '',
-      trim: vehicleData.trim || '',
-      extras: vehicleData.extras || '',
-      comments: vehicleData.comments || '',
+      currency: vehicleData.currencySymbol || vehicleData.currency || "R",
+      mileage: vehicleData.milage
+        ? `${vehicleData.milage.toLocaleString()} km`
+        : vehicleData.mileage || "Unknown",
+      color: vehicleData.colour || vehicleData.color || "Unknown",
+      condition: vehicleData.condition || "Good",
+      department: vehicleData.department || "Used",
+      stockCode: vehicleData.stockCode || "",
+      vin: vehicleData.vin || "",
+      registration: vehicleData.registration || "",
+      province: vehicleData.provinceName || "",
+      franchise: vehicleData.franchise || "",
+      engineNo: vehicleData.engineNo || "",
+      bodyType: vehicleData.bodyType || "Unknown",
+      transmission: vehicleData.transmission || "Unknown",
+      fuelType: vehicleData.fuelType || "Unknown",
+      engineSize: vehicleData.engineSize || "",
+      trim: vehicleData.trim || "",
+      extras: vehicleData.extras || "",
+      comments: vehicleData.comments || "",
       firstPrice: vehicleData.firstPrice || vehicleData.price || 0,
-      loadDate: vehicleData.loadDate ? new Date(vehicleData.loadDate).toLocaleDateString() : '',
-      lastTouchDate: vehicleData.lastTouchDate ? new Date(vehicleData.lastTouchDate).toLocaleDateString() : ''
+      loadDate: vehicleData.loadDate
+        ? new Date(vehicleData.loadDate).toLocaleDateString()
+        : "",
+      lastTouchDate: vehicleData.lastTouchDate
+        ? new Date(vehicleData.lastTouchDate).toLocaleDateString()
+        : "",
     };
   };
 
   const displayData = getVehicleDisplayData();
 
-  const selectedAssistanceTypes = watch('assistanceTypes') || [];
+  const selectedAssistanceTypes = watch("assistanceTypes") || [];
 
   const onFormSubmit = (formData: any) => {
     // Validate the form data before submission
     try {
       schema.validateSync(formData, { abortEarly: false });
-      
+
       // Navigate directly to BuyingComplete without showing interim screen
       onSubmit({
         contactInfo: {
           ...formData,
           submittedAt: new Date().toISOString(),
-          validatedData: true
+          validatedData: true,
         },
         vehicleData: vehicleData,
         assistanceRequested: formData.assistanceTypes,
         confirmed: true,
-        action: 'purchase-confirmed',
-        nextStep: 'BuyingComplete'
+        action: "purchase-confirmed",
+        nextStep: "BuyingComplete",
       });
     } catch (validationError) {
-      console.error('Form validation failed:', validationError);
+      console.error("Form validation failed:", validationError);
       // The form validation should prevent this, but handle edge cases
     }
   };
 
   // Main Form
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', py: 4, px: 3 }}>
+    <Box sx={{ maxWidth: 1200, mx: "auto", py: 4, px: 3 }}>
       <Box sx={{ mb: 4 }}>
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          sx={{ 
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{
             fontWeight: 700,
-            color: '#333333',
+            color: "#333333",
             mb: 2,
-            letterSpacing: '-0.02em'
+            letterSpacing: "-0.02em",
           }}
         >
           Vehicle Purchase Request
         </Typography>
-        <Typography 
-          variant="body1" 
+        <Typography
+          variant="body1"
           color="text.secondary"
-          sx={{ mb: 3, fontSize: '1.1rem', lineHeight: 1.6 }}
+          sx={{ mb: 3, fontSize: "1.1rem", lineHeight: 1.6 }}
         >
           Complete your purchase request and select the assistance you need
         </Typography>
@@ -372,143 +424,245 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
       </Box>
 
       <Grid container spacing={4}>
-      {/* Vehicle Summary */}
-      <Grid item xs={12} md={5}>
-        <Card sx={{ 
-          border: '2px solid #1e3a8a',
-          boxShadow: '0 4px 12px rgba(30, 58, 138, 0.1)'
-        }}>
-          <Box
-            component="img"
-            src="https://news-site-za.s3.af-south-1.amazonaws.com/images/2021/02/2012-Chevrolet-Sonic-Sedan.jpg"
-            alt={`${vehicleData.make} ${vehicleData.model}`}
+        {/* Vehicle Summary */}
+        <Grid columns={{ xs: 12, md: 5 }}>
+          <Card
             sx={{
-              width: '100%',
-              height: '200px',
-              objectFit: 'cover',
-              borderBottom: '1px solid #e0e0e0'
+              border: "2px solid #1e3a8a",
+              boxShadow: "0 4px 12px rgba(30, 58, 138, 0.1)",
             }}
-          />
-          <CardContent sx={{ p: 3 }}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: 2, 
-                display: 'flex', 
-                alignItems: 'center',
-                fontWeight: 700,
-                color: '#333333'
+          >
+            <Box
+              component="img"
+              src="https://news-site-za.s3.af-south-1.amazonaws.com/images/2021/02/2012-Chevrolet-Sonic-Sedan.jpg"
+              alt={`${vehicleData.make} ${vehicleData.model}`}
+              sx={{
+                width: "100%",
+                height: "200px",
+                objectFit: "cover",
+                borderBottom: "1px solid #e0e0e0",
               }}
-            >
-              <DirectionsCar sx={{ mr: 1.5, color: '#1e3a8a' }} />
-              Selected Vehicle
-            </Typography>
-            
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, color: '#333333' }}>
-                {displayData.year} {displayData.make} {displayData.model}
+            />
+            <CardContent sx={{ p: 3, width: "100%" }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  fontWeight: 700,
+                  color: "#333333",
+                }}
+              >
+                <DirectionsCar sx={{ mr: 1.5, color: "#1e3a8a" }} />
+                Selected Vehicle
               </Typography>
-              {displayData.variant && (
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  {displayData.variant}
-                </Typography>
-              )}
-              <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e3a8a' }}>
-                {displayData.currency}{displayData.price?.toLocaleString()}
-              </Typography>
-            </Box>
 
-            <Stack spacing={2} sx={{ pt: 2, borderTop: '1px solid #f0f0f0' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Department:</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.department}</Typography>
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="h5"
+                  sx={{ fontWeight: 700, mb: 1, color: "#333333" }}
+                >
+                  {displayData.year} {displayData.make} {displayData.model}
+                </Typography>
+                {displayData.variant && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 1 }}
+                  >
+                    {displayData.variant}
+                  </Typography>
+                )}
+                <Typography
+                  variant="h4"
+                  sx={{ fontWeight: 700, color: "#1e3a8a" }}
+                >
+                  {displayData.currency}
+                  {displayData.price?.toLocaleString()}
+                </Typography>
+              </Box>
+
+              <Stack spacing={2} sx={{ pt: 2, borderTop: "1px solid #f0f0f0" }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Department:
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {displayData.department}
+                  </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Mileage:</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.mileage}</Typography>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Mileage:
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {displayData.mileage}
+                  </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Color:</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.color}</Typography>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Color:
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {displayData.color}
+                  </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Body Type:</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.bodyType}</Typography>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Body Type:
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {displayData.bodyType}
+                  </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Transmission:</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.transmission}</Typography>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Transmission:
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {displayData.transmission}
+                  </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Fuel Type:</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.fuelType}</Typography>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Fuel Type:
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {displayData.fuelType}
+                  </Typography>
                 </Box>
                 {displayData.engineSize && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">Engine Size:</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.engineSize}</Typography>
+                  <Box
+                    sx={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Engine Size:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      {displayData.engineSize}
+                    </Typography>
                   </Box>
                 )}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Condition:</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.condition}</Typography>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Condition:
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {displayData.condition}
+                  </Typography>
                 </Box>
                 {displayData.stockCode && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">Stock Code:</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.stockCode}</Typography>
+                  <Box
+                    sx={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Stock Code:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      {displayData.stockCode}
+                    </Typography>
                   </Box>
                 )}
                 {displayData.registration && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">Registration:</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.registration}</Typography>
+                  <Box
+                    sx={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Registration:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      {displayData.registration}
+                    </Typography>
                   </Box>
                 )}
                 {displayData.vin && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">VIN:</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>{displayData.vin}</Typography>
+                  <Box
+                    sx={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      VIN:
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 600, fontSize: "0.9rem" }}
+                    >
+                      {displayData.vin}
+                    </Typography>
                   </Box>
                 )}
                 {displayData.engineNo && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">Engine No:</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.engineNo}</Typography>
+                  <Box
+                    sx={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Engine No:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      {displayData.engineNo}
+                    </Typography>
                   </Box>
                 )}
                 {displayData.province && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">Province:</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.province}</Typography>
+                  <Box
+                    sx={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Province:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      {displayData.province}
+                    </Typography>
                   </Box>
                 )}
-                {/* {displayData.franchise && (
-                  // <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  //   <Typography variant="body2" color="text.secondary">Franchise:</Typography>
-                  //   <Typography variant="body1" sx={{ fontWeight: 600 }}>{displayData.franchise}</Typography>
-                  // </Box>
-                )} */}
                 {displayData.firstPrice !== displayData.price && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">Original Price:</Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 600, textDecoration: 'line-through', color: 'text.secondary' }}>
-                      {displayData.currency}{displayData.firstPrice?.toLocaleString()}
+                  <Box
+                    sx={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Original Price:
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: 600,
+                        textDecoration: "line-through",
+                        color: "text.secondary",
+                      }}
+                    >
+                      {displayData.currency}
+                      {displayData.firstPrice?.toLocaleString()}
                     </Typography>
                   </Box>
                 )}
                 {displayData.comments && (
-                  <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #f0f0f0' }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Comments:</Typography>
+                  <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #f0f0f0" }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 1 }}
+                    >
+                      Comments:
+                    </Typography>
                     <Typography variant="body1" sx={{ lineHeight: 1.4 }}>
                       {displayData.comments}
                     </Typography>
                   </Box>
                 )}
                 {displayData.loadDate && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                    <Typography variant="body2" color="text.secondary">Added to Inventory:</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{displayData.loadDate}</Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mt: 1,
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Added to Inventory:
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {displayData.loadDate}
+                    </Typography>
                   </Box>
                 )}
               </Stack>
@@ -521,28 +675,37 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
           <form onSubmit={handleSubmit(onFormSubmit)}>
             <Stack spacing={4}>
               {/* Contact Information Card */}
-              <Card sx={{ border: '1px solid #e0e0e0' }}>
+              <Card sx={{ border: "1px solid #e0e0e0" }}>
                 <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center',
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 3,
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
                         fontWeight: 700,
-                        color: '#333333'
+                        color: "#333333",
                       }}
                     >
-                      <Person sx={{ mr: 1.5, color: '#1e3a8a' }} />
+                      <Person sx={{ mr: 1.5, color: "#1e3a8a" }} />
                       Contact Information
                     </Typography>
-                    {(personData.name || personData.email || personData.phone) && (
-                      <Chip 
-                        label="Pre-filled" 
-                        size="small" 
-                        color="success" 
+                    {(personData.name ||
+                      personData.email ||
+                      personData.phone) && (
+                      <Chip
+                        label="Pre-filled"
+                        size="small"
+                        color="success"
                         variant="outlined"
-                        sx={{ fontSize: '0.75rem' }}
+                        sx={{ fontSize: "0.75rem" }}
                       />
                     )}
                   </Box>
@@ -559,9 +722,16 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                             placeholder="Enter your full name as it appears on your ID"
                             fullWidth
                             error={!!errors.name}
-                            helperText={errors.name?.message || "Required for identity verification"}
+                            helperText={
+                              errors.name?.message ||
+                              "Required for identity verification"
+                            }
                             InputProps={{
-                              sx: { backgroundColor: field.value ? '#f8f9fa' : 'white' }
+                              sx: {
+                                backgroundColor: field.value
+                                  ? "#f8f9fa"
+                                  : "white",
+                              },
                             }}
                           />
                         )}
@@ -578,9 +748,16 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                             placeholder="+27 XX XXX XXXX"
                             fullWidth
                             error={!!errors.phone}
-                            helperText={errors.phone?.message || "Include country code for international numbers"}
+                            helperText={
+                              errors.phone?.message ||
+                              "Include country code for international numbers"
+                            }
                             InputProps={{
-                              sx: { backgroundColor: field.value ? '#f8f9fa' : 'white' }
+                              sx: {
+                                backgroundColor: field.value
+                                  ? "#f8f9fa"
+                                  : "white",
+                              },
                             }}
                           />
                         )}
@@ -598,9 +775,16 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                             placeholder="your.email@example.com"
                             fullWidth
                             error={!!errors.email}
-                            helperText={errors.email?.message || "We'll send vehicle documents and updates here"}
+                            helperText={
+                              errors.email?.message ||
+                              "We'll send vehicle documents and updates here"
+                            }
                             InputProps={{
-                              sx: { backgroundColor: field.value ? '#f8f9fa' : 'white' }
+                              sx: {
+                                backgroundColor: field.value
+                                  ? "#f8f9fa"
+                                  : "white",
+                              },
                             }}
                           />
                         )}
@@ -612,31 +796,54 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                         control={control}
                         render={({ field }) => (
                           <FormControl fullWidth error={!!errors.location}>
-                            <InputLabel id="location-label">Location (Province) *</InputLabel>
+                            <InputLabel id="location-label">
+                              Location (Province) *
+                            </InputLabel>
                             <Select
                               {...field}
                               labelId="location-label"
                               label="Location (Province) *"
-                              sx={{ backgroundColor: field.value ? '#f8f9fa' : 'white' }}
+                              sx={{
+                                backgroundColor: field.value
+                                  ? "#f8f9fa"
+                                  : "white",
+                              }}
                             >
-                              <MenuItem value="Eastern Cape">Eastern Cape</MenuItem>
+                              <MenuItem value="Eastern Cape">
+                                Eastern Cape
+                              </MenuItem>
                               <MenuItem value="Free State">Free State</MenuItem>
                               <MenuItem value="Gauteng">Gauteng</MenuItem>
-                              <MenuItem value="KwaZulu-Natal">KwaZulu-Natal</MenuItem>
+                              <MenuItem value="KwaZulu-Natal">
+                                KwaZulu-Natal
+                              </MenuItem>
                               <MenuItem value="Limpopo">Limpopo</MenuItem>
                               <MenuItem value="Mpumalanga">Mpumalanga</MenuItem>
-                              <MenuItem value="Northern Cape">Northern Cape</MenuItem>
+                              <MenuItem value="Northern Cape">
+                                Northern Cape
+                              </MenuItem>
                               <MenuItem value="North West">North West</MenuItem>
-                              <MenuItem value="Western Cape">Western Cape</MenuItem>
+                              <MenuItem value="Western Cape">
+                                Western Cape
+                              </MenuItem>
                             </Select>
                             {errors.location && (
-                              <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ mt: 0.5, ml: 1.5 }}
+                              >
                                 {errors.location.message}
                               </Typography>
                             )}
                             {!errors.location && (
-                              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, ml: 1.5 }}>
-                                Required - Select your province for local dealer matching
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ mt: 0.5, ml: 1.5 }}
+                              >
+                                Required - Select your province for local dealer
+                                matching
                               </Typography>
                             )}
                           </FormControl>
@@ -655,10 +862,18 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                               labelId="city-label"
                               label="City *"
                               disabled={!selectedProvince || loadingCities}
-                              sx={{ backgroundColor: field.value ? '#f8f9fa' : 'white' }}
+                              sx={{
+                                backgroundColor: field.value
+                                  ? "#f8f9fa"
+                                  : "white",
+                              }}
                             >
                               <MenuItem value="">
-                                <em>{loadingCities ? 'Loading cities...' : 'Select a city'}</em>
+                                <em>
+                                  {loadingCities
+                                    ? "Loading cities..."
+                                    : "Select a city"}
+                                </em>
                               </MenuItem>
                               {(cities || []).map((city) => (
                                 <MenuItem key={city} value={city}>
@@ -667,13 +882,23 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                               ))}
                             </Select>
                             {errors.city && (
-                              <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                              <Typography
+                                variant="caption"
+                                color="error"
+                                sx={{ mt: 0.5, ml: 1.5 }}
+                              >
                                 {errors.city.message}
                               </Typography>
                             )}
                             {!errors.city && (
-                              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, ml: 1.5 }}>
-                                {selectedProvince ? 'Select your city for nearest dealer matching' : 'Select a province first'}
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ mt: 0.5, ml: 1.5 }}
+                              >
+                                {selectedProvince
+                                  ? "Select your city for nearest dealer matching"
+                                  : "Select a province first"}
                               </Typography>
                             )}
                           </FormControl>
@@ -691,10 +916,17 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
                             label="Preferred Contact Method"
                             fullWidth
                             error={!!errors.preferredContact}
-                            helperText={errors.preferredContact?.message || "How would you like us to contact you?"}
+                            helperText={
+                              errors.preferredContact?.message ||
+                              "How would you like us to contact you?"
+                            }
                             SelectProps={{ native: true }}
                             InputProps={{
-                              sx: { backgroundColor: field.value ? '#f8f9fa' : 'white' }
+                              sx: {
+                                backgroundColor: field.value
+                                  ? "#f8f9fa"
+                                  : "white",
+                              },
                             }}
                           >
                             <option value="email">📧 Email</option>
@@ -803,7 +1035,7 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
               </Card> */}
 
               {/* Additional Comments */}
-              <Card sx={{ border: '1px solid #e0e0e0' }}>
+              <Card sx={{ border: "1px solid #e0e0e0" }}>
                 <CardContent sx={{ p: 4 }}>
                   <Controller
                     name="comments"
@@ -825,55 +1057,67 @@ const VehiclePurchaseConfirmation: React.FC<VehiclePurchaseConfirmationProps> = 
               {/* Disclaimer & Actions */}
               <Alert severity="info" sx={{ mb: 3 }}>
                 <Typography variant="body2">
-                  By submitting this request, you agree to be contacted by our team and partner network regarding this vehicle purchase inquiry. Your personal information will be used in accordance with our privacy policy.
+                  By submitting this request, you agree to be contacted by our
+                  team and partner network regarding this vehicle purchase
+                  inquiry. Your personal information will be used in accordance
+                  with our privacy policy.
                 </Typography>
               </Alert>
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 {onBack && (
-                  <Button 
-                    variant="outlined" 
+                  <Button
+                    variant="outlined"
                     onClick={onBack}
                     disabled={isLoading}
                     sx={{
-                      textTransform: 'none',
+                      textTransform: "none",
                       fontWeight: 600,
                       px: 4,
                       py: 1.5,
-                      borderColor: '#ddd',
-                      color: '#666',
-                      '&:hover': { borderColor: '#999', backgroundColor: '#f5f5f5' }
+                      borderColor: "#ddd",
+                      color: "#666",
+                      "&:hover": {
+                        borderColor: "#999",
+                        backgroundColor: "#f5f5f5",
+                      },
                     }}
                   >
                     Back
                   </Button>
                 )}
-                
-                <Button 
+
+                <Button
                   type="submit"
-                  variant="contained" 
+                  variant="contained"
                   disabled={isLoading || !isValid}
-                  sx={{ 
-                    ml: 'auto',
-                    textTransform: 'none',
+                  sx={{
+                    ml: "auto",
+                    textTransform: "none",
                     fontWeight: 700,
                     px: 6,
                     py: 2,
-                    fontSize: '1.1rem',
-                    backgroundColor: '#1e3a8a',
-                    color: '#ffffff',
-                    boxShadow: 'none',
-                    '&:hover': {
-                      backgroundColor: '#1e40af',
-                      boxShadow: '0 4px 12px rgba(30, 58, 138, 0.25)'
+                    fontSize: "1.1rem",
+                    backgroundColor: "#1e3a8a",
+                    color: "#ffffff",
+                    boxShadow: "none",
+                    "&:hover": {
+                      backgroundColor: "#1e40af",
+                      boxShadow: "0 4px 12px rgba(30, 58, 138, 0.25)",
                     },
-                    '&:disabled': {
-                      backgroundColor: '#f0f0f0',
-                      color: '#999'
-                    }
+                    "&:disabled": {
+                      backgroundColor: "#f0f0f0",
+                      color: "#999",
+                    },
                   }}
                 >
-                  Submit Purchase Request
+                  Submit
                 </Button>
               </Box>
             </Stack>

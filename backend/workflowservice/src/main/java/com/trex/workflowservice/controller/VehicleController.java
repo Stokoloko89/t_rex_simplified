@@ -129,6 +129,46 @@ public class VehicleController {
         }
     }
     
+    @GetMapping("/filter-counts")
+    public ResponseEntity<Map<String, Object>> getFilterCounts(
+            @RequestParam(required = false) String make,
+            @RequestParam(required = false) String model,
+            @RequestParam(required = false) Integer yearMin,
+            @RequestParam(required = false) Integer yearMax,
+            @RequestParam(required = false) BigDecimal priceMin,
+            @RequestParam(required = false) BigDecimal priceMax,
+            @RequestParam(required = false) Integer mileageMin,
+            @RequestParam(required = false) Integer mileageMax,
+            @RequestParam(required = false) List<String> bodyTypes,
+            @RequestParam(required = false) List<String> fuelTypes,
+            @RequestParam(required = false) String transmission,
+            @RequestParam(required = false) String condition,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) List<String> colours) {
+        
+        logger.info("Get filter counts with filters - make: {}, model: {}, bodyTypes: {}, fuelTypes: {}", 
+                   make, model, bodyTypes, fuelTypes);
+        
+        try {
+            Map<String, Object> filterCounts = vehicleService.getFilterCounts(
+                make, model, yearMin, yearMax, priceMin, priceMax, mileageMin, mileageMax,
+                bodyTypes, fuelTypes, transmission, condition, province, city, colours
+            );
+            
+            logger.info("Retrieved filter counts successfully");
+            return ResponseEntity.ok(filterCounts);
+            
+        } catch (Exception e) {
+            logger.error("Error retrieving filter counts", e);
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error retrieving filter counts: " + e.getMessage());
+            errorResponse.put("counts", new HashMap<>());
+            errorResponse.put("total", 0);
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+    
     @GetMapping("/{id}")
     public ResponseEntity<Vehicle> getVehicleById(@PathVariable Long id) {
         logger.info("Get vehicle by id: {}", id);

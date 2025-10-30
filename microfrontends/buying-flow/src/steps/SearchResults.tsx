@@ -505,7 +505,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               },
             },
           }}>
-            <Grid container spacing={4}>
+            <Grid container spacing={8} sx={{ display: 'flex', justifyContent: 'center' }}>
             {vehicles.map((vehicle) => (
               <Grid item xs={12} md={6} lg={6} key={vehicle.id}>
                 <Card 
@@ -1022,7 +1022,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                         }
                       }}
                     >
-                      Select this vehicle
+                      I'm interested
                     </Button>
                   )}
                 </Box>
