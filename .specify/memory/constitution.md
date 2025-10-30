@@ -1,30 +1,29 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version Change: 1.0.0 → 1.1.0
-Change Type: MINOR - Material expansion of Dealership Anonymity principle
-Rationale: Added specific 30-minute delay requirement and email-only revelation mechanism
+Version Change: 1.1.0 → 1.2.0
+Change Type: MINOR - Added Documentation Organization principle
+Rationale: Root directory bloat prevention and sustainable documentation structure
 
-Modified Principles:
-  - II. Dealership Anonymity: Added 30-minute delay requirement, email-only revelation,
-    scheduled job enforcement, and expanded rationale for spam prevention
+Modified Principles: None
 
-Added Sections: None
+Added Sections:
+  - VII. Documentation Organization: New principle for sustainable docs structure
+
 Removed Sections: None
 
 Templates Requiring Updates:
-  ✅ constitution.md - Updated Dealership Anonymity with timing and delivery constraints
-  ✅ plan-template.md - Constitution Check gate updated to v1.1.0 with 30-minute delay requirement
-  ✅ spec-template.md - Constitutional compliance updated to v1.1.0 with email-only revelation
-  ✅ tasks-template.md - Constitutional compliance updated to v1.1.0 with scheduled job requirement
+  ⚠ plan-template.md - Add documentation organization compliance check
+  ⚠ spec-template.md - Add documentation location requirement
+  ⚠ tasks-template.md - Add documentation consolidation task for long-running projects
 
 Follow-up TODOs:
-  - Features implementing interest submission must include 30-minute delay mechanism
-  - Backend must implement scheduled job or delayed queue for email notifications
-  - API contracts must not expose dealership info in any public endpoint
+  - Implement docs/ archive folder structure
+  - Migrate historical phase documents to archive/phases/
+  - Consolidate root directory from 25 files to 5 (README, DEPLOYMENT, TROUBLESHOOTING, PNPM_GUIDE, T-REX_COMPREHENSIVE_DOCUMENTATION)
 
 Commit Message Suggestion:
-docs: amend constitution to v1.1.0 (add 30-minute dealership revelation delay)
+docs: amend constitution to v1.2.0 (add documentation organization principle)
 -->
 
 # T-Rex Microfrontend Constitution
@@ -104,6 +103,21 @@ All features requiring data MUST define API contracts before frontend implementa
 - All endpoints MUST include error response definitions
 
 **Rationale:** Enables parallel frontend/backend development, reduces integration issues, provides clear contracts for testing, and supports API versioning strategy.
+
+### VII. Documentation Organization
+
+Documentation MUST be organized systematically to prevent root directory bloat and maintain discoverability.
+
+**Non-negotiable rules:**
+- Root directory MUST contain only essential files: `README.md`, `DEPLOYMENT.md`, `TROUBLESHOOTING.md`, `PNPM_GUIDE.md`, and one comprehensive reference document
+- Phase-specific documentation MUST be archived to `docs/archive/phases/` after phase completion
+- Status/progress documents (PHASE_*_COMPLETE, PHASE_*_PROGRESS, etc.) MUST be consolidated into phase completion reports
+- Feature-specific documentation MUST be stored in `specs/` directory, NOT root
+- Architectural decision records MUST be stored in `specs/[feature]/decisions/`, NOT root
+- Comprehensive documentation MUST use a single consolidated reference: `T-REX_COMPREHENSIVE_DOCUMENTATION.md`
+- Document lifecycle: Active → Archive after 2 weeks of inactivity
+
+**Rationale:** Prevents repository root pollution, maintains clear navigation hierarchy, archives historical decisions for reference, reduces cognitive load when onboarding, and improves long-term maintainability.
 
 ## Technology & Architecture Standards
 
@@ -187,4 +201,4 @@ All features requiring data MUST define API contracts before frontend implementa
 - Justifications MUST explain why simpler alternatives were rejected
 - Technical debt from violations MUST be tracked and prioritized for resolution
 
-**Version**: 1.1.0 | **Ratified**: 2025-10-30 | **Last Amended**: 2025-10-30
+**Version**: 1.2.0 | **Ratified**: 2025-10-30 | **Last Amended**: 2025-10-30
