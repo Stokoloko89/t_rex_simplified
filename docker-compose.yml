@@ -43,8 +43,8 @@ services:
   # T-Rex Buying Flow Application (Standalone)
   buying-flow:
     build:
-      context: ./microfrontends/buying-flow
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./microfrontends/buying-flow/Dockerfile
     ports:
       - "3000:80"  # Main frontend now on port 3000
       - "3001:80"  # Keep 3001 for backward compatibility
