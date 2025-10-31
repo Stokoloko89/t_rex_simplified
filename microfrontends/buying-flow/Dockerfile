@@ -1,29 +1,28 @@
 FROM node:18-alpine AS builder
 
-WORKDIR /app
+# Set up app root
+WORKDIR /monorepo
 
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy package files
-COPY package*.json pnpm-lock.yaml* ./
-
-# Install dependencies (including dev deps for build)
-RUN pnpm install --no-frozen-lockfile
-
-# Copy source code
+# Copy entire monorepo structure
 COPY . .
 
-# Build the application
+# Install dependencies at monorepo root
+RUN pnpm install --no-frozen-lockfile
+
+# Build the buying-flow application from within monorepo
+WORKDIR /monorepo/microfrontends/buying-flow
 RUN pnpm run build
 
 FROM nginx:alpine
 
 # Copy built files to nginx
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /monorepo/microfrontends/buying-flow/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY microfrontends/buying-flow/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port
 EXPOSE 80

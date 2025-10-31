@@ -1,29 +1,29 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version Change: 1.1.0 → 1.2.0
-Change Type: MINOR - Added Documentation Organization principle
-Rationale: Root directory bloat prevention and sustainable documentation structure
+Version Change: 1.2.0 → 1.2.1
+Change Type: PATCH - Clarified dealership notification timing and buyer delay mechanics
+Rationale: Align specification with actual business requirements: dealership gets immediate notification, buyer email delayed 30 minutes
 
-Modified Principles: None
+Modified Principles:
+  - II. Dealership Anonymity: Clarified dual-timing model
+    OLD: "Dealership information is revealed ONLY 30 minutes after user submits interest form"
+    NEW: "Dealership receives immediate notification; buyer information withheld 30 minutes"
 
-Added Sections:
-  - VII. Documentation Organization: New principle for sustainable docs structure
+Added Sections: None
 
 Removed Sections: None
 
 Templates Requiring Updates:
-  ⚠ plan-template.md - Add documentation organization compliance check
-  ⚠ spec-template.md - Add documentation location requirement
-  ⚠ tasks-template.md - Add documentation consolidation task for long-running projects
+  ✅ plan.md (Feature 002) - Already reflects immediate dealership notification + 30-min buyer delay
+  ✅ data-model.md (Feature 002) - Already includes anonymity_expires_at column
+  ✅ contracts/contact-request-submission.md (Feature 002) - Already documents dual timing
 
 Follow-up TODOs:
-  - Implement docs/ archive folder structure
-  - Migrate historical phase documents to archive/phases/
-  - Consolidate root directory from 25 files to 5 (README, DEPLOYMENT, TROUBLESHOOTING, PNPM_GUIDE, T-REX_COMPREHENSIVE_DOCUMENTATION)
+  - None (clarification only, no implementation changes required)
 
 Commit Message Suggestion:
-docs: amend constitution to v1.2.0 (add documentation organization principle)
+docs: amend constitution to v1.2.1 (clarify dealership/buyer notification timing)
 -->
 
 # T-Rex Microfrontend Constitution
@@ -49,12 +49,13 @@ Vehicle listings MUST NOT reveal dealership identities until a user expresses pu
 **Non-negotiable rules:**
 - Database queries MUST exclude dealership names, contacts, and identifying information in public APIs
 - Only generic location data (province/region) may be displayed in search results
-- Dealership information is revealed ONLY 30 minutes after user submits interest form
-- Revelation MUST occur exclusively via email notification (not in-app or API)
-- Email notifications to dealerships MUST include complete buyer information for follow-up
+- Dealership MUST receive immediate notification upon user interest submission (with buyer information)
+- Buyer information MUST be withheld from user until 30 minutes after interest form submission
+- Buyer email notification MUST be delayed 30 minutes and sent exclusively via email (not in-app or API)
 - System MUST enforce 30-minute delay through scheduled job or delayed queue mechanism
+- Email notifications MUST include complete contact information for designated follow-up party
 
-**Rationale:** Protects the business model of connecting qualified buyers with sellers; prevents buyers from bypassing the platform; maintains T-Rex as the trusted intermediary; the 30-minute delay ensures genuine interest and reduces spam/casual inquiries.
+**Rationale:** Protects the business model of connecting qualified buyers with sellers; prevents buyers from bypassing the platform; maintains T-Rex as the trusted intermediary; immediate dealership notification enables rapid follow-up; the 30-minute buyer delay ensures genuine interest and reduces spam/casual inquiries while giving dealerships a lead time advantage.
 
 ### III. Microfrontend Independence
 
@@ -201,4 +202,4 @@ Documentation MUST be organized systematically to prevent root directory bloat a
 - Justifications MUST explain why simpler alternatives were rejected
 - Technical debt from violations MUST be tracked and prioritized for resolution
 
-**Version**: 1.2.0 | **Ratified**: 2025-10-30 | **Last Amended**: 2025-10-30
+**Version**: 1.2.1 | **Ratified**: 2025-10-30 | **Last Amended**: 2025-10-30
